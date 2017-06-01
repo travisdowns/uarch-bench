@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+uarch-bench
+
+# Eclipse CDT artifacts
+.cproject
+.project
+.settings
+
+# nasm listing file
+*.list
