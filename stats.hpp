@@ -11,6 +11,7 @@
 #include <limits>
 #include <iterator>
 #include <functional>
+#include <vector>
 
 namespace Stats {
 
