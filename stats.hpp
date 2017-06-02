@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <limits>
 #include <iterator>
+#include <functional>
 
 namespace Stats {
 

@@ -11,6 +11,7 @@
 #include <cassert>
 #include <type_traits>
 #include <sstream>
+#include <functional>
 
 #include "stats.hpp"
 #include "asm_methods.h"
@@ -100,10 +101,6 @@ double CalcCpuFreq() {
 		auto t2 = CLOCK::now();
 		results[r] = duration_cast<nanoseconds>((t2 - t1) - (t1 - t0)).count();
 	}
-
-	//	for (auto ns : results) {
-	//		cout << "CPU freq: " << fixed << setw(4) << setprecision(3) << ((double)ITERS / ns) << " GHz" << endl;
-	//	}
 
 	DescriptiveStats stats = get_stats(results.begin(), results.end());
 
