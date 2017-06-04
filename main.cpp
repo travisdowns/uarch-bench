@@ -14,6 +14,7 @@
 #include <functional>
 
 #include "stats.hpp"
+#include "version.hpp"
 #include "asm_methods.h"
 
 using namespace std;
@@ -90,7 +91,6 @@ void CalcClockRes(const char *name) {
  */
 template <size_t ITERS, typename CLOCK, size_t TRIES = 3>
 double CalcCpuFreq() {
-
 	std::array<nanoseconds::rep, TRIES> results;
 
 	for (int r = 0; r < TRIES; r++) {
@@ -110,7 +110,7 @@ double CalcCpuFreq() {
 }
 
 template <typename CLOCK>
-double ClockTimerT<CLOCK>::ghz = CalcCpuFreq<10000,high_resolution_clock,1000>();
+double ClockTimerT<CLOCK>::ghz = CalcCpuFreq<10000,CLOCK,1000>();
 
 
 typedef std::function<int64_t (size_t)> time_method_t;  // given a loop count, returns a raw timing result
@@ -314,7 +314,7 @@ void runAll() {
 }
 
 int main(int argc, char **argv) {
-	cout << "Welcome to uarch-bench" << endl;
+	cout << "Welcome to uarch-bench (" << GIT_VERSION << ")" << endl;
 	CalcClockRes<100,system_clock>("system_clock");
 	CalcClockRes<100,steady_clock>("steady_clock");
 	CalcClockRes<100,high_resolution_clock>("hi_res_clock");

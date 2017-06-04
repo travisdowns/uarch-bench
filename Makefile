@@ -1,8 +1,10 @@
 .PHONY: all clean
 
+GIT_VERSION := $(shell git describe --dirty --always)
+
 HEADERS = $(wildcard *.h) $(wildcard *.hpp) 
 
-CPPFLAGS = -g -O2 -march=native
+CPPFLAGS = -g -O2 -march=native -DGIT_VERSION=\"$(GIT_VERSION)\"
 
 all: uarch-bench
 
