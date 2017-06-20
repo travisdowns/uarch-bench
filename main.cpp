@@ -31,12 +31,57 @@ static inline bool is_pow2(T x) {
 	return x && !(x & (x - 1));
 }
 
+const int MAX_ALIGN = 4096;
+const int STORAGE_SIZE = 4 * MAX_ALIGN;  // * 4 because we overalign the pointer in order to guarantee minimal alignemnt
+unsigned char unaligned_storage[STORAGE_SIZE];
 
-struct TimingResult {
+/*
+ * Returns a pointer that is minimally aligned to base_alignment. That is, it is
+ * aligned to base_alignment, but *not* aligned to 2 * base_alignment.
+ */
+void *aligned_ptr(size_t base_alignment, size_t required_size) {
+	assert(is_pow2(base_alignment));
+	void *p = unaligned_storage;
+	size_t space = STORAGE_SIZE;
+	void *r = std::align(base_alignment, required_size, p, space);
+	assert(r);
+	assert((((uintptr_t)r) & (base_alignment - 1)) == 0);
+	return r;
+}
+
+/**
+ * Returns a pointer that is first *minimally* aligned to the given base alignment (per
+ * aligned_ptr()) and then is offset by the about given in misalignment.
+ */
+void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misalignment) {
+	char *p = static_cast<char *>(aligned_ptr(base_alignment, required_size));
+	return p + misalignment;
+}
+
+
+class TimingResult {
 	bool hasNanos_, hasCycles_;
 	double nanos_, cycles_;
+
+public:
 	TimingResult(double cycles, double nanos) :
 		hasNanos_(true), hasCycles_(true), cycles_(cycles), nanos_(nanos) {}
+
+	/* multiply all values by the given value, useful when normalizing */
+	TimingResult operator*(double multipler) {
+		TimingResult result(*this);
+		result.nanos_ *= multipler;
+		result.cycles_ *= multipler;
+		return result;
+	}
+
+	double getCycles() const {
+		return cycles_;
+	}
+
+	double getNanos() const {
+		return nanos_;
+	}
 };
 
 /*
@@ -59,13 +104,17 @@ public:
 		return {nanos * ghz, (double)nanos};
 	}
 
+	/* return the statically calculated clock speed of the CPU in ghz for this clock */
+	static double getGHz() {
+		return ghz;
+	}
+
 };
 
 using ClockTimer = ClockTimerT<high_resolution_clock>;
 
 template <size_t ITERS, typename CLOCK>
-void CalcClockRes(const char *name) {
-
+DescriptiveStats CalcClockRes() {
 	std::array<nanoseconds::rep, ITERS> results;
 
 	for (int r = 0; r < 3; r++) {
@@ -76,9 +125,7 @@ void CalcClockRes(const char *name) {
 		}
 	}
 
-	DescriptiveStats stats = get_stats(results.begin(), results.end());
-
-	cout << "Overhead for " << name << ": " << stats << endl;
+	return get_stats(results.begin(), results.end());
 }
 
 /*
@@ -89,23 +136,24 @@ void CalcClockRes(const char *name) {
  * run twice, once with ITERS iterations and once with 2*ITERS, and a delta is used to
  * remove measurement overhead.
  */
-template <size_t ITERS, typename CLOCK, size_t TRIES = 3>
+template <size_t ITERS, typename CLOCK, size_t TRIES = 10, size_t WARMUP = 100>
 double CalcCpuFreq() {
 	std::array<nanoseconds::rep, TRIES> results;
 
-	for (int r = 0; r < TRIES; r++) {
-		auto t0 = CLOCK::now();
-		add_calibration(ITERS);
-		auto t1 = CLOCK::now();
-		add_calibration(ITERS * 2);
-		auto t2 = CLOCK::now();
-		results[r] = duration_cast<nanoseconds>((t2 - t1) - (t1 - t0)).count();
+	for (int w = 0; w < WARMUP + 1; w++) {
+		for (int r = 0; r < TRIES; r++) {
+			auto t0 = CLOCK::now();
+			add_calibration(ITERS);
+			auto t1 = CLOCK::now();
+			add_calibration(ITERS * 2);
+			auto t2 = CLOCK::now();
+			results[r] = duration_cast<nanoseconds>((t2 - t1) - (t1 - t0)).count();
+		}
 	}
 
 	DescriptiveStats stats = get_stats(results.begin(), results.end());
 
 	double ghz = ((double)ITERS / stats.getMedian());
-	cout << "Median CPU speed: " << fixed << setw(4) << setprecision(3) << ghz << " GHz" << endl;
 	return ghz;
 }
 
@@ -160,9 +208,10 @@ static void printResultLine(std::ostream &os, N name, T clocks, T nanos) {
 	os << setprecision(2) << fixed << setw(NAME_WIDTH) << name << setw(CLOCK_WIDTH) << clocks << setw(NANOS_WIDTH) << nanos << endl;
 }
 
-class Benchmark {
+
+class Benchmark final {
 	static constexpr int loop_count = 1000;
-	static constexpr int     samples = 33;
+	static constexpr int    samples = 33;
 
 	std::string name_;
 	/* how many operations are involved in one iteration of the benchmark loop */
@@ -179,13 +228,11 @@ public:
 	Benchmark(std::string name, size_t ops_per_loop, time_method_t bench_method, time_to_result_t *time_to_result) :
 		name_(name), ops_per_loop_(ops_per_loop), bench_method_(bench_method), time_to_result_(time_to_result) {}
 
-	Benchmark(const Benchmark& other) = default;
-	void operator=(const Benchmark& other) = delete;
-
 	std::string getName() const {
 		return name_;
 	}
 
+	/* get the raw timings for a full run of the underlying benchmark, doesn't normalize for loop_count or ops_per_loop */
 	TimingResult getTimings() {
 		auto b = getBench();
 
@@ -201,12 +248,58 @@ public:
 		return time_to_result_(aggr);
 	}
 
-	void runAndPrint(std::ostream &os) {
+	/* like getTimings, except that everything is normalized, so the results should reflect the cost for a single operation */
+	TimingResult run() {
 		TimingResult timings = getTimings();
-		double divisor = ops_per_loop_ * loop_count;
-		double clocks = timings.cycles_ / divisor;
-		double nanos  = timings.nanos_  / divisor;
-		printResultLine(os, getName(), clocks, nanos);
+		double multiplier = 1.0 / (ops_per_loop_ * loop_count); // normalize to time / op
+		return timings * multiplier;
+	}
+
+	void runAndPrint(std::ostream &os) {
+		TimingResult timing = run();
+		printResultLine(os, getName(), timing.getCycles(), timing.getNanos());
+	}
+};
+
+/**
+ * Interface for a group of benchmarks. The group itself has a name, and can run and output all the contained
+ * benchmarks.
+ */
+class BenchmarkGroup {
+	std::string name_;
+	std::vector<Benchmark> benches_;
+
+public:
+	BenchmarkGroup(std::string name) : name_(name) {}
+
+	virtual ~BenchmarkGroup() {}
+
+	virtual void runAll(std::ostream &os) {
+		os << endl << "** Running benchmark group " << getName() << " **" << endl;
+		printResultLine(os, "Benchmark", "Cycles", "Nanos");
+		for (auto b : benches_) {
+			b.runAndPrint(os);
+		}
+	}
+
+	virtual void add(const std::vector<Benchmark> &more) {
+		benches_.insert(benches_.end(), more.begin(), more.end());
+	}
+
+	virtual void add(const Benchmark &bench) {
+		benches_.push_back(bench);
+	}
+
+	virtual const std::vector<Benchmark>& getAllBenches() const {
+		return benches_;
+	}
+
+	const std::vector<Benchmark>& getBenches() const {
+		return benches_;
+	}
+
+	const std::string& getName() const {
+		return name_;
 	}
 };
 
@@ -225,99 +318,142 @@ public:
 	}
 };
 
-const int MAX_ALIGN = 4096;
-const int STORAGE_SIZE = 4 * MAX_ALIGN;  // * 4 because we overalign the pointer in order to guarantee minimal alignemnt
-unsigned char unaligned_storage[STORAGE_SIZE];
-
 /*
- * Returns a pointer that is minimally aligned to base_alignment. That is, it is
- * aligned to base_alignment, but *not* aligned to 2 * base_alignment.
+ * A specialization of BenchmarkGroup that outputs its results in a 4 x 16 grid for all 64 possible
+ * offsets within a 64B cache line.
  */
-void *aligned_ptr(size_t base_alignment, size_t required_size) {
-	assert(is_pow2(base_alignment));
-	void *p = unaligned_storage;
-	size_t space = STORAGE_SIZE;
-	void *r = std::align(base_alignment, required_size, p, space);
-	assert(r);
-	assert((((uintptr_t)r) & (base_alignment - 1)) == 0);
-	return r;
-}
+class LoadStoreGroup : public BenchmarkGroup {
+	static constexpr unsigned DEFAULT_ROWS =  4;
+	static constexpr unsigned DEFAULT_COLS = 16;
 
-/**
- * Returns a pointer that is first *minimally* aligned to the given base alignment (per
- * aligned_ptr()) and then is offset by the about given in misalignment.
- */
-void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misalignment) {
-	char *p = static_cast<char *>(aligned_ptr(base_alignment, required_size));
-	return p + misalignment;
-}
-
-template<typename CLOCK, bench2_f METHOD>
-void add_loadstore_benches(vector<Benchmark>& benches, unsigned store_size, const std::string &name) {
-	using maker = BenchmarkMaker<Timing, CLOCK>;
-	for (ssize_t misalign = 0; misalign < 64; misalign++) {
-		std::stringstream ss;
-		ss << "Misaligned " << (store_size * 8) << "-bit " << name << " [" << setw(2) << misalign << "]";
-		benches.push_back(maker::template make_bench<METHOD>(ss.str(),  128,
-				[misalign]() { return misaligned_ptr(64, 64,  misalign); }));
+	unsigned rows_, cols_, total_cells_, op_size_;
+public:
+	LoadStoreGroup(string name, unsigned op_size, unsigned rows, unsigned cols)
+	: BenchmarkGroup(name), op_size_(op_size), rows_(rows), cols_(cols), total_cells_(rows * cols) {
+		assert(rows < 10000 && cols < 10000);
 	}
-}
+
+	template<typename CLOCK, bench2_f METHOD>
+	static shared_ptr<LoadStoreGroup> make(string name, unsigned op_size) {
+		shared_ptr<LoadStoreGroup> group = make_shared<LoadStoreGroup>(name, op_size, DEFAULT_ROWS, DEFAULT_COLS);
+		using maker = BenchmarkMaker<Timing, CLOCK>;
+		for (ssize_t misalign = 0; misalign < 64; misalign++) {
+			std::stringstream ss;
+			ss << "Misaligned " << (op_size * 8) << "-bit " << name << " [" << setw(2) << misalign << "]";
+			group->add(maker::template make_bench<METHOD>(ss.str(),  128,
+					[misalign]() { return misaligned_ptr(64, 64,  misalign); }));
+		}
+		return group;
+	}
+
+	virtual void runAll(std::ostream &os) {
+		os << endl << "** Inverse throughput for " << getName() << " **" << endl;
+
+		// column headers
+		os << "offset  ";
+		for (unsigned col = 0; col < cols_; col++) {
+			os << setw(5) << col;
+		}
+		os << endl;
+
+		auto benches = getBenches();
+		assert(benches.size() == rows_ * cols_);
+
+		// collect all the results up front, before any output
+		vector<double> results(benches.size());
+		for (size_t i = 0; i < benches.size(); i++) {
+			results[i] = benches[i].run().getCycles();
+		}
+
+		for (unsigned row = 0, i = 0; row < rows_; row++) {
+			os << setw(3) << (row * cols_) << " :   ";
+			for (unsigned col = 0; col < cols_; col++, i++) {
+				os << setprecision(1) << fixed << setw(5) << results[i];
+			}
+			os << endl;
+		}
+	}
+};
+
+
+using BenchmarkList = std::vector<shared_ptr<BenchmarkGroup>>;
+
 
 template <typename CLOCK>
-std::vector<Benchmark> make_benches() {
+BenchmarkList make_benches() {
 
-	using maker = BenchmarkMaker<Timing, CLOCK>;
+	BenchmarkList groupList;
+
+	shared_ptr<BenchmarkGroup> default_group = std::make_shared<BenchmarkGroup>("default");
+
+	using default_maker = BenchmarkMaker<Timing, CLOCK>;
 
 	auto benches = std::vector<Benchmark>{
-		maker::template make_bench<dep_add_rax_rax>  ("Dependent add chain",       128),
-		maker::template make_bench<indep_add>        ("Independent add chain",  50 * 8),
-		maker::template make_bench<dep_imul128_rax>  ("Dependent imul 64->128",    128),
-		maker::template make_bench<dep_imul64_rax>   ("Dependent imul 64->64",     128),
-		maker::template make_bench<indep_imul128_rax>("Independent imul 64->128",  128),
-		maker::template make_bench<store_same_loc>   ("Same location stores",      128),
-		maker::template make_bench<store64_disjoint> ("Disjoint location stores",  128)
+		default_maker::template make_bench<dep_add_rax_rax>  ("Dependent add chain",       128),
+		default_maker::template make_bench<indep_add>        ("Independent add chain",  50 * 8),
+		default_maker::template make_bench<dep_imul128_rax>  ("Dependent imul 64->128",    128),
+		default_maker::template make_bench<dep_imul64_rax>   ("Dependent imul 64->64",     128),
+		default_maker::template make_bench<indep_imul128_rax>("Independent imul 64->128",  128),
+		default_maker::template make_bench<store_same_loc>   ("Same location stores",      128),
+		default_maker::template make_bench<store64_disjoint> ("Disjoint location stores",  128)
 	};
 
-	// store throughput tests
-	add_loadstore_benches<CLOCK,  store16_any>(benches,  2, "store");
-	add_loadstore_benches<CLOCK,  store32_any>(benches,  4, "store");
-	add_loadstore_benches<CLOCK,  store64_any>(benches,  8, "store");
-	add_loadstore_benches<CLOCK, store128_any>(benches, 16, "store");
-	add_loadstore_benches<CLOCK, store256_any>(benches, 32, "store");
+	default_group->add(benches);
+	groupList.push_back(default_group);
 
 	// load throughput benches
-	add_loadstore_benches<CLOCK,  load16_any>(benches,  2, "load");
-	add_loadstore_benches<CLOCK,  load32_any>(benches,  4, "load");
-	add_loadstore_benches<CLOCK,  load64_any>(benches,  8, "load");
-	add_loadstore_benches<CLOCK, load128_any>(benches, 16, "load");
-	add_loadstore_benches<CLOCK, load256_any>(benches, 32, "load");
+	groupList.push_back(LoadStoreGroup::make<CLOCK,  load16_any>("load/16-bit",  2));
+	groupList.push_back(LoadStoreGroup::make<CLOCK,  load32_any>("load/32-bit",  4));
+	groupList.push_back(LoadStoreGroup::make<CLOCK,  load64_any>("load/64-bit",  8));
+	groupList.push_back(LoadStoreGroup::make<CLOCK, load128_any>("load/128-bit", 16));
+	groupList.push_back(LoadStoreGroup::make<CLOCK, load256_any>("load/256-bit", 32));
 
-	return benches;
+	// store throughput
+	groupList.push_back(LoadStoreGroup::make<CLOCK,  store16_any>( "store/16-bit",  2));
+	groupList.push_back(LoadStoreGroup::make<CLOCK,  store32_any>( "store/32-bit",  4));
+	groupList.push_back(LoadStoreGroup::make<CLOCK,  store64_any>( "store/64-bit",  8));
+	groupList.push_back(LoadStoreGroup::make<CLOCK, store128_any>("store/128-bit", 16));
+	groupList.push_back(LoadStoreGroup::make<CLOCK, store256_any>("store/256-bit", 32));
+
+
+
+	return groupList;
 }
 
 
-std::vector<Benchmark> benches = make_benches<ClockTimer>();
+BenchmarkList benchList = make_benches<ClockTimer>();
 
 void listBenches() {
-	cout << "Found " << benches.size() << " benchmarks" << endl;
-	for (auto& b : benches) {
-		cout << b.getName() << endl;
+	cout << "Found " << benchList.size() << " benchmarks" << endl;
+	for (auto& group : benchList) {
+		for (auto& bench : group->getAllBenches()) {
+			cout << bench.getName() << endl;
+		}
 	}
 }
 
 void runAll() {
-	cout << "Running " << benches.size() << " benchmarks" << endl;
-	printResultLine(std::cout, "Benchmark", "Cycles", "Nanos");
-	for (auto& b : benches) {
-		b.runAndPrint(cout);
+	cout << "Running " << benchList.size() << " benchmark groups" << endl;
+	for (auto& group : benchList) {
+		group->runAll(cout);
 	}
+}
+
+void printClockOverheads() {
+	constexpr int cw = 22;
+	cout << "Clock overhead: " << setw(cw) << "system_clock" << setw(cw) << "steady_clock" << setw(cw) << "hi_res_clock" << endl;
+	cout << "min/med/avg/max ";
+	cout << setw(cw) << CalcClockRes<100,system_clock>().getString4(1);
+	cout << setw(cw) << CalcClockRes<100,steady_clock>().getString4(1);
+	cout << setw(cw) << CalcClockRes<100,high_resolution_clock>().getString4(1);
+	cout << endl;
 }
 
 int main(int argc, char **argv) {
 	cout << "Welcome to uarch-bench (" << GIT_VERSION << ")" << endl;
-	CalcClockRes<100,system_clock>("system_clock");
-	CalcClockRes<100,steady_clock>("steady_clock");
-	CalcClockRes<100,high_resolution_clock>("hi_res_clock");
+	cout << "Median CPU speed: " << fixed << setw(4) << setprecision(3) << ClockTimer::getGHz() << " GHz" << endl;
+
+	printClockOverheads();
 
 	runAll();
 

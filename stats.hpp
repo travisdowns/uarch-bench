@@ -7,6 +7,9 @@
 #ifndef STATS_HPP_
 #define STATS_HPP_
 
+#include <string>
+#include <iomanip>
+#include <sstream>
 #include <algorithm>
 #include <limits>
 #include <iterator>
@@ -40,6 +43,21 @@ public:
 
 	double getMedian() const {
 		return median_;
+	}
+
+	/*
+	 * Return a string with the values of min/median/avg/max at the specified precision.
+	 * Note that the count is not included.
+	 */
+	std::string getString4(int precision) const {
+		std::ostringstream os;
+		os << std::fixed << std::setprecision(precision) <<
+				getMin() << "/" <<
+				getMedian() << "/" <<
+				getAvg() << "/" <<
+				getMax();
+
+		return os.str();
 	}
 };
 
