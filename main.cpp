@@ -375,6 +375,8 @@ public:
 	}
 };
 
+constexpr unsigned LoadStoreGroup::DEFAULT_ROWS;
+constexpr unsigned LoadStoreGroup::DEFAULT_COLS;
 
 using BenchmarkList = std::vector<shared_ptr<BenchmarkGroup>>;
 
