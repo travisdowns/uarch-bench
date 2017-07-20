@@ -8,7 +8,7 @@ GLOBAL %1:function
 %1:
 %endmacro
 
-;; This function executes a right loop, where we expect that each iteration takes
+;; This function executes a tight loop, where we expect that each iteration takes
 ;; once cycle (plus some penalty on loop exit due to the mispredict). We time this
 ;; function to calculate the effective CPU frequency. We could also consider a series
 ;; of dependent add calls, which we expect to each take 1 cycle as well. It isn't

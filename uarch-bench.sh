@@ -34,23 +34,17 @@ echo -e "Vendor ID: $VENDOR_ID\nModel name: $MODEL_NAME"
 if [[ "$SCALING_GOVERNOR" != "performance" ]]; then
 	original_governor=$SCALING_GOVERNOR
 	echo -n "Changing scaling_governor to performance: "
+	if ! sudo -n true 2>/dev/null; then echo ""; fi # write a newline if we are about to prompt for sudo
 	sudo sh -c "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
 	if [[ $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor) == "performance" ]]; then
 		echo "SUCCESS"; 
 	else
 		echo "FAILED";
 	fi
-fi		
+fi
 
 if [[ -z $(which rdmsr) ]]; then
     echo "msr-tools is not installed. Run 'sudo apt-get install msr-tools' to install it." >&2
-    exit 1
-fi
-
-if [[ ! -z $1 && $1 != "enable" && $1 != "disable" ]]; then
-    echo "Invalid argument: $1" >&2
-    echo ""
-    echo "Usage: $(basename $0) [disable|enable]"
     exit 1
 fi
 

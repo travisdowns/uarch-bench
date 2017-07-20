@@ -16,13 +16,20 @@
 #include "stats.hpp"
 #include "version.hpp"
 #include "asm_methods.h"
+#include "args.hxx"
+#include "timer-info.hpp"
+
+#if USE_LIBPFC
+#include "libpfc/include/libpfc.h"
+#include "libpfc-timer.hpp"
+#endif
 
 using namespace std;
 using namespace std::chrono;
 using namespace Stats;
 
 constexpr int  NAME_WIDTH = 30;
-constexpr int CLOCK_WIDTH =  8;
+constexpr int CYCLE_WIDTH =  8;
 constexpr int NANOS_WIDTH =  8;
 
 template <typename T>
@@ -59,42 +66,24 @@ void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misali
 }
 
 
-class TimingResult {
-	bool hasNanos_, hasCycles_;
-	double nanos_, cycles_;
-
-public:
-	TimingResult(double cycles, double nanos) :
-		hasNanos_(true), hasCycles_(true), cycles_(cycles), nanos_(nanos) {}
-
-	/* multiply all values by the given value, useful when normalizing */
-	TimingResult operator*(double multipler) {
-		TimingResult result(*this);
-		result.nanos_ *= multipler;
-		result.cycles_ *= multipler;
-		return result;
-	}
-
-	double getCycles() const {
-		return cycles_;
-	}
-
-	double getNanos() const {
-		return nanos_;
-	}
-};
 
 /*
  * This class measures cycles indirectly by measuring the wall-time for each test, and then converting
  * that to a cycle count based on a calibration loop performed once at startup.
  */
 template <typename CLOCK>
-class ClockTimerT {
+class ClockTimerT : public TimerInfo {
 
 	/* aka 'cycles per nanosecond */
 	static double ghz;
 
 public:
+
+	ClockTimerT(std::string clock_name) : TimerInfo("ClockTimer", string("Use the system clock (" + clock_name
+			+ ") to measure wall-clock time, and convert to cycles using a calibration loop")) {}
+
+	virtual void init(Context &context) {
+	}
 
 	static int64_t now() {
 		return duration_cast<nanoseconds>(CLOCK::now().time_since_epoch()).count();
@@ -108,17 +97,14 @@ public:
 	static double getGHz() {
 		return ghz;
 	}
-
 };
-
-using ClockTimer = ClockTimerT<high_resolution_clock>;
 
 template <size_t ITERS, typename CLOCK>
 DescriptiveStats CalcClockRes() {
 	std::array<nanoseconds::rep, ITERS> results;
 
 	for (int r = 0; r < 3; r++) {
-		for (int i = 0; i < ITERS; i++) {
+		for (size_t i = 0; i < ITERS; i++) {
 			auto t0 = CLOCK::now();
 			auto t1 = CLOCK::now();
 			results[i] = duration_cast<nanoseconds>(t1 - t0).count();
@@ -138,23 +124,23 @@ DescriptiveStats CalcClockRes() {
  */
 template <size_t ITERS, typename CLOCK, size_t TRIES = 10, size_t WARMUP = 100>
 double CalcCpuFreq() {
-	std::array<nanoseconds::rep, TRIES> results;
+    std::array<nanoseconds::rep, TRIES> results;
 
-	for (int w = 0; w < WARMUP + 1; w++) {
-		for (int r = 0; r < TRIES; r++) {
-			auto t0 = CLOCK::now();
-			add_calibration(ITERS);
-			auto t1 = CLOCK::now();
-			add_calibration(ITERS * 2);
-			auto t2 = CLOCK::now();
-			results[r] = duration_cast<nanoseconds>((t2 - t1) - (t1 - t0)).count();
-		}
-	}
+    for (size_t w = 0; w < WARMUP + 1; w++) {
+        for (size_t r = 0; r < TRIES; r++) {
+            auto t0 = CLOCK::now();
+            add_calibration(ITERS);
+            auto t1 = CLOCK::now();
+            add_calibration(ITERS * 2);
+            auto t2 = CLOCK::now();
+            results[r] = duration_cast<nanoseconds>((t2 - t1) - (t1 - t0)).count();
+        }
+    }
 
-	DescriptiveStats stats = get_stats(results.begin(), results.end());
+    DescriptiveStats stats = get_stats(results.begin(), results.end());
 
-	double ghz = ((double)ITERS / stats.getMedian());
-	return ghz;
+    double ghz = ((double)ITERS / stats.getMedian());
+    return ghz;
 }
 
 template <typename CLOCK>
@@ -165,14 +151,14 @@ typedef std::function<int64_t (size_t)> time_method_t;  // given a loop count, r
 typedef std::function<void * ()>         arg_method_t;  // generates the argument for the benchmarking function
 typedef TimingResult (time_to_result_t)(int64_t);
 
-template <typename CLOCK>
+template <typename TIMER>
 class Timing {
 public:
 	template <bench_f METHOD>
 	static int64_t time_method(size_t loop_count) {
-		auto t0 = CLOCK::now();
+		auto t0 = TIMER::now();
 		METHOD(loop_count);
-		auto t1 = CLOCK::now();
+		auto t1 = TIMER::now();
 		return t1 - t0;
 	}
 };
@@ -181,7 +167,7 @@ public:
  * Like Timing, this implements a time_method_t, but as a member function since it wraps an argument provider
  * method
  */
-template <typename CLOCK, bench2_f METHOD>
+template <typename TIMER, bench2_f METHOD>
 class Timing2 {
 	arg_method_t arg_method_;
 	void* arg_;
@@ -194,9 +180,9 @@ public:
 	}
 
 	static int64_t time_inner(size_t loop_count, void* arg) {
-		auto t0 = CLOCK::now();
+		auto t0 = TIMER::now();
 		METHOD(loop_count, arg);
-		auto t1 = CLOCK::now();
+		auto t1 = TIMER::now();
 		return t1 - t0;
 	}
 };
@@ -205,7 +191,7 @@ public:
 
 template <typename N, typename T>
 static void printResultLine(std::ostream &os, N name, T clocks, T nanos) {
-	os << setprecision(2) << fixed << setw(NAME_WIDTH) << name << setw(CLOCK_WIDTH) << clocks << setw(NANOS_WIDTH) << nanos << endl;
+	os << setprecision(2) << fixed << setw(NAME_WIDTH) << name << setw(CYCLE_WIDTH) << clocks << setw(NANOS_WIDTH) << nanos << endl;
 }
 
 
@@ -303,18 +289,18 @@ public:
 	}
 };
 
-template <template<typename> class TIME_METHOD, typename CLOCK>
+template <template<typename> class TIME_METHOD, typename TIMER>
 class BenchmarkMaker {
 public:
 	template <bench_f BENCH_METHOD>
 	static Benchmark make_bench(const char *name, size_t ops_per_loop) {
-		return Benchmark{name, ops_per_loop, TIME_METHOD<CLOCK>::template time_method<BENCH_METHOD>, CLOCK::to_result};
+		return Benchmark{name, ops_per_loop, TIME_METHOD<TIMER>::template time_method<BENCH_METHOD>, TIMER::to_result};
 	}
 
 	template <bench2_f BENCH_METHOD>
 	static Benchmark make_bench(const std::string name, size_t ops_per_loop, std::function<void * ()> arg_provider) {
-		Timing2<CLOCK,BENCH_METHOD> timing(arg_provider);
-		return Benchmark{name, ops_per_loop, timing, CLOCK::to_result};
+		Timing2<TIMER,BENCH_METHOD> timing(arg_provider);
+		return Benchmark{name, ops_per_loop, timing, TIMER::to_result};
 	}
 };
 
@@ -329,14 +315,14 @@ class LoadStoreGroup : public BenchmarkGroup {
 	unsigned rows_, cols_, total_cells_, op_size_;
 public:
 	LoadStoreGroup(string name, unsigned op_size, unsigned rows, unsigned cols)
-	: BenchmarkGroup(name), op_size_(op_size), rows_(rows), cols_(cols), total_cells_(rows * cols) {
+	: BenchmarkGroup(name), rows_(rows), cols_(cols), total_cells_(rows * cols), op_size_(op_size) {
 		assert(rows < 10000 && cols < 10000);
 	}
 
-	template<typename CLOCK, bench2_f METHOD>
+	template<typename TIMER, bench2_f METHOD>
 	static shared_ptr<LoadStoreGroup> make(string name, unsigned op_size) {
 		shared_ptr<LoadStoreGroup> group = make_shared<LoadStoreGroup>(name, op_size, DEFAULT_ROWS, DEFAULT_COLS);
-		using maker = BenchmarkMaker<Timing, CLOCK>;
+		using maker = BenchmarkMaker<Timing, TIMER>;
 		for (ssize_t misalign = 0; misalign < 64; misalign++) {
 			std::stringstream ss;
 			ss << "Misaligned " << (op_size * 8) << "-bit " << name << " [" << setw(2) << misalign << "]";
@@ -381,14 +367,14 @@ constexpr unsigned LoadStoreGroup::DEFAULT_COLS;
 using BenchmarkList = std::vector<shared_ptr<BenchmarkGroup>>;
 
 
-template <typename CLOCK>
+template <typename TIMER>
 BenchmarkList make_benches() {
 
 	BenchmarkList groupList;
 
 	shared_ptr<BenchmarkGroup> default_group = std::make_shared<BenchmarkGroup>("default");
 
-	using default_maker = BenchmarkMaker<Timing, CLOCK>;
+	using default_maker = BenchmarkMaker<Timing, TIMER>;
 
 	auto benches = std::vector<Benchmark>{
 		default_maker::template make_bench<dep_add_rax_rax>  ("Dependent add chain",       128),
@@ -404,41 +390,99 @@ BenchmarkList make_benches() {
 	groupList.push_back(default_group);
 
 	// load throughput benches
-	groupList.push_back(LoadStoreGroup::make<CLOCK,  load16_any>("load/16-bit",  2));
-	groupList.push_back(LoadStoreGroup::make<CLOCK,  load32_any>("load/32-bit",  4));
-	groupList.push_back(LoadStoreGroup::make<CLOCK,  load64_any>("load/64-bit",  8));
-	groupList.push_back(LoadStoreGroup::make<CLOCK, load128_any>("load/128-bit", 16));
-	groupList.push_back(LoadStoreGroup::make<CLOCK, load256_any>("load/256-bit", 32));
+	groupList.push_back(LoadStoreGroup::make<TIMER,  load16_any>("load/16-bit",  2));
+	groupList.push_back(LoadStoreGroup::make<TIMER,  load32_any>("load/32-bit",  4));
+	groupList.push_back(LoadStoreGroup::make<TIMER,  load64_any>("load/64-bit",  8));
+	groupList.push_back(LoadStoreGroup::make<TIMER, load128_any>("load/128-bit", 16));
+	groupList.push_back(LoadStoreGroup::make<TIMER, load256_any>("load/256-bit", 32));
 
 	// store throughput
-	groupList.push_back(LoadStoreGroup::make<CLOCK,  store16_any>( "store/16-bit",  2));
-	groupList.push_back(LoadStoreGroup::make<CLOCK,  store32_any>( "store/32-bit",  4));
-	groupList.push_back(LoadStoreGroup::make<CLOCK,  store64_any>( "store/64-bit",  8));
-	groupList.push_back(LoadStoreGroup::make<CLOCK, store128_any>("store/128-bit", 16));
-	groupList.push_back(LoadStoreGroup::make<CLOCK, store256_any>("store/256-bit", 32));
-
-
+	groupList.push_back(LoadStoreGroup::make<TIMER,  store16_any>( "store/16-bit",  2));
+	groupList.push_back(LoadStoreGroup::make<TIMER,  store32_any>( "store/32-bit",  4));
+	groupList.push_back(LoadStoreGroup::make<TIMER,  store64_any>( "store/64-bit",  8));
+	groupList.push_back(LoadStoreGroup::make<TIMER, store128_any>("store/128-bit", 16));
+	groupList.push_back(LoadStoreGroup::make<TIMER, store256_any>("store/256-bit", 32));
 
 	return groupList;
 }
 
+/*
+ * This object binds together a particular TIMER implementation (and its corresponding ClockInfo object)
+ */
+class TimeredList {
 
-BenchmarkList benchList = make_benches<ClockTimer>();
+    static std::vector<TimeredList> all_;
 
-void listBenches() {
-	cout << "Found " << benchList.size() << " benchmarks" << endl;
+	std::unique_ptr<TimerInfo> timer_info_;
+	BenchmarkList benches_;
+
+public:
+	TimeredList(std::unique_ptr<TimerInfo>&& timer_info, const BenchmarkList& benches)
+		: timer_info_(std::move(timer_info)), benches_(benches) {}
+
+	TimeredList(const TimeredList &) = delete;
+	TimeredList(TimeredList &&) = default;
+
+	~TimeredList() = default;
+
+	TimerInfo& getTimerInfo() {
+		return *timer_info_;
+	}
+
+	const BenchmarkList& getBenches() const {
+		return benches_;
+	}
+
+	void runAll() {
+		cout << "Running " << getBenches().size() << " benchmark groups" << endl;
+		for (auto& group : getBenches()) {
+			group->runAll(cout);
+		}
+	}
+
+	template <typename TIMER>
+	static TimeredList create(const TIMER& ti) {
+		return TimeredList(std::unique_ptr<TIMER>(new TIMER(ti)), make_benches<TIMER>());
+	}
+
+
+	static std::vector<TimeredList>& getAll() {
+	    if (all_.empty()) {
+	        all_.push_back(TimeredList::create(ClockTimerT<high_resolution_clock>("high_resolution_clock")));
+#if USE_LIBPFC
+	        all_.push_back(TimeredList::create(LibpfcTimer()));
+#endif
+	    }
+	    return all_;
+	}
+};
+
+std::vector<TimeredList> TimeredList::all_;
+
+
+TimeredList& getForTimer(args::ValueFlag<std::string>& timerArg) {
+	std::string timerName = timerArg ? timerArg.Get() : "ClockTimer";
+	std::vector<TimeredList>& all = TimeredList::getAll();
+	for (auto& i : all) {
+		if (i.getTimerInfo().getName() == timerName) {
+			return i;
+		}
+	}
+
+	throw args::UsageError(string("No timer with name ") + timerName);
+}
+
+int listBenches() {
+	auto benchList = TimeredList::getAll().front().getBenches();
+	cout << "Listing " << benchList.size() << " benchmark groups" << endl << endl;
 	for (auto& group : benchList) {
+		cout << "Benchmark group: " << group->getName() << endl;
 		for (auto& bench : group->getAllBenches()) {
 			cout << bench.getName() << endl;
 		}
+		cout << endl;
 	}
-}
-
-void runAll() {
-	cout << "Running " << benchList.size() << " benchmark groups" << endl;
-	for (auto& group : benchList) {
-		group->runAll(cout);
-	}
+	return EXIT_SUCCESS;
 }
 
 void printClockOverheads() {
@@ -451,15 +495,59 @@ void printClockOverheads() {
 	cout << endl;
 }
 
+/* list the avaiable timers on stdout */
+int listTimers() {
+	cout << endl << "Available timers:" << endl << endl;
+	for (auto& tl : TimeredList::getAll()) {
+		auto& ti = tl.getTimerInfo();
+		cout << ti.getName() << endl << "\t" << ti.getDesciption() << endl << endl;
+	}
+	return EXIT_SUCCESS;
+}
+
 int main(int argc, char **argv) {
 	cout << "Welcome to uarch-bench (" << GIT_VERSION << ")" << endl;
-	cout << "Median CPU speed: " << fixed << setw(4) << setprecision(3) << ClockTimer::getGHz() << " GHz" << endl;
 
-	printClockOverheads();
+	args::ArgumentParser parser("uarch-bench: A CPU micro-architecture benchmark");
+	args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
+	args::Flag arg_clockoverhead(parser, "clock-overhead", "Dislay clock overhead, then quit", {"clock-overhead"});
+	args::Flag arg_listbenches(parser, "list-benches", "Dislay the available benchmarks", {"list"});
+	args::Flag arg_listtimers(parser, "list-timers", "Dislay the available timers", {"list-timers"});
+	args::ValueFlag<std::string> arg_timer(parser, "timer", "Use the specified timer", {"timer"});
 
-	runAll();
+	try {
+		parser.ParseCLI(argc, argv);
 
-	return EXIT_SUCCESS;
+		if (arg_listtimers)
+			return listTimers();
+		if (arg_listbenches)
+			return listBenches();
+
+
+		printClockOverheads();
+		if (arg_clockoverhead.Get()) {
+			return EXIT_SUCCESS;
+		}
+
+		cout << "Median CPU speed: " << fixed << setw(4) << setprecision(3) << ClockTimerT<high_resolution_clock>::getGHz() << " GHz" << endl;
+
+		Context context(&std::cout);
+		TimeredList& toRun = getForTimer(arg_timer);
+		toRun.getTimerInfo().init(context);
+		toRun.runAll();
+
+		return EXIT_SUCCESS;
+
+	} catch (args::Help&) {
+		std::cout << parser;
+		return EXIT_SUCCESS;
+	} catch (args::ParseError& e) {
+		std::cerr << "ERROR: " << e.what() << std::endl << parser;
+	} catch (args::UsageError & e) {
+		std::cerr << "ERROR: " << e.what() << std::endl;
+	}
+
+	return EXIT_FAILURE;
 }
 
 
