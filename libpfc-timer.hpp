@@ -17,7 +17,8 @@ public:
     typedef int64_t now_t;
 
     LibpfcTimer() : TimerInfo("LibpfcTimer",
-            "A timer which directly reads the CPU performance counters for accurate cycle measurements.") {}
+            "A timer which directly reads the CPU performance counters for accurate cycle measurements.",
+            {"Cycles"}) {}
 
     virtual void init(Context &context);
 
@@ -39,7 +40,7 @@ public:
     }
 
     static TimingResult to_result(now_t delta) {
-        return TimingResult(delta);
+        return TimingResult({(double)delta});
     }
 
 private:

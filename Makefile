@@ -4,7 +4,7 @@ include config.mk
 
 GIT_VERSION := $(shell git describe --dirty --always)
 
-HEADERS := $(wildcard *.h) $(wildcard *.hpp) $(wildcard *.hxx) 
+HEADERS := $(wildcard *.h) $(wildcard *.hpp) $(wildcard *.hxx)
 
 CPPFLAGS := -Wall -g -O0 -march=native -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC)
 

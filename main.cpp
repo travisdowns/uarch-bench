@@ -18,6 +18,7 @@
 #include "asm_methods.h"
 #include "args.hxx"
 #include "timer-info.hpp"
+#include "context.h"
 
 #if USE_LIBPFC
 #include "libpfc/include/libpfc.h"
@@ -29,8 +30,7 @@ using namespace std::chrono;
 using namespace Stats;
 
 constexpr int  NAME_WIDTH = 30;
-constexpr int CYCLE_WIDTH =  8;
-constexpr int NANOS_WIDTH =  8;
+constexpr int  COLUMN_PAD =  3;
 
 template <typename T>
 static inline bool is_pow2(T x) {
@@ -80,7 +80,8 @@ class ClockTimerT : public TimerInfo {
 public:
 
 	ClockTimerT(std::string clock_name) : TimerInfo("ClockTimer", string("Use the system clock (" + clock_name
-			+ ") to measure wall-clock time, and convert to cycles using a calibration loop")) {}
+			+ ") to measure wall-clock time, and convert to cycles using a calibration loop"),
+	        {"Cycles", "Nanos"}) {}
 
 	virtual void init(Context &context) {
 	}
@@ -90,7 +91,7 @@ public:
 	}
 
 	static TimingResult to_result(int64_t nanos) {
-		return {nanos * ghz, (double)nanos};
+		return TimingResult({nanos * ghz, (double)nanos});
 	}
 
 	/* return the statically calculated clock speed of the CPU in ghz for this clock */
@@ -187,13 +188,32 @@ public:
 	}
 };
 
-
-
-template <typename N, typename T>
-static void printResultLine(std::ostream &os, N name, T clocks, T nanos) {
-	os << setprecision(2) << fixed << setw(NAME_WIDTH) << name << setw(CYCLE_WIDTH) << clocks << setw(NANOS_WIDTH) << nanos << endl;
+template <typename T>
+static void printAlignedMetrics(Context &c, const std::vector<T> metrics) {
+    const TimerInfo &ti = c.getTimerInfo();
+    assert(ti.getMetricNames().size() == metrics.size());
+    for (size_t i = 0; i < metrics.size(); i++) {
+        // the width is either the expected max width of the value, or the with of the name, plus COLUMN_PAD
+        unsigned int width = std::max(ti.getMetricNames().size(), 4UL + c.getPrecision()) + COLUMN_PAD;
+        c.out() << setw(width) << metrics[i];
+    }
 }
 
+
+static void printResultLine(Context& c, const std::string& benchName, const TimingResult &result) {
+    std::ostream& os = c.out();
+	os << setprecision(c.getPrecision()) << fixed << setw(NAME_WIDTH) << benchName;
+	printAlignedMetrics(c, result.getResults());
+	os << endl;
+}
+
+
+static void printResultHeader(Context& c, const TimerInfo& ti) {
+    // "Benchmark", "Cycles", "Nanos"
+    c.out() << setw(NAME_WIDTH) << "Benchmark";
+    printAlignedMetrics(c, ti.getMetricNames());
+    c.out() << endl;
+}
 
 class Benchmark final {
 	static constexpr int loop_count = 1000;
@@ -241,9 +261,9 @@ public:
 		return timings * multiplier;
 	}
 
-	void runAndPrint(std::ostream &os) {
+	void runAndPrint(Context& c) {
 		TimingResult timing = run();
-		printResultLine(os, getName(), timing.getCycles(), timing.getNanos());
+		printResultLine(c, getName(), timing);
 	}
 };
 
@@ -260,11 +280,11 @@ public:
 
 	virtual ~BenchmarkGroup() {}
 
-	virtual void runAll(std::ostream &os) {
-		os << endl << "** Running benchmark group " << getName() << " **" << endl;
-		printResultLine(os, "Benchmark", "Cycles", "Nanos");
+	virtual void runAll(Context &context, const TimerInfo &ti) {
+		context.out() << endl << "** Running benchmark group " << getName() << " **" << endl;
+		printResultHeader(context, ti);
 		for (auto b : benches_) {
-			b.runAndPrint(os);
+			b.runAndPrint(context);
 		}
 	}
 
@@ -332,7 +352,8 @@ public:
 		return group;
 	}
 
-	virtual void runAll(std::ostream &os) {
+	virtual void runAll(Context& c, const TimerInfo &ti) override {
+	    std::ostream& os = c.out();
 		os << endl << "** Inverse throughput for " << getName() << " **" << endl;
 
 		// column headers
@@ -433,10 +454,10 @@ public:
 		return benches_;
 	}
 
-	void runAll() {
-		cout << "Running " << getBenches().size() << " benchmark groups" << endl;
+	void runAll(Context &c) {
+		cout << "Running " << getBenches().size() << " benchmark groups using timer " << timer_info_->getName() << endl;
 		for (auto& group : getBenches()) {
-			group->runAll(cout);
+			group->runAll(c, getTimerInfo());
 		}
 	}
 
@@ -472,7 +493,7 @@ TimeredList& getForTimer(args::ValueFlag<std::string>& timerArg) {
 	throw args::UsageError(string("No timer with name ") + timerName);
 }
 
-int listBenches() {
+void Context::listBenches() {
 	auto benchList = TimeredList::getAll().front().getBenches();
 	cout << "Listing " << benchList.size() << " benchmark groups" << endl << endl;
 	for (auto& group : benchList) {
@@ -482,7 +503,6 @@ int listBenches() {
 		}
 		cout << endl;
 	}
-	return EXIT_SUCCESS;
 }
 
 void printClockOverheads() {
@@ -496,58 +516,49 @@ void printClockOverheads() {
 }
 
 /* list the avaiable timers on stdout */
-int listTimers() {
+void Context::listTimers() {
 	cout << endl << "Available timers:" << endl << endl;
 	for (auto& tl : TimeredList::getAll()) {
 		auto& ti = tl.getTimerInfo();
 		cout << ti.getName() << endl << "\t" << ti.getDesciption() << endl << endl;
 	}
-	return EXIT_SUCCESS;
+}
+
+int Context::run() {
+    if (arg_listtimers) {
+        listTimers();
+    } else if (arg_listbenches) {
+        listBenches();
+    } else if (arg_clockoverhead) {
+		printClockOverheads();
+    } else {
+        TimeredList& toRun = getForTimer(arg_timer);
+        timer_info_ = &toRun.getTimerInfo();
+        timer_info_->init(*this);
+        toRun.runAll(*this);
+    }
+    return EXIT_SUCCESS;
 }
 
 int main(int argc, char **argv) {
 	cout << "Welcome to uarch-bench (" << GIT_VERSION << ")" << endl;
 
-	args::ArgumentParser parser("uarch-bench: A CPU micro-architecture benchmark");
-	args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
-	args::Flag arg_clockoverhead(parser, "clock-overhead", "Dislay clock overhead, then quit", {"clock-overhead"});
-	args::Flag arg_listbenches(parser, "list-benches", "Dislay the available benchmarks", {"list"});
-	args::Flag arg_listtimers(parser, "list-timers", "Dislay the available timers", {"list-timers"});
-	args::ValueFlag<std::string> arg_timer(parser, "timer", "Use the specified timer", {"timer"});
-
 	try {
-		parser.ParseCLI(argc, argv);
-
-		if (arg_listtimers)
-			return listTimers();
-		if (arg_listbenches)
-			return listBenches();
-
-
-		printClockOverheads();
-		if (arg_clockoverhead.Get()) {
-			return EXIT_SUCCESS;
-		}
+		Context context(argc, argv, &std::cout);
 
 		cout << "Median CPU speed: " << fixed << setw(4) << setprecision(3) << ClockTimerT<high_resolution_clock>::getGHz() << " GHz" << endl;
 
-		Context context(&std::cout);
-		TimeredList& toRun = getForTimer(arg_timer);
-		toRun.getTimerInfo().init(context);
-		toRun.runAll();
+		context.run();
 
-		return EXIT_SUCCESS;
-
-	} catch (args::Help&) {
-		std::cout << parser;
-		return EXIT_SUCCESS;
-	} catch (args::ParseError& e) {
-		std::cerr << "ERROR: " << e.what() << std::endl << parser;
-	} catch (args::UsageError & e) {
-		std::cerr << "ERROR: " << e.what() << std::endl;
+	} catch (SilentSuccess& e) {
+	} catch (SilentFailure& e) {
+	    return EXIT_FAILURE;
+	} catch (const std::exception& e) {
+	    std::cerr << "ERROR: " << e.what() << std::endl;
+	    return EXIT_FAILURE;
 	}
 
-	return EXIT_FAILURE;
+	return EXIT_SUCCESS;
 }
 
 

@@ -5,38 +5,39 @@
 #ifndef TIMER_INFO_HPP_
 #define TIMER_INFO_HPP_
 
-#include "context.h"
+#include <iostream>
+#include <vector>
+#include <string>
+
+class Context;
 
 /**
  * A timing operation ultimately returns a result of this type, regardless of the
  * underlying timer.
  */
 class TimingResult {
-    bool hasCycles_, hasNanos_;
-    double cycles_, nanos_;
 
+    std::vector<double> results_;
 public:
-    TimingResult(double cycles, double nanos) :
-        hasCycles_(true), cycles_(cycles), nanos_(nanos) {}
-
-    TimingResult(double cycles) :
-            hasCycles_(true), hasNanos_(false), cycles_(cycles), nanos_(std::numeric_limits<double>::quiet_NaN()) {}
+    TimingResult(std::vector<double> results) : results_(std::move(results)) {}
 
     /* multiply all values by the given value, useful when normalizing */
     TimingResult operator*(double multipler) {
         TimingResult result(*this);
-        result.nanos_ *= multipler;
-        result.cycles_ *= multipler;
+        for (double& r : result.results_) {
+            r *= multipler;
+        }
         return result;
     }
 
     double getCycles() const {
-        return cycles_;
+        return results_.at(0);
     }
 
-    double getNanos() const {
-        return nanos_;
+    const std::vector<double>& getResults() const {
+        return results_;
     }
+
 };
 
 /*
@@ -47,10 +48,11 @@ public:
  */
 class TimerInfo {
 	std::string name_, description_;
+	std::vector<std::string> metric_names_;
 public:
 
-	TimerInfo(std::string name, std::string description) :
-		name_(name), description_(description) {}
+	TimerInfo(std::string name, std::string description, std::vector<std::string> metric_names) :
+		name_(name), description_(description), metric_names_(metric_names) {}
 
 	virtual std::string getName() const {
 		return name_;
@@ -58,6 +60,11 @@ public:
 
 	virtual std::string getDesciption() const {
 		return description_;
+	}
+
+	/* return a list of the names for 1 or more metrics that are recorded by this time */
+	virtual const std::vector<std::string>& getMetricNames() const {
+	    return metric_names_;
 	}
 
 	/*
