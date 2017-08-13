@@ -8,8 +8,13 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <functional>
+
+#include "bench-declarations.hpp"
 
 class Context;
+
+typedef std::function<void * ()>         arg_method_t;  // generates the argument for the benchmarking function
 
 /**
  * A timing operation ultimately returns a result of this type, regardless of the
@@ -88,6 +93,47 @@ public:
     }
 
 	**************************/
+};
+
+/*
+ * A timing implementation that simply calls the METHOD once bracketed by calls to Timer::now().
+ * The downside is that the overhead of the timer calls is not cancelled out, and there is no
+ * mechanism to cancel out overhead within the METHOD call itself.
+ */
+template <typename TIMER>
+class Timing {
+public:
+    template <bench_f METHOD>
+    static int64_t time_method(size_t loop_count) {
+        auto t0 = TIMER::now();
+        METHOD(loop_count);
+        auto t1 = TIMER::now();
+        return t1 - t0;
+    }
+};
+
+/*
+ * Like Timing, this implements a time_method_t, but as a member function since it wraps an argument provider
+ * method
+ */
+template <typename TIMER, bench2_f METHOD>
+class Timing2 {
+    arg_method_t arg_method_;
+    void* arg_;
+public:
+    Timing2(arg_method_t arg_method) :
+        arg_method_(arg_method), arg_(arg_method()) {}
+
+    int64_t operator()(size_t loop_count) {
+        return time_inner(loop_count, arg_);
+    }
+
+    static int64_t time_inner(size_t loop_count, void* arg) {
+        auto t0 = TIMER::now();
+        METHOD(loop_count, arg);
+        auto t1 = TIMER::now();
+        return t1 - t0;
+    }
 };
 
 

@@ -7,10 +7,9 @@
 #ifndef ASM_METHODS_H_
 #define ASM_METHODS_H_
 
-extern "C" {
+#include "bench-declarations.hpp"
 
-typedef void (bench_f)(uint64_t);
-typedef void (bench2_f)(uint64_t, void *);
+extern "C" {
 
 /* execute a 1-cycle loop 'iters' times */
 bench_f add_calibration;
