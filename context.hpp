@@ -2,13 +2,14 @@
  * context.h
  */
 
-#ifndef CONTEXT_H_
-#define CONTEXT_H_
+#ifndef CONTEXT_HPP_
+#define CONTEXT_HPP_
 
 #include <iostream>
 
 #include "args.hxx"
 #include "timer-info.hpp"
+#include "util.hpp"
 
 /* Context object couldn't be created but error information was already emitted */
 class SilentFailure {};
@@ -23,33 +24,36 @@ public:
 
     constexpr static unsigned int DEFAULT_PRECISION = 2;
 
-    Context(int argc, char* const * argv, std::ostream *out) : err_(out), log_(out), out_(out) {
-        try {
-            parser.ParseCLI(argc, argv);
-        } catch (args::Help&) {
-            log() << parser;
-            throw SilentSuccess();
-        } catch (args::ParseError& e) {
-            err() << "ERROR: " << e.what() << std::endl << parser;
-            throw SilentFailure();
-        } catch (args::UsageError & e) {
-            err() << "ERROR: " << e.what() << std::endl;
-            throw SilentFailure();
-        }
-    }
+    Context(int argc, char **argv, std::ostream *out);
 
     /* return the stream for error output */
     std::ostream& err() { return *err_; }
 
-    /* return the stream for informational output */
+    /* return the stream for verbose informational output */
     std::ostream& log() { return *log_; }
 
     /* return the stream for benchmark result output */
     std::ostream& out() { return *out_; }
 
+    /* return the argc origianlly passed to the process */
+    int argc() { return argc_; }
+
+    /* return the argv originally passed to the process (don't mutate this, ok?) */
+    char** argv() { return argv_; }
+
+    /* terminate the application with the given fatal error, treated as a printf-style format string */
+    template<typename ... Args>
+    void fatal(const std::string& str, Args ... args) {
+        throw std::runtime_error(string_format(str, args ...));
+    }
+
     /* return the default precision (number of decimal places) to use for metrics */
     unsigned int getPrecision() {
         return arg_default_precision.Get();
+    }
+
+    std::string getTimerName() {
+        return arg_timer ? arg_timer.Get() : "clock";
     }
 
     /* return the TimerInfo for the timer associated with the current context, if any */
@@ -57,15 +61,17 @@ public:
         return *timer_info_;
     }
 
-    int run();
-    void listTimers();
-    void listBenches();
+    /* execute the benchmark or other behavior */
+    void run();
 
 private:
     std::ostream *err_, *log_, *out_;
     TimerInfo *timer_info_;
+    int argc_;
+    char **argv_;
 
     args::ArgumentParser parser{"uarch-bench: A CPU micro-architecture benchmark"};
+//    args::Group with_help{parser};
     args::HelpFlag help{parser, "help", "Display this help menu", {'h', "help"}};
     args::Flag arg_clockoverhead{parser, "clock-overhead", "Dislay clock overhead, then quit", {"clock-overhead"}};
     args::Flag arg_listbenches{parser, "list-benches", "Dislay the available benchmarks", {"list"}};
@@ -73,8 +79,16 @@ private:
     args::ValueFlag<std::string> arg_timer{parser, "timer", "Use the specified timer", {"timer"}};
     args::ValueFlag<unsigned int> arg_default_precision{parser, "precision", "Use the specified number of decimal places"
             " to report values from most benchmarks", {"precision"}, (unsigned int)DEFAULT_PRECISION};
+
+
+    // internal flags: these aren't displayed to the user via help, but are used by some wrapper script to interact with the
+    // benchmark program, e.g., to dump info
+
+    // dump the name of the selected timer, so that the wrapper script can consume it
+    args::Flag arg_internal_dump_timer{parser, "internal-dump-timer", "", {"internal-dump-timer"}, args::Options::Hidden};
+
 };
 
 
 
-#endif /* CONTEXT_H_ */
+#endif /* CONTEXT_HPP_ */

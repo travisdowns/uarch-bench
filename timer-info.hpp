@@ -9,8 +9,11 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <array>
 
-#include "bench-declarations.hpp"
+#include "args.hxx"
+
+#include "bench-declarations.h"
 
 class Context;
 
@@ -45,6 +48,8 @@ public:
 
 };
 
+typedef std::function<TimingResult (size_t)> full_bench_t;  // a full timing method
+
 /*
  * Contains information about a particular TIMER implementation. Timer implementations inherit this class
  * and should also implement the duck-typing static TIMER methods now(), and so on. That is, an timer classes
@@ -53,6 +58,7 @@ public:
  */
 class TimerInfo {
 	std::string name_, description_;
+protected:
 	std::vector<std::string> metric_names_;
 public:
 
@@ -73,11 +79,23 @@ public:
 	}
 
 	/*
-	 * Do any initialization required prior to using the timer
+	 * Do any initialization required prior to using the timer. Of course, you can put initialization
+	 * in the constructor as well, but slow initialization, or init that might fail can usefully go
+	 * here since timers may be created but never used in various cases (e.g., all timers are generally
+	 * created even though only a specific one will usually be used in any given run).
+	 *
+	 * Really this is just a poor design though and we should factor out the simple timer state, from the
+	 * "ready to measure" state which might require complicated init such as calibration. One day...
 	 */
 	virtual void init(Context &context) = 0;
 
 	virtual ~TimerInfo() = default;
+
+	// this static method can be overridden in subclasses to expose timer-specific command line arguments
+	static void addCustomArgs(args::ArgumentParser& parser) {}
+
+	// this static method can be overriden to implement custom behavior at the start of the benchmark run
+	static void customRunHandler(Context& c) {}
 
 	/***************************
 	 * Implementations of this class should additionally
@@ -95,26 +113,55 @@ public:
 	**************************/
 };
 
+
+/**
+ * Normally you implement a Timer by inheriting from this class, templatized on your implementation
+ * class in the CRTP pattern. This class uses various static methods in your class to implement
+ * the TimerInfo interface, and also to wrap bare benchmark methods in the static scaffolding turning
+ * them into a full benchmark.
+ */
+template <typename TIMER_INFO>
+class TimerBase : public TimerInfo {
+public:
+
+    static constexpr int warmup_samples =  2;
+    static constexpr int total_samples   = 35;
+
+    static_assert(warmup_samples < total_samples, "warmup samples must be less than total");
+
+//    using now_t2 = typename TIMER_INFO::now_t;
+
+    TimerBase(const std::string& name, const std::string& description, const std::vector<std::string>& metric_names)
+            : TimerInfo(name, description, metric_names) {}
+
+    template <typename TIMING>
+    static full_bench_t make_bench_method(TIMING t) {
+        auto l = [t](int loop_count){ return doTiming(loop_count, t); };
+        return l;
+    }
+
+    template <typename TIMING>
+    static TimingResult doTiming(size_t loop_count, TIMING t) {
+        std::array<typename TIMER_INFO::now_t, total_samples> raw_results;
+        // warmup
+        for (int i = 0; i < total_samples; i++) {
+            raw_results[i] = t(loop_count);
+        }
+
+//        auto aggr = *std::min_element(raw_results.begin() + warmup_samples, raw_results.end());
+        typename TIMER_INFO::delta_t aggr = TIMER_INFO::aggregate(raw_results.begin() + warmup_samples, raw_results.end());
+        return TIMER_INFO::to_result(aggr);
+    }
+
+};
+
 /*
  * A timing implementation that simply calls the METHOD once bracketed by calls to Timer::now().
  * The downside is that the overhead of the timer calls is not cancelled out, and there is no
  * mechanism to cancel out overhead within the METHOD call itself.
- */
-template <typename TIMER>
-class Timing {
-public:
-    template <bench_f METHOD>
-    static int64_t time_method(size_t loop_count) {
-        auto t0 = TIMER::now();
-        METHOD(loop_count);
-        auto t1 = TIMER::now();
-        return t1 - t0;
-    }
-};
-
-/*
- * Like Timing, this implements a time_method_t, but as a member function since it wraps an argument provider
- * method
+ *
+ * The METHOD accepts two arguments: a loop counter, and an arbitrary benchmark-specific void *
+ * which is most often used to use the same benchmark code repeatedly with different input values.
  */
 template <typename TIMER, bench2_f METHOD>
 class Timing2 {
@@ -124,15 +171,15 @@ public:
     Timing2(arg_method_t arg_method) :
         arg_method_(arg_method), arg_(arg_method()) {}
 
-    int64_t operator()(size_t loop_count) {
+    typename TIMER::delta_t operator()(size_t loop_count) {
         return time_inner(loop_count, arg_);
     }
 
-    static int64_t time_inner(size_t loop_count, void* arg) {
+    static typename TIMER::delta_t time_inner(size_t loop_count, void* arg) {
         auto t0 = TIMER::now();
         METHOD(loop_count, arg);
         auto t1 = TIMER::now();
-        return t1 - t0;
+        return TIMER::delta(t1, t0);
     }
 };
 

@@ -7,20 +7,16 @@
  * To have your benchmarks included, declare a register method here and call it in main.cpp.
  */
 
-#ifndef BENCHES_H_
-#define BENCHES_H_
+#ifndef BENCHES_HPP_
+#define BENCHES_HPP_
 
 #include <vector>
 #include <memory>
 
+#include "bench-declarations.h"
 #include "timer-info.hpp"
 #include "timers.hpp"
-#include "context.h"
-#include "bench-declarations.hpp"
-
-typedef std::function<int64_t (size_t)> time_method_t;  // given a loop count, returns a raw timing result
-typedef TimingResult (time_to_result_t)(int64_t);
-
+#include "context.hpp"
 
 class Benchmark final {
     static constexpr int loop_count = 1000;
@@ -29,17 +25,13 @@ class Benchmark final {
     std::string name_;
     /* how many operations are involved in one iteration of the benchmark loop */
     size_t ops_per_loop_;
-    time_method_t bench_method_;
-    time_to_result_t *time_to_result_;
+    full_bench_t full_bench_;
 
 protected:
-    time_method_t getBench() const {
-        return bench_method_;
-    }
+
 
 public:
-    Benchmark(std::string name, size_t ops_per_loop, time_method_t bench_method, time_to_result_t *time_to_result) :
-        name_(name), ops_per_loop_(ops_per_loop), bench_method_(bench_method), time_to_result_(time_to_result) {}
+    Benchmark(const std::string& name, size_t ops_per_loop, full_bench_t full_bench);
 
     std::string getName() const {
         return name_;
@@ -63,7 +55,7 @@ class BenchmarkGroup {
     std::vector<Benchmark> benches_;
 
 public:
-    BenchmarkGroup(std::string name) : name_(name) {}
+    BenchmarkGroup(const std::string& name) : name_(name) {}
 
     virtual ~BenchmarkGroup() {}
 
@@ -73,7 +65,7 @@ public:
         benches_.insert(benches_.end(), more.begin(), more.end());
     }
 
-    virtual void add(const Benchmark &bench) {
+    void add(const Benchmark &bench) {
         benches_.push_back(bench);
     }
 
@@ -92,21 +84,16 @@ public:
 
 using BenchmarkList = std::vector<std::shared_ptr<BenchmarkGroup>>;
 
-template <template<typename> class TIME_METHOD, typename TIMER>
+template <typename TIMER>
 class BenchmarkMaker {
 public:
-    template <bench_f BENCH_METHOD>
-    static Benchmark make_bench(const char *name, size_t ops_per_loop) {
-        return Benchmark{name, ops_per_loop, TIME_METHOD<TIMER>::template time_method<BENCH_METHOD>, TIMER::to_result};
-    }
-
     template <bench2_f BENCH_METHOD>
-    static Benchmark make_bench(const std::string name, size_t ops_per_loop, std::function<void * ()> arg_provider) {
+    static Benchmark make_bench(const std::string& name, size_t ops_per_loop,
+            std::function<void * ()> arg_provider = []{ return nullptr; }) {
         Timing2<TIMER,BENCH_METHOD> timing(arg_provider);
-        return Benchmark{name, ops_per_loop, timing, TIMER::to_result};
+        return Benchmark{name, ops_per_loop, TIMER::make_bench_method(timing)};
     }
 };
-
 
 template <typename TIMER>
 void register_loadstore(BenchmarkList& list);
@@ -114,4 +101,4 @@ void register_loadstore(BenchmarkList& list);
 template <typename TIMER>
 void register_default(BenchmarkList& list);
 
-#endif /* BENCHES_H_ */
+#endif /* BENCHES_HPP_ */

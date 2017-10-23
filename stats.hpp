@@ -93,7 +93,7 @@ DescriptiveStats get_stats(iter_type first, iter_type last) {
 
 
 
-std::ostream& operator<<(std::ostream &os, const DescriptiveStats &stats) {
+inline std::ostream& operator<<(std::ostream &os, const DescriptiveStats &stats) {
 	os << "min=" << stats.getMin() << ", median=" << stats.getMedian() << ", avg=" << stats.getAvg()
 			<< ", max=" << stats.getMax() << ", n=" << stats.getCount();
 	return os;

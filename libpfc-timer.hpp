@@ -7,24 +7,37 @@
 
 #include <limits>
 
+#include "libpfc/include/libpfc.h"
+
 #include "timer-info.hpp"
+#include "libpfm4-support.hpp"
 
+#define FIXED_COUNTERS 3
+#define    GP_COUNTERS 4
+#define TOTAL_COUNTERS (FIXED_COUNTERS + GP_COUNTERS)
 
-class LibpfcTimer : public TimerInfo {
+/* this code is used in the appropriate fixed counter slow to enable the associated counter */
+#define FIXED_COUNTER_ENABLE 0x2
+
+struct LibpfcNow {
+    PFC_CNT cnt[TOTAL_COUNTERS];
+    /* return the unhalted clock cycles value (PFC_FIXEDCNT_CPU_CLK_UNHALTED) */
+    PFC_CNT getClk() const { return cnt[PFC_FIXEDCNT_CPU_CLK_UNHALTED]; }
+};
+
+class LibpfcTimer : public TimerBase<LibpfcTimer> {
 
 public:
 
-    typedef int64_t now_t;
+    typedef LibpfcNow   now_t;
+    typedef LibpfcNow delta_t;
 
-    LibpfcTimer() : TimerInfo("LibpfcTimer",
-            "A timer which directly reads the CPU performance counters for accurate cycle measurements.",
-            {"Cycles"}) {}
+    LibpfcTimer(Context &c);
 
-    virtual void init(Context &context);
+    virtual void init(Context &) override;
 
     static now_t now() {
-        PFC_CNT cnt[7];
-        cnt[PFC_FIXEDCNT_CPU_CLK_UNHALTED] = 0;
+        LibpfcNow now = {};
 
         // in principle, PFCEND is supposed to be used with a matched pair of END/START pairs, like
         //
@@ -32,19 +45,27 @@ public:
         // ... code under test
         // PFCEND(cnt);
         //
-        // The pairs both read the counters, except that START subtracts from cnt, and END subtracts, so you end up with
+        // The pairs both read the counters, except that START subtracts from cnt, and END adds, so you end up with
         // the delta "automatically". We just have a single now() function, so just return the positive (END) value each
         // time, which should be fine (we can calculate the delta outside the critical region).
-        PFCEND(cnt);
-        return cnt[PFC_FIXEDCNT_CPU_CLK_UNHALTED];
+        PFCEND(now.cnt);
+        return now;
     }
 
-    static TimingResult to_result(now_t delta) {
-        return TimingResult({(double)delta});
-    }
+    static TimingResult to_result(LibpfcNow delta);
+
+    static void addCustomArgs(args::ArgumentParser& parser);
+
+    static void customRunHandler(Context& c);
+
+    /*
+     * Return the delta of a and b, that is a minus b.
+     */
+    static LibpfcNow delta(const LibpfcNow& a, const LibpfcNow& b);
+
+    static LibpfcNow aggregate(const LibpfcNow *begin, const LibpfcNow *end);
 
 private:
-
 
     static bool is_init;
 };

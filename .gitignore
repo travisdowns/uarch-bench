@@ -39,3 +39,6 @@ uarch-bench
 
 # nasm listing file
 *.list
+
+# libpfm4 directory
+libpfm-4*/*

@@ -17,9 +17,9 @@
 #include "version.hpp"
 #include "asm_methods.h"
 #include "args.hxx"
+#include "benches.hpp"
 #include "timer-info.hpp"
-#include "context.h"
-#include "benches.h"
+#include "context.hpp"
 #include "util.hpp"
 #include "timers.hpp"
 
@@ -32,8 +32,8 @@ constexpr int  COLUMN_PAD =  3;
 
 template <typename T>
 static inline bool is_pow2(T x) {
-	static_assert(std::is_unsigned<T>::value, "must use unsigned integral types");
-	return x && !(x & (x - 1));
+    static_assert(std::is_unsigned<T>::value, "must use unsigned integral types");
+    return x && !(x & (x - 1));
 }
 
 const int MAX_ALIGN = 4096;
@@ -45,13 +45,13 @@ unsigned char unaligned_storage[STORAGE_SIZE];
  * aligned to base_alignment, but *not* aligned to 2 * base_alignment.
  */
 void *aligned_ptr(size_t base_alignment, size_t required_size) {
-	assert(is_pow2(base_alignment));
-	void *p = unaligned_storage;
-	size_t space = STORAGE_SIZE;
-	void *r = std::align(base_alignment, required_size, p, space);
-	assert(r);
-	assert((((uintptr_t)r) & (base_alignment - 1)) == 0);
-	return r;
+    assert(is_pow2(base_alignment));
+    void *p = unaligned_storage;
+    size_t space = STORAGE_SIZE;
+    void *r = std::align(base_alignment, required_size, p, space);
+    assert(r);
+    assert((((uintptr_t)r) & (base_alignment - 1)) == 0);
+    return r;
 }
 
 /**
@@ -59,64 +59,29 @@ void *aligned_ptr(size_t base_alignment, size_t required_size) {
  * aligned_ptr()) and then is offset by the about given in misalignment.
  */
 void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misalignment) {
-	char *p = static_cast<char *>(aligned_ptr(base_alignment, required_size));
-	return p + misalignment;
+    char *p = static_cast<char *>(aligned_ptr(base_alignment, required_size));
+    return p + misalignment;
 }
-
-
-
 
 
 template <size_t ITERS, typename CLOCK>
 DescriptiveStats CalcClockRes() {
-	std::array<nanoseconds::rep, ITERS> results;
+    std::array<nanoseconds::rep, ITERS> results;
 
-	for (int r = 0; r < 3; r++) {
-		for (size_t i = 0; i < ITERS; i++) {
-			auto t0 = CLOCK::now();
-			auto t1 = CLOCK::now();
-			results[i] = duration_cast<nanoseconds>(t1 - t0).count();
-		}
-	}
-
-	return get_stats(results.begin(), results.end());
-}
-
-/*
- * Calculate the frequency of the CPU based on timing a tight loop that we expect to
- * take one iteration per cycle.
- *
- * ITERS is the base number of iterations to use: the calibration routine is actually
- * run twice, once with ITERS iterations and once with 2*ITERS, and a delta is used to
- * remove measurement overhead.
- */
-template <size_t ITERS, typename CLOCK, size_t TRIES = 10, size_t WARMUP = 100>
-double CalcCpuFreq() {
-    std::array<nanoseconds::rep, TRIES> results;
-
-    for (size_t w = 0; w < WARMUP + 1; w++) {
-        for (size_t r = 0; r < TRIES; r++) {
+    for (int r = 0; r < 3; r++) {
+        for (size_t i = 0; i < ITERS; i++) {
             auto t0 = CLOCK::now();
-            add_calibration(ITERS);
             auto t1 = CLOCK::now();
-            add_calibration(ITERS * 2);
-            auto t2 = CLOCK::now();
-            results[r] = duration_cast<nanoseconds>((t2 - t1) - (t1 - t0)).count();
+            results[i] = duration_cast<nanoseconds>(t1 - t0).count();
         }
     }
 
-    DescriptiveStats stats = get_stats(results.begin(), results.end());
-
-    double ghz = ((double)ITERS / stats.getMedian());
-    return ghz;
+    return get_stats(results.begin(), results.end());
 }
-
-template <typename CLOCK>
-double ClockTimerT<CLOCK>::ghz = CalcCpuFreq<10000,CLOCK,1000>();
 
 
 template <typename T>
-static void printAlignedMetrics(Context &c, const std::vector<T> metrics) {
+static void printAlignedMetrics(Context &c, const std::vector<T>& metrics) {
     const TimerInfo &ti = c.getTimerInfo();
     assert(ti.getMetricNames().size() == metrics.size());
     for (size_t i = 0; i < metrics.size(); i++) {
@@ -127,11 +92,11 @@ static void printAlignedMetrics(Context &c, const std::vector<T> metrics) {
 }
 
 
-static void printResultLine(Context& c, const std::string& benchName, const TimingResult &result) {
+static void printResultLine(Context& c, const std::string& benchName, const TimingResult& result) {
     std::ostream& os = c.out();
-	os << setprecision(c.getPrecision()) << fixed << setw(NAME_WIDTH) << benchName;
-	printAlignedMetrics(c, result.getResults());
-	os << endl;
+    os << setprecision(c.getPrecision()) << fixed << setw(NAME_WIDTH) << benchName;
+    printAlignedMetrics(c, result.getResults());
+    os << endl;
 }
 
 
@@ -142,20 +107,11 @@ static void printResultHeader(Context& c, const TimerInfo& ti) {
     c.out() << endl;
 }
 
+Benchmark::Benchmark(const std::string& name, size_t ops_per_loop, full_bench_t full_bench) :
+        name_(name), ops_per_loop_(ops_per_loop), full_bench_(full_bench) {}
 
 TimingResult Benchmark::getTimings() {
-    auto b = getBench();
-
-    std::array<int64_t, samples> raw_results;
-    // warmup
-    b(loop_count);
-    b(loop_count);
-    for (int i = 0; i < samples; i++) {
-        raw_results[i] = b(loop_count);
-    }
-
-    auto aggr = *std::min_element(raw_results.begin(), raw_results.end());
-    return time_to_result_(aggr);
+    return full_bench_(loop_count);
 }
 
 TimingResult Benchmark::run() {
@@ -177,22 +133,15 @@ void BenchmarkGroup::runAll(Context &context, const TimerInfo &ti) {
     }
 }
 
-
-
-
-
-
-
-
 template <typename TIMER>
 BenchmarkList make_benches() {
 
-	BenchmarkList groupList;
+    BenchmarkList groupList;
 
-	register_default<TIMER>(groupList);
-	register_loadstore<TIMER>(groupList);
+    register_default<TIMER>(groupList);
+    register_loadstore<TIMER>(groupList);
 
-	return groupList;
+    return groupList;
 }
 
 /*
@@ -202,130 +151,171 @@ class TimeredList {
 
     static std::vector<TimeredList> all_;
 
-	std::unique_ptr<TimerInfo> timer_info_;
-	BenchmarkList benches_;
+    std::unique_ptr<TimerInfo> timer_info_;
+    BenchmarkList benches_;
 
 public:
-	TimeredList(std::unique_ptr<TimerInfo>&& timer_info, const BenchmarkList& benches)
-		: timer_info_(std::move(timer_info)), benches_(benches) {}
+    TimeredList(std::unique_ptr<TimerInfo>&& timer_info, const BenchmarkList& benches)
+: timer_info_(std::move(timer_info)), benches_(benches) {}
 
-	TimeredList(const TimeredList &) = delete;
-	TimeredList(TimeredList &&) = default;
+    TimeredList(const TimeredList &) = delete;
+    TimeredList(TimeredList &&) = default;
 
-	~TimeredList() = default;
+    ~TimeredList() = default;
 
-	TimerInfo& getTimerInfo() {
-		return *timer_info_;
-	}
+    TimerInfo& getTimerInfo() {
+        return *timer_info_;
+    }
 
-	const BenchmarkList& getBenches() const {
-		return benches_;
-	}
+    const BenchmarkList& getBenches() const {
+        return benches_;
+    }
 
-	void runAll(Context &c) {
-		cout << "Running " << getBenches().size() << " benchmark groups using timer " << timer_info_->getName() << endl;
-		for (auto& group : getBenches()) {
-			group->runAll(c, getTimerInfo());
-		}
-	}
+    void runAll(Context &c) {
+        cout << "Running " << getBenches().size() << " benchmark groups using timer " << timer_info_->getName() << endl;
+        for (auto& group : getBenches()) {
+            group->runAll(c, getTimerInfo());
+        }
+    }
 
-	template <typename TIMER>
-	static TimeredList create(const TIMER& ti) {
-		return TimeredList(std::unique_ptr<TIMER>(new TIMER(ti)), make_benches<TIMER>());
-	}
+    template <typename TIMER, typename... Args>
+    static TimeredList create(Args&&... args) {
+        auto t = new TIMER(std::forward<Args>(args)...);
+        return TimeredList(std::unique_ptr<TIMER>(t), make_benches<TIMER>());
+    }
 
 
-	static std::vector<TimeredList>& getAll() {
-	    if (all_.empty()) {
-	        all_.push_back(TimeredList::create(ClockTimerT<high_resolution_clock>("high_resolution_clock")));
+    static std::vector<TimeredList>& getAll(Context& c) {
+        if (all_.empty()) {
+            all_.push_back(TimeredList::create<DefaultClockTimer>("high_resolution_clock"));
 #if USE_LIBPFC
-	        all_.push_back(TimeredList::create(LibpfcTimer()));
+            all_.push_back(TimeredList::create<LibpfcTimer>(c));
 #endif
-	    }
-	    return all_;
-	}
+        }
+        return all_;
+    }
 };
 
 std::vector<TimeredList> TimeredList::all_;
 
-TimeredList& getForTimer(args::ValueFlag<std::string>& timerArg) {
-	std::string timerName = timerArg ? timerArg.Get() : "ClockTimer";
-	std::vector<TimeredList>& all = TimeredList::getAll();
-	for (auto& i : all) {
-		if (i.getTimerInfo().getName() == timerName) {
-			return i;
-		}
-	}
+TimeredList& getForTimer(Context &c) {
+    std::string timerName = c.getTimerName();
+    std::vector<TimeredList>& all = TimeredList::getAll(c);
+    for (auto& i : all) {
+        if (i.getTimerInfo().getName() == timerName) {
+            return i;
+        }
+    }
 
-	throw args::UsageError(string("No timer with name ") + timerName);
+    throw args::UsageError(string("No timer with name ") + timerName);
 }
 
-void Context::listBenches() {
-	auto benchList = TimeredList::getAll().front().getBenches();
-	cout << "Listing " << benchList.size() << " benchmark groups" << endl << endl;
-	for (auto& group : benchList) {
-		cout << "Benchmark group: " << group->getName() << endl;
-		for (auto& bench : group->getAllBenches()) {
-			cout << bench.getName() << endl;
-		}
-		cout << endl;
-	}
+void listBenches(Context& c) {
+    std::ostream& out = c.out();
+    auto benchList = TimeredList::getAll(c).front().getBenches();
+    out << "Listing " << benchList.size() << " benchmark groups" << endl << endl;
+    for (auto& group : benchList) {
+        out << "Benchmark group: " << group->getName() << endl;
+        for (auto& bench : group->getAllBenches()) {
+            out << bench.getName() << endl;
+        }
+        out << endl;
+    }
 }
 
-void printClockOverheads() {
-	constexpr int cw = 22;
-	cout << "Clock overhead: " << setw(cw) << "system_clock" << setw(cw) << "steady_clock" << setw(cw) << "hi_res_clock" << endl;
-	cout << "min/med/avg/max ";
-	cout << setw(cw) << CalcClockRes<100,system_clock>().getString4(1);
-	cout << setw(cw) << CalcClockRes<100,steady_clock>().getString4(1);
-	cout << setw(cw) << CalcClockRes<100,high_resolution_clock>().getString4(1);
-	cout << endl;
+void printClockOverheads(Context& c) {
+    constexpr int cw = 22;
+    std::ostream& out = c.out();
+    out << "Clock overhead: " << setw(cw) << "system_clock" << setw(cw) << "steady_clock" << setw(cw) << "hi_res_clock" << endl;
+    out << "min/med/avg/max ";
+    out << setw(cw) << CalcClockRes<100,system_clock>().getString4(1);
+    out << setw(cw) << CalcClockRes<100,steady_clock>().getString4(1);
+    out << setw(cw) << CalcClockRes<100,high_resolution_clock>().getString4(1);
+    out << endl;
 }
 
 /* list the avaiable timers on stdout */
-void Context::listTimers() {
-	cout << endl << "Available timers:" << endl << endl;
-	for (auto& tl : TimeredList::getAll()) {
-		auto& ti = tl.getTimerInfo();
-		cout << ti.getName() << endl << "\t" << ti.getDesciption() << endl << endl;
-	}
+void listTimers(Context& c) {
+    cout << endl << "Available timers:" << endl << endl;
+    for (auto& tl : TimeredList::getAll(c)) {
+        auto& ti = tl.getTimerInfo();
+        c.out() << ti.getName() << endl << "\t" << ti.getDesciption() << endl << endl;
+    }
 }
 
-int Context::run() {
+/*
+ * Each timer might have specific arguments it wants to expose to the user, here we add them to the parser.
+ */
+void addTimerSpecificArgs(args::ArgumentParser& parser) {
+#define ADD_TIMER(TIMER) TIMER::addCustomArgs(parser);
+    ALL_TIMERS_X(ADD_TIMER);
+}
+
+/*
+ * Allow each timer to handle their specific args before starting any benchmark - e.g., for arguments that
+ * just want to list some configuration then exit (throw SilentSuccess in this case).
+ */
+void handleTimerSpecificRun(Context& c) {
+#define HANDLE_TIMER(TIMER) TIMER::customRunHandler(c);
+    ALL_TIMERS_X(HANDLE_TIMER);
+}
+
+Context::Context(int argc, char **argv, std::ostream *out)
+        : err_(out), log_(out), out_(out), argc_(argc), argv_(argv) {
+    try {
+        addTimerSpecificArgs(parser);
+        parser.ParseCLI(argc, argv);
+    } catch (args::Help&) {
+        log() << parser;
+        throw SilentSuccess();
+    } catch (args::ParseError& e) {
+        err() << "ERROR: " << e.what() << std::endl << parser;
+        throw SilentFailure();
+    } catch (args::UsageError & e) {
+        err() << "ERROR: " << e.what() << std::endl;
+        throw SilentFailure();
+    }
+}
+
+
+void Context::run() {
+
+    handleTimerSpecificRun(*this);
+
     if (arg_listtimers) {
-        listTimers();
+        listTimers(*this);
     } else if (arg_listbenches) {
-        listBenches();
+        listBenches(*this);
     } else if (arg_clockoverhead) {
-		printClockOverheads();
+        printClockOverheads(*this);
+    } else if (arg_internal_dump_timer) {
+        std::cout << getTimerName();
+        throw SilentSuccess();
     } else {
-        TimeredList& toRun = getForTimer(arg_timer);
+        TimeredList& toRun = getForTimer(*this);
         timer_info_ = &toRun.getTimerInfo();
         timer_info_->init(*this);
         toRun.runAll(*this);
     }
-    return EXIT_SUCCESS;
 }
 
+
 int main(int argc, char **argv) {
-	cout << "Welcome to uarch-bench (" << GIT_VERSION << ")" << endl;
+    cout << "Welcome to uarch-bench (" << GIT_VERSION << ")" << endl;
 
-	try {
-		Context context(argc, argv, &std::cout);
+    try {
+        Context context(argc, argv, &std::cout);
+        context.run();
 
-		cout << "Median CPU speed: " << fixed << setw(4) << setprecision(3) << ClockTimerT<high_resolution_clock>::getGHz() << " GHz" << endl;
+    } catch (SilentSuccess& e) {
+    } catch (SilentFailure& e) {
+        return EXIT_FAILURE;
+    } catch (const std::exception& e) {
+        std::cerr << "ERROR: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 
-		context.run();
-
-	} catch (SilentSuccess& e) {
-	} catch (SilentFailure& e) {
-	    return EXIT_FAILURE;
-	} catch (const std::exception& e) {
-	    std::cerr << "ERROR: " << e.what() << std::endl;
-	    return EXIT_FAILURE;
-	}
-
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 

@@ -4,15 +4,15 @@
  * Various "default" benchmarks.
  */
 
-#include "benches.h"
 #include "asm_methods.h"
+#include "benches.hpp"
 
 
 template <typename TIMER>
 void register_default(BenchmarkList& list) {
     std::shared_ptr<BenchmarkGroup> default_group = std::make_shared<BenchmarkGroup>("default");
 
-    using default_maker = BenchmarkMaker<Timing, TIMER>;
+    using default_maker = BenchmarkMaker<TIMER>;
 
     auto benches = std::vector<Benchmark> {
         default_maker::template make_bench<dep_add_rax_rax>  ("Dependent add chain",       128),

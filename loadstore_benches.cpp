@@ -7,10 +7,11 @@
 #include <sstream>
 #include <iomanip>
 
-#include "benches.h"
+#include "hedley.h"
 #include "util.hpp"
-#include "context.h"
 #include "asm_methods.h"
+#include "benches.hpp"
+#include "context.hpp"
 #include "timers.hpp"
 
 using namespace std;
@@ -25,19 +26,21 @@ class LoadStoreGroup : public BenchmarkGroup {
 
     unsigned rows_, cols_, total_cells_, op_size_;
 public:
-    LoadStoreGroup(string name, unsigned op_size, unsigned rows, unsigned cols)
-    : BenchmarkGroup(name), rows_(rows), cols_(cols), total_cells_(rows * cols), op_size_(op_size) {
+    LoadStoreGroup(const string& name, unsigned op_size, unsigned rows, unsigned cols)
+: BenchmarkGroup(name), rows_(rows), cols_(cols), total_cells_(rows * cols), op_size_(op_size) {
         assert(rows < 10000 && cols < 10000);
     }
 
+    HEDLEY_NEVER_INLINE std::string make_name(ssize_t misalign);
+
+    HEDLEY_NEVER_INLINE static shared_ptr<LoadStoreGroup> make_group(const string& name, ssize_t op_size);
+
     template<typename TIMER, bench2_f METHOD>
-    static shared_ptr<LoadStoreGroup> make(string name, unsigned op_size) {
-        shared_ptr<LoadStoreGroup> group = make_shared<LoadStoreGroup>(name, op_size, DEFAULT_ROWS, DEFAULT_COLS);
-        using maker = BenchmarkMaker<Timing, TIMER>;
+    static shared_ptr<LoadStoreGroup> make(const string& name, unsigned op_size) {
+        shared_ptr<LoadStoreGroup> group = make_group(name, op_size);
+        using maker = BenchmarkMaker<TIMER>;
         for (ssize_t misalign = 0; misalign < 64; misalign++) {
-            std::stringstream ss;
-            ss << "Misaligned " << (op_size * 8) << "-bit " << name << " [" << setw(2) << misalign << "]";
-            group->add(maker::template make_bench<METHOD>(ss.str(),  128,
+            group->add(maker::template make_bench<METHOD>(group->make_name(misalign), 128,
                     [misalign]() { return misaligned_ptr(64, 64,  misalign); }));
         }
         return group;
@@ -75,6 +78,16 @@ public:
 
 constexpr unsigned LoadStoreGroup::DEFAULT_ROWS;
 constexpr unsigned LoadStoreGroup::DEFAULT_COLS;
+
+shared_ptr<LoadStoreGroup> LoadStoreGroup::make_group(const string& name, ssize_t op_size) {
+    return make_shared<LoadStoreGroup>(name, op_size, DEFAULT_ROWS, DEFAULT_COLS);
+}
+
+std::string LoadStoreGroup::make_name(ssize_t misalign) {
+    std::stringstream ss;
+    ss << "Misaligned " << (op_size_ * 8) << "-bit " << getName() << " [" << setw(2) << misalign << "]";
+    return ss.str();
+}
 
 template <typename TIMER>
 void register_loadstore(BenchmarkList& list) {

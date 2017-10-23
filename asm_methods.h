@@ -7,19 +7,19 @@
 #ifndef ASM_METHODS_H_
 #define ASM_METHODS_H_
 
-#include "bench-declarations.hpp"
+#include "bench-declarations.h"
 
 extern "C" {
 
 /* execute a 1-cycle loop 'iters' times */
-bench_f add_calibration;
-bench_f dep_add_rax_rax;
-bench_f indep_add;
-bench_f dep_imul128_rax;
-bench_f dep_imul64_rax;
-bench_f indep_imul128_rax;
-bench_f store_same_loc;
-bench_f store64_disjoint;
+bench2_f add_calibration;
+bench2_f dep_add_rax_rax;
+bench2_f indep_add;
+bench2_f dep_imul128_rax;
+bench2_f dep_imul64_rax;
+bench2_f indep_imul128_rax;
+bench2_f store_same_loc;
+bench2_f store64_disjoint;
 
 bench2_f  store16_any;
 bench2_f  store32_any;
