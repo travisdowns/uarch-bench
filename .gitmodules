@@ -1,3 +1,6 @@
 [submodule "libpfc"]
 	path = libpfc
 	url = https://github.com/travisdowns/libpfc
+[submodule "nasm-utils"]
+	path = nasm-utils
+	url = https://github.com/travisdowns/nasm-utils

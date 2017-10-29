@@ -1,21 +1,28 @@
 include config.mk
 
+# rebuild when makefile changes
+-include dummy.rebuild
+
 .PHONY: all clean libpfc libpfc-clean
+
+ASM := nasm 
+ASM_FLAGS := -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all -l x86_methods.list 
 
 PFM_VER := 4.8.0
 PFM_DIR := libpfm-$(PFM_VER)
 PFM_LIBDIR := $(PFM_DIR)/lib
 
-
 GIT_VERSION := $(shell git describe --dirty --always)
 
 HEADERS := $(wildcard *.h) $(wildcard *.hpp) $(wildcard *.hxx)
 
-CPPFLAGS := -Wall -g -O2 -march=native -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC)
+O_LEVEL ?= -O2
+CPPFLAGS := -Wall -g $(O_LEVEL) -march=native -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC)
 
 # files that should only be compiled if USE_LIBPFC is enabled
 PFC_SRC := libpfc-timer.cpp libpfm4-support.cpp
-SRC_FILES := $(filter-out $(PFC_SRC), $(wildcard *.cpp))
+SRC_FILES := $(wildcard *.cpp) nasm-utils/nasm-utils-helper.c
+SRC_FILES := $(filter-out $(PFC_SRC), $(SRC_FILES))
 
 ifeq ($(USE_LIBPFC),1)
 LDFLAGS += -Llibpfc '-Wl,-rpath=$$ORIGIN/libpfc/' -L$(PFM_LIBDIR) '-Wl,-rpath=$$ORIGIN/$(PFM_LIBDIR)/'
@@ -26,6 +33,8 @@ SRC_FILES += $(PFC_SRC)
 endif
 
 OBJECTS := $(SRC_FILES:.cpp=.o) x86_methods.o
+OBJECTS := $(OBJECTS:.c=.o)
+# $(info OBJECTS=$(OBJECTS))
 
 $(info USE_LIBPFC=${USE_LIBPFC})
 
@@ -35,8 +44,10 @@ $(info USE_LIBPFC=${USE_LIBPFC})
 
 all: uarch-bench
 
-clean: $(CLEAN_TARGETS)
+clean:
 	rm -f *.o uarch-bench
+	
+dist-clean: clean $(CLEAN_TARGETS)
 
 uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
 	g++ $(OBJECTS) $(CPPFLAGS) $(LDFLAGS) $(LDLIBS) -o uarch-bench
@@ -48,7 +59,7 @@ uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
 	g++ $(CPPFLAGS) -c -std=c++11 -o $@ $<
 
 x86_methods.o: x86_methods.asm
-	nasm -w+all -f elf64 -l x86_methods.list x86_methods.asm
+	$(ASM) $(ASM_FLAGS) -f elf64 x86_methods.asm
 
 libpfc/libpfc.so:
 	@echo "Buiding libpfc..."
@@ -68,4 +79,9 @@ $(PFM_LIBDIR)/libpfm.so:
 
 libpfm4-clean:
 	rm -rf $(PFM_DIR)
+	
+# https://stackoverflow.com/a/3892826/149138
+dummy.rebuild: Makefile
+	touch $@
+	$(MAKE) -s clean
 

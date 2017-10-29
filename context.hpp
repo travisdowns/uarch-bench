@@ -79,6 +79,7 @@ private:
     args::ValueFlag<std::string> arg_timer{parser, "timer", "Use the specified timer", {"timer"}};
     args::ValueFlag<unsigned int> arg_default_precision{parser, "precision", "Use the specified number of decimal places"
             " to report values from most benchmarks", {"precision"}, (unsigned int)DEFAULT_PRECISION};
+    args::ValueFlag<std::string> arg_test_name{parser, "test name", "Run only the test with the given name", {"test-name"}};
 
 
     // internal flags: these aren't displayed to the user via help, but are used by some wrapper script to interact with the

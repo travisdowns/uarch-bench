@@ -42,3 +42,9 @@ uarch-bench
 
 # libpfm4 directory
 libpfm-4*/*
+
+# core files
+/core*
+/vgcore*
+
+dummy.rebuild

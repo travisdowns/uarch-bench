@@ -1,11 +1,15 @@
 BITS 64
 default rel
 
+%include "nasm-utils/nasm-utils-inc.asm"
+
+thunk_boilerplate
+
 ; aligns and declares the global label for the bench with the given name
+; also potentally checks the ABI compliance (if enabled)
 %macro define_bench 1
 ALIGN 32
-GLOBAL %1:function
-%1:
+abi_checked_function %1
 %endmacro
 
 ;; This function executes a tight loop, where we expect that each iteration takes
@@ -202,6 +206,55 @@ dec rdi
 jnz .top
 add rsp, 1024
 ret
+
+define_bench misc_add_loop32
+push rbp
+mov  rbp, rsp
+push rbx
+mov rcx, rdi
+sub rsp, 128
+and rsp, -64
+lea rax, [rsp + 8]
+lea rdi, [rsp + 16]
+jmp .top
+ALIGN 32
+.top:
+add edx, [rsp]
+mov [rax], edi
+blsi ebx, [rdi]
+dec ecx
+jnz .top
+
+; cleanup
+mov rbx, [rbp - 8]
+mov rsp, rbp
+pop rbp
+ret
+
+define_bench misc_add_loop64
+push rbp
+mov  rbp, rsp
+push rbx
+mov rcx, rdi
+sub rsp, 128
+and rsp, -64
+lea rax, [rsp + 8]
+lea rdi, [rsp + 16]
+jmp .top
+ALIGN 32
+.top:
+add rdx, [rsp]
+mov [rax], edi
+blsi ebx, [rdi]
+dec ecx
+jnz .top
+
+; cleanup
+mov rbx, [rbp - 8]
+mov rsp, rbp
+pop rbp
+ret
+
 
 
 

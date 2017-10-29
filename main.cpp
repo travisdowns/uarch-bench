@@ -107,16 +107,17 @@ static void printResultHeader(Context& c, const TimerInfo& ti) {
     c.out() << endl;
 }
 
-Benchmark::Benchmark(const std::string& name, size_t ops_per_loop, full_bench_t full_bench) :
-        name_(name), ops_per_loop_(ops_per_loop), full_bench_(full_bench) {}
+
+Benchmark::Benchmark(const std::string& name, size_t ops_per_loop, full_bench_t full_bench, uint32_t loop_count) :
+        name_(name), ops_per_loop_(ops_per_loop), full_bench_(full_bench), loop_count_(loop_count) {}
 
 TimingResult Benchmark::getTimings() {
-    return full_bench_(loop_count);
+    return full_bench_(getLoopCount());
 }
 
 TimingResult Benchmark::run() {
     TimingResult timings = getTimings();
-    double multiplier = 1.0 / (ops_per_loop_ * loop_count); // normalize to time / op
+    double multiplier = 1.0 / (ops_per_loop_ * getLoopCount()); // normalize to time / op
     return timings * multiplier;
 }
 
@@ -125,11 +126,13 @@ void Benchmark::runAndPrint(Context& c) {
     printResultLine(c, getName(), timing);
 }
 
-void BenchmarkGroup::runAll(Context &context, const TimerInfo &ti) {
+void BenchmarkGroup::runAll(Context &context, const TimerInfo &ti, const predicate_t& predicate) {
     context.out() << std::endl << "** Running benchmark group " << getName() << " **" << std::endl;
     printResultHeader(context, ti);
-    for (auto b : benches_) {
-        b.runAndPrint(context);
+    for (auto& b : benches_) {
+        if (predicate(b)) {
+            b.runAndPrint(context);
+        }
     }
 }
 
@@ -140,6 +143,7 @@ BenchmarkList make_benches() {
 
     register_default<TIMER>(groupList);
     register_loadstore<TIMER>(groupList);
+    register_misc<TIMER>(groupList);
 
     return groupList;
 }
@@ -171,10 +175,10 @@ public:
         return benches_;
     }
 
-    void runAll(Context &c) {
+    void runAll(Context &c, const predicate_t& predicate) {
         cout << "Running " << getBenches().size() << " benchmark groups using timer " << timer_info_->getName() << endl;
         for (auto& group : getBenches()) {
-            group->runAll(c, getTimerInfo());
+            group->runAll(c, getTimerInfo(), predicate);
         }
     }
 
@@ -278,6 +282,7 @@ Context::Context(int argc, char **argv, std::ostream *out)
 }
 
 
+
 void Context::run() {
 
     handleTimerSpecificRun(*this);
@@ -295,7 +300,14 @@ void Context::run() {
         TimeredList& toRun = getForTimer(*this);
         timer_info_ = &toRun.getTimerInfo();
         timer_info_->init(*this);
-        toRun.runAll(*this);
+        predicate_t pred;
+        if (arg_test_name) {
+            pred =  [this](const Benchmark& b){ return b.getName().find(arg_test_name.Get()) != std::string::npos; };
+        } else {
+            pred =  [](const Benchmark&){ return true; };
+        }
+
+        toRun.runAll(*this, pred);
     }
 }
 

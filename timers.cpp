@@ -10,6 +10,11 @@
 #include "stats.hpp"
 #include "asm_methods.h"
 
+extern "C" {
+/* execute a 1-cycle loop 'iters' times */
+bench2_f add_calibration;
+}
+
 using namespace Stats;
 using namespace std::chrono;
 

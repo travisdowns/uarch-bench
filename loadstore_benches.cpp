@@ -14,6 +14,20 @@
 #include "context.hpp"
 #include "timers.hpp"
 
+extern "C" {
+bench2_f  store16_any;
+bench2_f  store32_any;
+bench2_f  store64_any;
+bench2_f store128_any; // AVX2 128-bit store
+bench2_f store256_any; // AVX2 256-bit store
+
+bench2_f  load16_any;
+bench2_f  load32_any;
+bench2_f  load64_any;
+bench2_f load128_any; // AVX (REX-encoded) 128-bit store
+bench2_f load256_any; // AVX (REX-encoded) 256-bit store
+}
+
 using namespace std;
 
 /*
@@ -46,7 +60,16 @@ public:
         return group;
     }
 
-    virtual void runAll(Context& c, const TimerInfo &ti) override {
+    virtual void runAll(Context& c, const TimerInfo &ti, const std::function<bool(const Benchmark&)>& predicate) override {
+
+        // because this BenchmarkGroup is really more like a single benchmark (i.e., the 64 actual Benchmark objects
+        // don't their name printed but are showin a grid instead, we run the predicate on a fake Benchmark created
+        // based on the group name
+        Benchmark fake(getName(), 1, full_bench_t(), 1);
+        if (!predicate(fake)) {
+            return;
+        }
+
         std::ostream& os = c.out();
         os << endl << "** Inverse throughput for " << getName() << " **" << endl;
 
@@ -63,7 +86,8 @@ public:
         // collect all the results up front, before any output
         vector<double> results(benches.size());
         for (size_t i = 0; i < benches.size(); i++) {
-            results[i] = benches[i].run().getCycles();
+            Benchmark& b = benches[i];
+            results[i] = b.run().getCycles();
         }
 
         for (unsigned row = 0, i = 0; row < rows_; row++) {

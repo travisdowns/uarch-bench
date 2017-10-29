@@ -19,19 +19,23 @@
 #include "context.hpp"
 
 class Benchmark final {
-    static constexpr int loop_count = 1000;
-    static constexpr int    samples = 33;
 
     std::string name_;
     /* how many operations are involved in one iteration of the benchmark loop */
     size_t ops_per_loop_;
     full_bench_t full_bench_;
+    uint32_t loop_count_;
 
 protected:
 
+    unsigned getLoopCount() { return loop_count_; }
 
 public:
-    Benchmark(const std::string& name, size_t ops_per_loop, full_bench_t full_bench);
+
+    static constexpr uint32_t default_loop_count = 1000;
+    static constexpr int                 samples =   33;
+
+    Benchmark(const std::string& name, size_t ops_per_loop, full_bench_t full_bench, uint32_t loop_count);
 
     std::string getName() const {
         return name_;
@@ -46,6 +50,8 @@ public:
     void runAndPrint(Context& c);
 };
 
+using predicate_t = std::function<bool(const Benchmark&)>;
+
 /**
  * Interface for a group of benchmarks. The group itself has a name, and can run and output all the contained
  * benchmarks.
@@ -59,7 +65,7 @@ public:
 
     virtual ~BenchmarkGroup() {}
 
-    virtual void runAll(Context &context, const TimerInfo &ti);
+    virtual void runAll(Context &context, const TimerInfo &ti, const predicate_t& predicate);
 
     virtual void add(const std::vector<Benchmark> &more) {
         benches_.insert(benches_.end(), more.begin(), more.end());
@@ -88,10 +94,12 @@ template <typename TIMER>
 class BenchmarkMaker {
 public:
     template <bench2_f BENCH_METHOD>
-    static Benchmark make_bench(const std::string& name, size_t ops_per_loop,
-            std::function<void * ()> arg_provider = []{ return nullptr; }) {
+    static Benchmark make_bench(const std::string& name,
+            size_t ops_per_loop,
+            std::function<void * ()> arg_provider = []{ return nullptr; },
+            uint32_t loop_count = Benchmark::default_loop_count) {
         Timing2<TIMER,BENCH_METHOD> timing(arg_provider);
-        return Benchmark{name, ops_per_loop, TIMER::make_bench_method(timing)};
+        return Benchmark{name, ops_per_loop, TIMER::make_bench_method(timing), loop_count};
     }
 };
 
@@ -100,5 +108,8 @@ void register_loadstore(BenchmarkList& list);
 
 template <typename TIMER>
 void register_default(BenchmarkList& list);
+
+template <typename TIMER>
+void register_misc(BenchmarkList& list);
 
 #endif /* BENCHES_HPP_ */

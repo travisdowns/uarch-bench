@@ -7,6 +7,15 @@
 #include "asm_methods.h"
 #include "benches.hpp"
 
+extern "C" {
+bench2_f dep_add_rax_rax;
+bench2_f indep_add;
+bench2_f dep_imul128_rax;
+bench2_f dep_imul64_rax;
+bench2_f indep_imul128_rax;
+bench2_f store_same_loc;
+bench2_f store64_disjoint;
+}
 
 template <typename TIMER>
 void register_default(BenchmarkList& list) {
@@ -28,7 +37,7 @@ void register_default(BenchmarkList& list) {
     list.push_back(default_group);
 }
 
-#define REG_DEFAULT(CLOCK) template void register_default< CLOCK >(BenchmarkList& list);
+#define REG_DEFAULT(CLOCK) template void register_default<CLOCK>(BenchmarkList& list);
 
 ALL_TIMERS_X(REG_DEFAULT)
 
