@@ -31,6 +31,12 @@ export SCALING_GOVERNOR=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_gover
 echo "Driver: $SCALING_DRIVER, governor: $SCALING_GOVERNOR" 
 echo -e "Vendor ID: $VENDOR_ID\nModel name: $MODEL_NAME"
 
+################ Load the msr kernel module (needed by turbo-boost disabling code) ###########
+if [[ -z $(which rdmsr) ]]; then
+    echo "msr-tools is not installed. Run 'sudo apt-get install msr-tools' to install it." >&2
+    exit 1
+fi
+
 ############### Adjust the scaling governor to 'performance' to avoid sub-nominal clocking ##########
 
 if [[ "$SCALING_GOVERNOR" != "performance" ]]; then
@@ -43,12 +49,6 @@ if [[ "$SCALING_GOVERNOR" != "performance" ]]; then
 	else
 		echo "FAILED";
 	fi
-fi
-
-################ Load the msr kernel module (needed by turbo-boost disabling code) ###########
-if [[ -z $(which rdmsr) ]]; then
-    echo "msr-tools is not installed. Run 'sudo apt-get install msr-tools' to install it." >&2
-    exit 1
 fi
 
 lsmod | egrep -q "^msr " || { echo "loading msr kernel module"; sudo modprobe msr; }
