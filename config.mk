@@ -1,7 +1,7 @@
 USE_LIBPFC = 1
 
 # set DEBUG to 1 to enable various debugging checks
-DEBUG := 1
+DEBUG := 0
 
 ifeq ($(DEBUG),1)
 O_LEVEL = -O0

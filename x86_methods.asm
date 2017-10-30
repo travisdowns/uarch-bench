@@ -212,10 +212,10 @@ push rbp
 mov  rbp, rsp
 push rbx
 mov rcx, rdi
-sub rsp, 128
+sub rsp, 256
 and rsp, -64
-lea rax, [rsp + 8]
-lea rdi, [rsp + 16]
+lea rax, [rsp + 64]
+lea rdi, [rsp + 128]
 jmp .top
 ALIGN 32
 .top:
@@ -236,10 +236,10 @@ push rbp
 mov  rbp, rsp
 push rbx
 mov rcx, rdi
-sub rsp, 128
+sub rsp, 256
 and rsp, -64
-lea rax, [rsp + 8]
-lea rdi, [rsp + 16]
+lea rax, [rsp + 64]
+lea rdi, [rsp + 128]
 jmp .top
 ALIGN 32
 .top:
