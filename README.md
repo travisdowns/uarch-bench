@@ -1,4 +1,4 @@
-**This project is a work-in-progress, and is in a very early state**
+**This project is a work-in-progress, and is currently in a very early state. Use is welcome, but don't expect miracles.**
 
 The uarch-bench project is a collection of micro-benchmarks that try to stress certain microarchitectural features of modern CPUs.
 
