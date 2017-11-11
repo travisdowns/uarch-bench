@@ -19,9 +19,10 @@ void register_misc(BenchmarkList& list) {
 
     using default_maker = BenchmarkMaker<TIMER>;
 
+    const uint32_t iters = 10*1000*1000;
     auto benches = std::vector<Benchmark> {
-        default_maker::template make_bench<misc_add_loop32>("32-bit add-loop", 1, []{ return nullptr; }, 100000),
-        default_maker::template make_bench<misc_add_loop64>("64-bit add-loop", 1, []{ return nullptr; }, 100000)
+        default_maker::template make_bench<misc_add_loop32>("32-bit add-loop", 1, []{ return nullptr; }, iters),
+        default_maker::template make_bench<misc_add_loop64>("64-bit add-loop", 1, []{ return nullptr; }, iters)
     };
 
     default_group->add(benches);
