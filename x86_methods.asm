@@ -255,7 +255,17 @@ mov rsp, rbp
 pop rbp
 ret
 
+%macro bmi_bench 1
+define_bench bmi_%1
+xor eax, eax
+xor ecx, ecx
+.top:
+times 128 %1 eax, ecx
+dec rdi
+jnz .top
+ret
+%endmacro
 
-
-
-
+bmi_bench  tzcnt
+bmi_bench  lzcnt
+bmi_bench popcnt
