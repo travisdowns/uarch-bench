@@ -13,7 +13,6 @@
 #include "libpfc/include/libpfc.h"
 #include "libpfc-timer.hpp"
 #include "util.hpp"
-#include "asm_methods.h"  // for add_calibration
 #include "context.hpp"
 
 using namespace std;

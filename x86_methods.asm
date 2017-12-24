@@ -269,3 +269,56 @@ ret
 bmi_bench  tzcnt
 bmi_bench  lzcnt
 bmi_bench popcnt
+
+%define STRIDE 832  ; 13 * 64
+
+; %1 - bench size in KiB
+; %2 - load instruction
+; %3 - bench name
+%macro load_loop_bench_tmpl 3
+; parallel loads with large stride (across pages, defeating prefetcher)
+define_bench %3%1
+%define SIZE   (%1 * 1024)
+%define MASK   (SIZE - 1)
+xor     ecx, ecx
+mov     rdx, rsi
+.top:
+
+%define UF 8
+
+%assign s 0
+%rep UF
+%2      [rdx + STRIDE * s]
+%assign s s+1
+%endrep
+
+; check if final read of the next unrolled iteration will exceed the requested size
+; and if so, wrap back to the start. Due to the runolling this means that the last
+; few loads might be skipped, making the effective footprint somewhat smaler than
+; requested by something like UF * 0.5 * STRIDE on average (mostly relevant for buffer
+; sizes just above a cache size boundary)
+lea     edx, [ecx + STRIDE * (UF*2-1) - SIZE]
+add     ecx, STRIDE * UF
+test    edx, edx
+cmovns  ecx, edx
+lea     rdx, [rsi + rcx]
+
+dec rdi
+jnz .top
+ret
+%endmacro
+
+%macro all_parallel_benches 2
+load_loop_bench_tmpl   16,{%1},%2
+load_loop_bench_tmpl   32,{%1},%2
+load_loop_bench_tmpl  128,{%1},%2
+load_loop_bench_tmpl  256,{%1},%2
+load_loop_bench_tmpl  512,{%1},%2
+load_loop_bench_tmpl 2048,{%1},%2
+%endmacro
+
+all_parallel_benches {movzx   eax, BYTE},load_loop
+all_parallel_benches prefetcht0,prefetcht0_bench
+all_parallel_benches prefetcht1,prefetcht1_bench
+all_parallel_benches prefetcht2,prefetcht2_bench
+all_parallel_benches prefetchnta,prefetchnta_bench

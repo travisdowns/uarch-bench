@@ -9,7 +9,6 @@
 
 #include "hedley.h"
 #include "util.hpp"
-#include "asm_methods.h"
 #include "benches.hpp"
 #include "context.hpp"
 #include "timers.hpp"

@@ -4,7 +4,6 @@
  * Various "default" benchmarks.
  */
 
-#include "asm_methods.h"
 #include "benches.hpp"
 
 extern "C" {

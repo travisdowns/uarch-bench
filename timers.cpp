@@ -8,7 +8,6 @@
 
 #include "timers.hpp"
 #include "stats.hpp"
-#include "asm_methods.h"
 
 extern "C" {
 /* execute a 1-cycle loop 'iters' times */
@@ -28,6 +27,12 @@ using namespace std::chrono;
  */
 template <size_t ITERS, typename CLOCK, size_t TRIES = 10, size_t WARMUP = 100>
 double CalcCpuFreq() {
+    const char* mhz;
+    if ((mhz = getenv("UARCH_BENCH_CLOCK_MHZ"))) {
+        double ghz = std::stoi(mhz) / 1000.0;
+        return ghz;
+    }
+
     std::array<nanoseconds::rep, TRIES> results;
 
     for (size_t w = 0; w < WARMUP + 1; w++) {

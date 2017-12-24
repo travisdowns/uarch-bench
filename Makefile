@@ -81,7 +81,7 @@ libpfm4-clean:
 	rm -rf $(PFM_DIR)
 	
 # https://stackoverflow.com/a/3892826/149138
-dummy.rebuild: Makefile
+dummy.rebuild: Makefile config.mk
 	touch $@
 	$(MAKE) -s clean
 

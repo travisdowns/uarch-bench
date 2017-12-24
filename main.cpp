@@ -12,10 +12,13 @@
 #include <type_traits>
 #include <sstream>
 #include <functional>
+#include <cstring>
+#include <cstdlib>
+
+#include <sys/mman.h>
 
 #include "stats.hpp"
 #include "version.hpp"
-#include "asm_methods.h"
 #include "args.hxx"
 #include "benches.hpp"
 #include "timer-info.hpp"
@@ -37,16 +40,35 @@ static inline bool is_pow2(T x) {
 }
 
 const int MAX_ALIGN = 4096;
-const int STORAGE_SIZE = 4 * MAX_ALIGN;  // * 4 because we overalign the pointer in order to guarantee minimal alignemnt
-unsigned char unaligned_storage[STORAGE_SIZE];
+const size_t TWO_MB = 2 * 1024 * 1024;
+const int STORAGE_SIZE = TWO_MB;  // * 4 because we overalign the pointer in order to guarantee minimal alignemnt
+//unsigned char unaligned_storage[STORAGE_SIZE];
+void *storage_ptr = 0;
+
+volatile int zero = 0;
+bool storage_init = false;
 
 /*
  * Returns a pointer that is minimally aligned to base_alignment. That is, it is
  * aligned to base_alignment, but *not* aligned to 2 * base_alignment.
  */
 void *aligned_ptr(size_t base_alignment, size_t required_size) {
+    assert(required_size <= STORAGE_SIZE);
     assert(is_pow2(base_alignment));
-    void *p = unaligned_storage;
+    assert(base_alignment < TWO_MB);
+    if (!storage_ptr) {
+        assert(posix_memalign(&storage_ptr, TWO_MB, STORAGE_SIZE + TWO_MB) == 0);
+        madvise(storage_ptr, STORAGE_SIZE + TWO_MB, MADV_HUGEPAGE);
+        storage_ptr = ((char *)storage_ptr + TWO_MB);
+
+        // it is critical that we memset the memory region to touch each page, otherwise all or some pages
+        // can be mapped to the zero page, leading to unexpected results for read-only tests (i.e., "too good to be true"
+        // results for benchmarks that read large amounts of memory, because internally these are all mapped
+        // to the same page
+        std::memset(storage_ptr, 1, STORAGE_SIZE);
+        std::memset(storage_ptr, 0, STORAGE_SIZE);
+    }
+    void *p = storage_ptr;
     size_t space = STORAGE_SIZE;
     void *r = std::align(base_alignment, required_size, p, space);
     assert(r);
