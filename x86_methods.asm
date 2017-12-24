@@ -311,6 +311,7 @@ ret
 %macro all_parallel_benches 2
 load_loop_bench_tmpl   16,{%1},%2
 load_loop_bench_tmpl   32,{%1},%2
+load_loop_bench_tmpl   64,{%1},%2
 load_loop_bench_tmpl  128,{%1},%2
 load_loop_bench_tmpl  256,{%1},%2
 load_loop_bench_tmpl  512,{%1},%2

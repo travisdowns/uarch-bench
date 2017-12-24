@@ -12,6 +12,7 @@
 #define BENCH_DECL_X(name) \
     bench2_f name ## 16;    \
     bench2_f name ## 32;    \
+    bench2_f name ## 64;    \
     bench2_f name ## 128;   \
     bench2_f name ## 256;   \
     bench2_f name ## 512;   \
@@ -48,6 +49,7 @@ void register_misc(BenchmarkList& list) {
     auto benches = std::vector<Benchmark> {
         BOTH_BENCH(16),
         BOTH_BENCH(32),
+        BOTH_BENCH(64),
         BOTH_BENCH(128),
         BOTH_BENCH(256),
         BOTH_BENCH(512),
