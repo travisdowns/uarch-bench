@@ -39,38 +39,39 @@ class LoadStoreGroup : public BenchmarkGroup {
 
     unsigned rows_, cols_, total_cells_, op_size_;
 public:
-    LoadStoreGroup(const string& name, unsigned op_size, unsigned rows, unsigned cols)
-: BenchmarkGroup(name), rows_(rows), cols_(cols), total_cells_(rows * cols), op_size_(op_size) {
+    LoadStoreGroup(const string& id, const string& name, unsigned op_size, unsigned rows, unsigned cols)
+: BenchmarkGroup(id, name), rows_(rows), cols_(cols), total_cells_(rows * cols), op_size_(op_size) {
         assert(rows < 10000 && cols < 10000);
     }
 
     HEDLEY_NEVER_INLINE std::string make_name(ssize_t misalign);
+    HEDLEY_NEVER_INLINE std::string make_id(ssize_t misalign);
 
-    HEDLEY_NEVER_INLINE static shared_ptr<LoadStoreGroup> make_group(const string& name, ssize_t op_size);
+    HEDLEY_NEVER_INLINE static shared_ptr<LoadStoreGroup> make_group(const string& id, const string& name, ssize_t op_size);
 
     template<typename TIMER, bench2_f METHOD>
-    static shared_ptr<LoadStoreGroup> make(const string& name, unsigned op_size) {
-        shared_ptr<LoadStoreGroup> group = make_group(name, op_size);
+    static shared_ptr<LoadStoreGroup> make(const string& id, unsigned op_size) {
+        shared_ptr<LoadStoreGroup> group = make_group(id, id, op_size);
         using maker = BenchmarkMaker<TIMER>;
         for (ssize_t misalign = 0; misalign < 64; misalign++) {
-            group->add(maker::template make_bench<METHOD>(group->make_name(misalign), 128,
+            group->add(maker::template make_bench<METHOD>(group.get(), group->make_id(misalign), group->make_name(misalign), 128,
                     [misalign]() { return misaligned_ptr(64, 64,  misalign); }));
         }
         return group;
     }
 
-    virtual void runAll(Context& c, const TimerInfo &ti, const std::function<bool(const Benchmark&)>& predicate) override {
+    virtual void runIf(Context& c, const TimerInfo &ti, const predicate_t& predicate) override {
 
         // because this BenchmarkGroup is really more like a single benchmark (i.e., the 64 actual Benchmark objects
-        // don't their name printed but are showin a grid instead, we run the predicate on a fake Benchmark created
+        // don't their name printed but are show in a grid instead, we run the predicate on a fake Benchmark created
         // based on the group name
-        Benchmark fake(getName(), 1, full_bench_t(), 1);
-        if (!predicate(fake)) {
+        Benchmark fake(this, "fake", getDescription(), 1, full_bench_t(), 1);
+        if (!predicate("", fake)) {
             return;
         }
 
         std::ostream& os = c.out();
-        os << endl << "** Inverse throughput for " << getName() << " **" << endl;
+        os << endl << "** Inverse throughput for " << getDescription() << " **" << endl;
 
         // column headers
         os << "offset  ";
@@ -97,23 +98,38 @@ public:
             os << endl;
         }
     }
+
+    void printBenches(std::ostream& out) const override {
+        auto& benches = getBenches();
+        assert(benches.size() >= 2);
+        printBench(out, benches[0]);
+        printBench(out, benches[1]);
+        out << "...\n";
+        printBench(out, benches.back());
+    }
 };
 
 constexpr unsigned LoadStoreGroup::DEFAULT_ROWS;
 constexpr unsigned LoadStoreGroup::DEFAULT_COLS;
 
-shared_ptr<LoadStoreGroup> LoadStoreGroup::make_group(const string& name, ssize_t op_size) {
-    return make_shared<LoadStoreGroup>(name, op_size, DEFAULT_ROWS, DEFAULT_COLS);
+shared_ptr<LoadStoreGroup> LoadStoreGroup::make_group(const string& id, const string& name, ssize_t op_size) {
+    return make_shared<LoadStoreGroup>(id, name, op_size, DEFAULT_ROWS, DEFAULT_COLS);
 }
 
 std::string LoadStoreGroup::make_name(ssize_t misalign) {
     std::stringstream ss;
-    ss << "Misaligned " << (op_size_ * 8) << "-bit " << getName() << " [" << setw(2) << misalign << "]";
+    ss << "Misaligned " << (op_size_ * 8) << "-bit " << getDescription() << " [" << setw(2) << misalign << "]";
+    return ss.str();
+}
+
+std::string LoadStoreGroup::make_id(ssize_t misalign) {
+    std::stringstream ss;
+    ss << "misaligned-" << misalign;
     return ss.str();
 }
 
 template <typename TIMER>
-void register_loadstore(BenchmarkList& list) {
+void register_loadstore(GroupList& list) {
     // load throughput benches
     list.push_back(LoadStoreGroup::make<TIMER,  load16_any>("load/16-bit",  2));
     list.push_back(LoadStoreGroup::make<TIMER,  load32_any>("load/32-bit",  4));
@@ -129,7 +145,7 @@ void register_loadstore(BenchmarkList& list) {
     list.push_back(LoadStoreGroup::make<TIMER, store256_any>("store/256-bit", 32));
 }
 
-#define REG_LOADSTORE(CLOCK) template void register_loadstore< CLOCK >(BenchmarkList& list);
+#define REG_LOADSTORE(CLOCK) template void register_loadstore< CLOCK >(GroupList& list);
 
 ALL_TIMERS_X(REG_LOADSTORE)
 

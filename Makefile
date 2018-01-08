@@ -5,7 +5,7 @@ include config.mk
 
 .PHONY: all clean libpfc libpfc-clean
 
-ASM := nasm 
+ASM := nasm
 ASM_FLAGS := -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all -l x86_methods.list 
 
 PFM_VER := 4.8.0

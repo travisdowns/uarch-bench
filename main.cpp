@@ -30,9 +30,6 @@ using namespace std;
 using namespace std::chrono;
 using namespace Stats;
 
-constexpr int  NAME_WIDTH = 30;
-constexpr int  COLUMN_PAD =  3;
-
 template <typename T>
 static inline bool is_pow2(T x) {
     static_assert(std::is_unsigned<T>::value, "must use unsigned integral types");
@@ -102,66 +99,11 @@ DescriptiveStats CalcClockRes() {
 }
 
 
-template <typename T>
-static void printAlignedMetrics(Context &c, const std::vector<T>& metrics) {
-    const TimerInfo &ti = c.getTimerInfo();
-    assert(ti.getMetricNames().size() == metrics.size());
-    for (size_t i = 0; i < metrics.size(); i++) {
-        // the width is either the expected max width of the value, or the with of the name, plus COLUMN_PAD
-        unsigned int width = std::max(ti.getMetricNames().size(), 4UL + c.getPrecision()) + COLUMN_PAD;
-        c.out() << setw(width) << metrics[i];
-    }
-}
-
-
-static void printResultLine(Context& c, const std::string& benchName, const TimingResult& result) {
-    std::ostream& os = c.out();
-    os << setprecision(c.getPrecision()) << fixed << setw(NAME_WIDTH) << benchName;
-    printAlignedMetrics(c, result.getResults());
-    os << endl;
-}
-
-
-static void printResultHeader(Context& c, const TimerInfo& ti) {
-    // "Benchmark", "Cycles", "Nanos"
-    c.out() << setw(NAME_WIDTH) << "Benchmark";
-    printAlignedMetrics(c, ti.getMetricNames());
-    c.out() << endl;
-}
-
-
-Benchmark::Benchmark(const std::string& name, size_t ops_per_loop, full_bench_t full_bench, uint32_t loop_count) :
-        name_(name), ops_per_loop_(ops_per_loop), full_bench_(full_bench), loop_count_(loop_count) {}
-
-TimingResult Benchmark::getTimings() {
-    return full_bench_(getLoopCount());
-}
-
-TimingResult Benchmark::run() {
-    TimingResult timings = getTimings();
-    double multiplier = 1.0 / (ops_per_loop_ * getLoopCount()); // normalize to time / op
-    return timings * multiplier;
-}
-
-void Benchmark::runAndPrint(Context& c) {
-    TimingResult timing = run();
-    printResultLine(c, getName(), timing);
-}
-
-void BenchmarkGroup::runAll(Context &context, const TimerInfo &ti, const predicate_t& predicate) {
-    context.out() << std::endl << "** Running benchmark group " << getName() << " **" << std::endl;
-    printResultHeader(context, ti);
-    for (auto& b : benches_) {
-        if (predicate(b)) {
-            b.runAndPrint(context);
-        }
-    }
-}
 
 template <typename TIMER>
-BenchmarkList make_benches() {
+GroupList make_benches() {
 
-    BenchmarkList groupList;
+    GroupList groupList;
 
     register_default<TIMER>(groupList);
     register_loadstore<TIMER>(groupList);
@@ -178,11 +120,11 @@ class TimeredList {
     static std::vector<TimeredList> all_;
 
     std::unique_ptr<TimerInfo> timer_info_;
-    BenchmarkList benches_;
+    GroupList groups_;
 
 public:
-    TimeredList(std::unique_ptr<TimerInfo>&& timer_info, const BenchmarkList& benches)
-: timer_info_(std::move(timer_info)), benches_(benches) {}
+    TimeredList(std::unique_ptr<TimerInfo>&& timer_info, const GroupList& benches)
+: timer_info_(std::move(timer_info)), groups_(benches) {}
 
     TimeredList(const TimeredList &) = delete;
     TimeredList(TimeredList &&) = default;
@@ -193,14 +135,14 @@ public:
         return *timer_info_;
     }
 
-    const BenchmarkList& getBenches() const {
-        return benches_;
+    const GroupList& getGroups() const {
+        return groups_;
     }
 
-    void runAll(Context &c, const predicate_t& predicate) {
-        cout << "Running " << getBenches().size() << " benchmark groups using timer " << timer_info_->getName() << endl;
-        for (auto& group : getBenches()) {
-            group->runAll(c, getTimerInfo(), predicate);
+    void runIf(Context &c, const predicate_t& predicate) {
+        cout << "Running " << getGroups().size() << " benchmark groups using timer " << timer_info_->getName() << endl;
+        for (auto& group : getGroups()) {
+            group->runIf(c, getTimerInfo(), predicate);
         }
     }
 
@@ -238,13 +180,13 @@ TimeredList& getForTimer(Context &c) {
 
 void listBenches(Context& c) {
     std::ostream& out = c.out();
-    auto benchList = TimeredList::getAll(c).front().getBenches();
+    auto benchList = TimeredList::getAll(c).front().getGroups();
     out << "Listing " << benchList.size() << " benchmark groups" << endl << endl;
     for (auto& group : benchList) {
-        out << "Benchmark group: " << group->getName() << endl;
-        for (auto& bench : group->getAllBenches()) {
-            out << bench.getName() << endl;
-        }
+        out << "-------------------------------------\n";
+        out << "Benchmark group: " << group->getId() << "\n" << group->getDescription() << endl;
+        out << "-------------------------------------\n";
+        group->printBenches(out);
         out << endl;
     }
 }
@@ -324,15 +266,14 @@ void Context::run() {
         timer_info_->init(*this);
         predicate_t pred;
         if (arg_test_name) {
-            pred =  [this](const Benchmark& b){ return b.getName().find(arg_test_name.Get()) != std::string::npos; };
+            pred =  [this](const std::string& s, const Benchmark& b){ return b.getDescription().find(arg_test_name.Get()) != std::string::npos; };
         } else {
-            pred =  [](const Benchmark&){ return true; };
+            pred =  [](const std::string& s, const Benchmark&){ return true; };
         }
 
-        toRun.runAll(*this, pred);
+        toRun.runIf(*this, pred);
     }
 }
-
 
 int main(int argc, char **argv) {
     cout << "Welcome to uarch-bench (" << GIT_VERSION << ")" << endl;
