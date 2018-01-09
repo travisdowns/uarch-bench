@@ -66,7 +66,7 @@ public:
         // don't their name printed but are show in a grid instead, we run the predicate on a fake Benchmark created
         // based on the group name
         Benchmark fake(this, "fake", getDescription(), 1, full_bench_t(), 1);
-        if (!predicate("", fake)) {
+        if (!predicate(fake)) {
             return;
         }
 

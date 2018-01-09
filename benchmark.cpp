@@ -60,7 +60,7 @@ void Benchmark::runAndPrint(Context& c) {
     printResultLine(c, getDescription(), timing);
 }
 
-std::string Benchmark::getPath() {
+std::string Benchmark::getPath() const {
     return parent->getId() + "/" + getId();
 }
 

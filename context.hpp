@@ -76,10 +76,10 @@ private:
     args::Flag arg_clockoverhead{parser, "clock-overhead", "Dislay clock overhead, then quit", {"clock-overhead"}};
     args::Flag arg_listbenches{parser, "list-benches", "Dislay the available benchmarks", {"list"}};
     args::Flag arg_listtimers{parser, "list-timers", "Dislay the available timers", {"list-timers"}};
-    args::ValueFlag<std::string> arg_timer{parser, "timer", "Use the specified timer", {"timer"}};
-    args::ValueFlag<unsigned int> arg_default_precision{parser, "precision", "Use the specified number of decimal places"
+    args::ValueFlag<std::string> arg_timer{parser, "TIMER-NAME", "Use the specified timer", {"timer"}};
+    args::ValueFlag<unsigned int> arg_default_precision{parser, "PRECISION", "Use the specified number of decimal places"
             " to report values from most benchmarks", {"precision"}, (unsigned int)DEFAULT_PRECISION};
-    args::ValueFlag<std::string> arg_test_name{parser, "test name", "Run only the test with the given name", {"test-name"}};
+    args::ValueFlag<std::string> arg_test_name{parser, "PATTERN", "Run only the tests matching the given pattern", {"test-name"}};
 
 
     // internal flags: these aren't displayed to the user via help, but are used by some wrapper script to interact with the

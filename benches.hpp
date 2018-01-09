@@ -55,12 +55,12 @@ public:
     void runAndPrint(Context& c);
 
     /* the full "path" of the benchmark, which is the group id and the benchmark id, like group-name/bench-name */
-    std::string getPath();
+    std::string getPath() const;
 
 };
 
 /* a predicate which can select a benchmark, given the fully qualified ID and Benchmark object */
-using predicate_t = std::function<bool(const std::string&, const Benchmark&)>;
+using predicate_t = std::function<bool(const Benchmark&)>;
 
 /**
  * Interface for a group of benchmarks. The group itself has a name, and can run and output all the contained

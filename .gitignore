@@ -47,4 +47,7 @@ libpfm-4*/*
 /core*
 /vgcore*
 
+# perf files
+/perf.*
+
 dummy.rebuild

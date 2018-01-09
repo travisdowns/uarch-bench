@@ -64,4 +64,12 @@ static inline std::vector<std::string> split(const std::string &text, char sep) 
     return split(text, std::string{sep});
 }
 
+/** Take a string and escape it so that it will be treated as a literal string in a regex */
+std::string escape_for_regex(const std::string& input);
+
+/**
+ * Returns true if the entire string target matches pattern, where pattern can contain * wildcards
+ * that match any number of characters.
+ */
+bool wildcard_match(const std::string& target, const std::string& pattern);
 #endif /* UTIL_HPP_ */

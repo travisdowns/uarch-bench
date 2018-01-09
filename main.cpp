@@ -140,7 +140,7 @@ public:
     }
 
     void runIf(Context &c, const predicate_t& predicate) {
-        cout << "Running " << getGroups().size() << " benchmark groups using timer " << timer_info_->getName() << endl;
+        cout << "Running benchmarks groups using timer " << timer_info_->getName() << endl;
         for (auto& group : getGroups()) {
             group->runIf(c, getTimerInfo(), predicate);
         }
@@ -266,9 +266,9 @@ void Context::run() {
         timer_info_->init(*this);
         predicate_t pred;
         if (arg_test_name) {
-            pred =  [this](const std::string& s, const Benchmark& b){ return b.getDescription().find(arg_test_name.Get()) != std::string::npos; };
+            pred =  [this](const Benchmark& b){ return wildcard_match(b.getPath(), arg_test_name.Get()); };
         } else {
-            pred =  [](const std::string& s, const Benchmark&){ return true; };
+            pred =  [](const Benchmark&){ return true; };
         }
 
         toRun.runIf(*this, pred);

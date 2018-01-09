@@ -11,10 +11,14 @@ constexpr int BENCH_ID_WIDTH = 16;
 
 
 void BenchmarkGroup::runIf(Context &context, const TimerInfo &ti, const predicate_t& predicate) {
-    context.out() << std::endl << "** Running benchmark group " << getDescription() << " **" << std::endl;
-    printResultHeader(context, ti);
+    bool header = false;
     for (auto& b : benches_) {
-        if (predicate("", b)) {
+        if (predicate(b)) {
+            if (!header) {
+                context.out() << std::endl << "** Running benchmark group " << getDescription() << " **" << std::endl;
+                printResultHeader(context, ti);
+                header = true;
+            }
             b.runAndPrint(context);
         }
     }
@@ -27,7 +31,7 @@ void BenchmarkGroup::printBenches(std::ostream& out) const {
 }
 
 void BenchmarkGroup::printBench(std::ostream& out, const Benchmark& bench) {
-    out << left << setw(BENCH_ID_WIDTH) << bench.getId() << ": " << bench.getDescription() << endl;
+    out << left << setw(BENCH_ID_WIDTH) << bench.getPath() << ": " << bench.getDescription() << endl;
 }
 
 
