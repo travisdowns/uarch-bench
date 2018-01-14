@@ -14,6 +14,8 @@ bench2_f dep_imul64_rax;
 bench2_f indep_imul128_rax;
 bench2_f store_same_loc;
 bench2_f store64_disjoint;
+bench2_f dep_pushpop;
+bench2_f indep_pushpop;
 }
 
 template <typename TIMER>
@@ -30,7 +32,9 @@ void register_default(GroupList& list) {
         default_maker::template make_bench<dep_imul64_rax>   (group_ptr, "dep-mul64",  "Dependent imul 64->64",     128),
         default_maker::template make_bench<indep_imul128_rax>(group_ptr, "indep-mul128", "Independent imul 64->128",  128),
         default_maker::template make_bench<store_same_loc>   (group_ptr, "same-stores", "Same location stores",      128),
-        default_maker::template make_bench<store64_disjoint> (group_ptr, "disjoin-stores", "Disjoint location stores",  128)
+        default_maker::template make_bench<store64_disjoint> (group_ptr, "disjoint-stores", "Disjoint location stores",  128),
+        default_maker::template make_bench<dep_pushpop>      (group_ptr, "dep-push-pop", "Dependent push/pop chain",  128),
+        default_maker::template make_bench<indep_pushpop>    (group_ptr, "dep-push-pop", "Inependent push/pop chain",  128)
     };
 
     default_group->add(benches);

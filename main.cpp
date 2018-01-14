@@ -107,6 +107,7 @@ GroupList make_benches() {
 
     register_default<TIMER>(groupList);
     register_loadstore<TIMER>(groupList);
+    register_mem<TIMER>(groupList);
     register_misc<TIMER>(groupList);
 
     return groupList;

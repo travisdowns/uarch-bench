@@ -117,6 +117,10 @@ using GroupList = std::vector<std::shared_ptr<BenchmarkGroup>>;
 template <typename TIMER>
 class BenchmarkMaker {
 public:
+    /**
+     * Make a benchmark with the given parameters - this measures absolute time of the single
+     * BENCH_METHOD without a mechanism for removing constant overhead.
+     */
     template <bench2_f BENCH_METHOD>
     static Benchmark make_bench(
             const BenchmarkGroup* parent,
@@ -125,8 +129,28 @@ public:
             size_t ops_per_loop,
             std::function<void * ()> arg_provider = []{ return nullptr; },
             uint32_t loop_count = Benchmark::default_loop_count) {
-        Timing2<TIMER,BENCH_METHOD> timing(arg_provider);
+        TimingAbsolute<TIMER,BENCH_METHOD> timing(arg_provider);
         return Benchmark{parent, id, name, ops_per_loop, TIMER::make_bench_method(timing), loop_count};
+    }
+
+    /**
+     * Makes a benchmark with the given BASE_METHOD and BENCH_METHOD. The effective time is the difference
+     * between BASE_METHOD and BENCH_METHOD - essentially we are timing only the difference between the
+     * two methods. This is useful when the core work of a benchmark includes overhead that you don't want
+     * to include (i.e., it is possible to create "sparse" benchmarks where the code under test is surrounded
+     * by code that shouldn't contribute to the result).
+     */
+    template <bench2_f BASE_METHOD, bench2_f BENCH_METHOD>
+    static Benchmark make_bench(
+            const BenchmarkGroup* parent,
+            const std::string& id,
+            const std::string& name,
+            size_t ops_per_loop,
+            std::function<void * ()> arg_provider = []{ return nullptr; },
+            uint32_t loop_count = Benchmark::default_loop_count) {
+        TimingAbsolute<TIMER, BASE_METHOD>   base(arg_provider);
+        TimingAbsolute<TIMER,BENCH_METHOD> timing(arg_provider);
+        return Benchmark{parent, id, name, ops_per_loop, TIMER::make_delta_method(base, timing), loop_count};
     }
 };
 
@@ -138,6 +162,9 @@ void register_default(GroupList& list);
 
 template <typename TIMER>
 void register_misc(GroupList& list);
+
+template <typename TIMER>
+void register_mem(GroupList& list);
 
 void printResultHeader(Context& c, const TimerInfo& ti);
 

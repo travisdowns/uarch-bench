@@ -44,7 +44,7 @@ static Benchmark make_load_bench(const BenchmarkGroup* parent, size_t kib, const
     make_load_bench<TIMER,prefetchnta_bench ## kib>(misc_group.get(), kib, "prefetchnta")
 
 template <typename TIMER>
-void register_misc(GroupList& list) {
+void register_mem(GroupList& list) {
     std::shared_ptr<BenchmarkGroup> misc_group = std::make_shared<BenchmarkGroup>("memory/load", "Load/prefetches from fixed-size regions");
 
     auto benches = std::vector<Benchmark> {
@@ -61,7 +61,7 @@ void register_misc(GroupList& list) {
     list.push_back(misc_group);
 }
 
-#define REG_DEFAULT(CLOCK) template void register_misc<CLOCK>(GroupList& list);
+#define REG_DEFAULT(CLOCK) template void register_mem<CLOCK>(GroupList& list);
 
 ALL_TIMERS_X(REG_DEFAULT)
 

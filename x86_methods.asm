@@ -53,6 +53,31 @@ dec rdi
 jnz .top
 ret
 
+define_bench dep_pushpop
+xor eax, eax
+xor ecx, ecx
+.top:
+%rep 128
+push rax
+pop  rax
+%endrep
+dec rdi
+jnz .top
+ret
+
+define_bench indep_pushpop
+xor eax, eax
+xor ecx, ecx
+.top:
+%rep 128
+push rax
+pop  rcx
+%endrep
+dec rdi
+jnz .top
+ret
+
+
 ; because the 64x64=128 imul uses an implicit destination & first source
 ; we need to clear out eax each iteration to make it idenpendent, although
 ; of course that may bias the measurement on some architectures
@@ -323,3 +348,155 @@ all_parallel_benches prefetcht0,prefetcht0_bench
 all_parallel_benches prefetcht1,prefetcht1_bench
 all_parallel_benches prefetcht2,prefetcht2_bench
 all_parallel_benches prefetchnta,prefetchnta_bench
+
+; retpoline stuff
+
+; the generic retpoline thunk, parameterized on the loop instruction
+%macro retpoline_thunk 1
+retpoline_thunk_%1:
+call    .target
+.loop:
+%1
+jmp .loop
+.target:
+lea rsp, [rsp + 8]
+ret
+%endmacro
+
+%macro retpo_call 2
+jmp     %%call
+%%jmpthunk:
+push %1
+jmp retpoline_thunk_%2
+%%call:
+call %%jmpthunk
+%endmacro
+
+
+retpoline_thunk pause
+retpoline_thunk lfence
+
+ALIGN 16
+empty_func:
+ret
+
+%macro body 0
+call empty_func
+%endmacro
+
+%assign depth 128
+%rep depth
+call_chain_ %+ depth :
+%assign depth depth-1
+call call_chain_ %+ depth
+ret
+%endrep
+
+call_chain_0:
+ret
+
+%define dense_nop_padding nop5
+
+%macro retpoline_dense_call 1
+define_bench retpoline_dense_call_%1
+push r15
+lea r15, [empty_func]
+.top:
+%rep 32
+retpo_call r15,%1
+dense_nop_padding
+%endrep
+dec rdi
+jnz .top
+pop r15
+ret
+%endmacro
+
+retpoline_dense_call lfence
+retpoline_dense_call pause
+
+%define IMUL_COUNT 20
+define_bench retpoline_sparse_call_base
+push r15
+lea r15, [empty_func]
+.top:
+%rep 8
+times IMUL_COUNT imul eax, eax, 1
+%endrep
+dec rdi
+jnz .top
+pop r15
+ret
+
+%macro retpoline_sparse_indep_call 1
+define_bench retpoline_sparse_indep_call_%1
+push r15
+lea r15, [empty_func]
+.top:
+%rep 8
+retpo_call r15,%1
+times IMUL_COUNT imul rax, rax, 1
+%endrep
+dec rdi
+jnz .top
+pop r15
+ret
+%endmacro
+
+%macro retpoline_sparse_dep_call 1
+define_bench retpoline_sparse_dep_call_%1
+push r15
+lea r15, [empty_func]
+.top:
+%rep 8
+retpo_call r15,%1
+times IMUL_COUNT imul r15, r15, 1
+%endrep
+dec rdi
+jnz .top
+pop r15
+ret
+%endmacro
+
+retpoline_sparse_indep_call lfence
+retpoline_sparse_indep_call pause
+retpoline_sparse_dep_call lfence
+retpoline_sparse_dep_call pause
+
+define_bench indirect_dense_call_pred
+lea r15, [empty_func]
+.top:
+%rep 32
+call r15
+dense_nop_padding
+%endrep
+dec rdi
+jnz .top
+ret
+
+define_bench indirect_dense_call_unpred
+push r14
+push r15
+xor r14, r14
+.top:
+add  r14, 11
+and  r14, 127
+lea r15, [empty_func0 + r14 * 8]
+%rep 32
+call r15
+%endrep
+dec rdi
+jnz .top
+pop r15
+pop r14
+ret
+
+; empty functions spaced out every 8 bytes
+%assign i 0
+%rep 128
+empty_func %+ i :
+ret
+nop7
+%assign i i+1
+%endrep
+

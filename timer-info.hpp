@@ -125,7 +125,7 @@ class TimerBase : public TimerInfo {
 public:
 
     static constexpr int warmup_samples =  2;
-    static constexpr int total_samples   = 35;
+    static constexpr int total_samples  = 35;
 
     static_assert(warmup_samples < total_samples, "warmup samples must be less than total");
 
@@ -136,21 +136,42 @@ public:
 
     template <typename TIMING>
     static full_bench_t make_bench_method(TIMING t) {
-        auto l = [t](int loop_count){ return doTiming(loop_count, t); };
-        return l;
+        return [t](int loop_count){ return doTiming(loop_count, t); };
     }
 
     template <typename TIMING>
     static TimingResult doTiming(size_t loop_count, TIMING t) {
         std::array<typename TIMER_INFO::now_t, total_samples> raw_results;
-        // warmup
+
+        // note that the warmup and "real" samples use exactly the same loop, below
+        // this keeps the generated code smaller and, more importantly, consistent
+        // between warmup and actual iterations
         for (int i = 0; i < total_samples; i++) {
             raw_results[i] = t(loop_count);
         }
 
-//        auto aggr = *std::min_element(raw_results.begin() + warmup_samples, raw_results.end());
         typename TIMER_INFO::delta_t aggr = TIMER_INFO::aggregate(raw_results.begin() + warmup_samples, raw_results.end());
         return TIMER_INFO::to_result(aggr);
+    }
+
+    template <typename BASE_TIMING, typename PRIMARY_TIMING>
+    static full_bench_t make_delta_method(BASE_TIMING base, PRIMARY_TIMING primary) {
+        return [base, primary](int loop_count){ return doTimingDelta(loop_count, base, primary); };
+    }
+
+    template <typename BASE_TIMING, typename PRIMARY_TIMING>
+    static TimingResult doTimingDelta(size_t loop_count, BASE_TIMING base, PRIMARY_TIMING primary) {
+        std::array<typename TIMER_INFO::now_t, total_samples>    base_results;
+        std::array<typename TIMER_INFO::now_t, total_samples> primary_results;
+
+        for (int i = 0; i < total_samples; i++) {
+            base_results[i]    =    base(loop_count);
+            primary_results[i] = primary(loop_count);
+        }
+
+        typename TIMER_INFO::delta_t    base_aggr = TIMER_INFO::aggregate(base_results.begin() + warmup_samples, base_results.end());
+        typename TIMER_INFO::delta_t primary_aggr = TIMER_INFO::aggregate(primary_results.begin() + warmup_samples, primary_results.end());
+        return TIMER_INFO::to_result(TIMER_INFO::delta(primary_aggr, base_aggr));
     }
 
 };
@@ -164,11 +185,11 @@ public:
  * which is most often used to use the same benchmark code repeatedly with different input values.
  */
 template <typename TIMER, bench2_f METHOD>
-class Timing2 {
+class TimingAbsolute {
     arg_method_t arg_method_;
     void* arg_;
 public:
-    Timing2(arg_method_t arg_method) :
+    TimingAbsolute(arg_method_t arg_method) :
         arg_method_(arg_method), arg_(arg_method()) {}
 
     typename TIMER::delta_t operator()(size_t loop_count) {

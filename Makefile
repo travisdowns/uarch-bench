@@ -5,12 +5,12 @@ include config.mk
 
 .PHONY: all clean libpfc libpfc-clean
 
-ASM := nasm
-ASM_FLAGS := -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all -l x86_methods.list 
+ASM ?= nasm
+ASM_FLAGS ?= -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all -l x86_methods.list 
 
-PFM_VER := 4.8.0
-PFM_DIR := libpfm-$(PFM_VER)
-PFM_LIBDIR := $(PFM_DIR)/lib
+PFM_VER ?= 4.8.0
+PFM_DIR ?= libpfm-$(PFM_VER)
+PFM_LIBDIR ?= $(PFM_DIR)/lib
 
 GIT_VERSION := $(shell git describe --dirty --always)
 
@@ -58,7 +58,7 @@ uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
 %.o : %.cpp $(HEADERS) $(LIBPFC_DEP)
 	g++ $(CPPFLAGS) -c -std=c++11 -o $@ $<
 
-x86_methods.o: x86_methods.asm
+x86_methods.o: x86_methods.asm nasm-utils/nasm-utils-inc.asm
 	$(ASM) $(ASM_FLAGS) -f elf64 x86_methods.asm
 
 libpfc/libpfc.so:
@@ -79,9 +79,14 @@ $(PFM_LIBDIR)/libpfm.so:
 
 libpfm4-clean:
 	rm -rf $(PFM_DIR)
+
+	
+LOCAL_MK = $(wildcard local.mk)
 	
 # https://stackoverflow.com/a/3892826/149138
-dummy.rebuild: Makefile config.mk
+dummy.rebuild: Makefile config.mk $(LOCAL_MK)
 	touch $@
 	$(MAKE) -s clean
+	
+foo: barzzz
 
