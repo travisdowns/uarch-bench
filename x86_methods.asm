@@ -273,11 +273,23 @@ mov [rax], edi
 blsi ebx, [rdi]
 dec ecx
 jnz .top
-
 ; cleanup
 mov rbx, [rbp - 8]
 mov rsp, rbp
 pop rbp
+ret
+
+define_bench misc_port7
+ALIGN 32
+mov rax, rsp
+mov rsi, [rsp]
+xor edx, edx
+.top:
+mov ecx, [rax]
+mov ecx, [rax]
+mov [rax + rdx * 8], rsi
+dec rdi
+jnz .top
 ret
 
 %macro bmi_bench 1
