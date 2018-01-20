@@ -2,6 +2,8 @@
 # launches the uarch-bench process after trying to disable turbo
 # Some parts based on http://notepad2.blogspot.com/2014/11/a-script-to-turn-off-intel-cpu-turbo.html
 
+set -e
+
 # pass cpu # and get the state of the turbo mode, 0 is enabled, 1 is disabled
 function get_core_turbo_intel {
 	echo $(sudo rdmsr -p${core} 0x1a0 -f 38:38)

@@ -44,9 +44,9 @@ $(info USE_LIBPFC=${USE_LIBPFC})
 
 all: uarch-bench
 
-clean:
+clean:	libpfc-clean
 	rm -f *.o uarch-bench
-	
+
 dist-clean: clean $(CLEAN_TARGETS)
 
 uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
