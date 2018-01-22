@@ -11,6 +11,8 @@ extern "C" {
 bench2_f misc_add_loop32;
 bench2_f misc_add_loop64;
 bench2_f misc_port7;
+bench2_f misc_dsb_align_16;
+bench2_f misc_dsb_align_32;
 bench2_f bmi_tzcnt;
 bench2_f bmi_lzcnt;
 bench2_f bmi_popcnt;
@@ -39,7 +41,13 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<misc_add_loop64>(misc_group.get(), "add-64", "64-bit add-loop", 1,
                 []{ return nullptr; }, iters),
         default_maker::template make_bench<misc_port7>(misc_group.get(), "port7", "Can port7 be used by loads", 1,
-                        []{ return nullptr; }, iters)
+                []{ return nullptr; }, iters),
+
+        // https://dendibakh.github.io/blog/2018/01/18/Code_alignment_issues
+        default_maker::template make_bench<misc_dsb_align_16>(misc_group.get(), "dsb-align16", "Weird alignment effect 16", 1,
+                []{ return aligned_ptr(1024, 1024); }, 1024),
+        default_maker::template make_bench<misc_dsb_align_32>(misc_group.get(), "dsb-align32", "Weird alignment effect 32", 1,
+                []{ return aligned_ptr(1024, 1024); }, 1024),
     };
 
     misc_group->add(benches);
