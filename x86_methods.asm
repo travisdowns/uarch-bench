@@ -512,45 +512,29 @@ nop7
 %assign i i+1
 %endrep
 
-%define ITERS 128
-
 %macro dsb_body 0
+times 2 nop8
 .outer:
-mov         rax, -(ITERS * 32)
-mov         rdx, rax
-nop
-nop
-nop
-nop
-nop
-nop
-nop
-nop
-nop6
+mov     rax, 128
 .top:
 nop9
-add         rdx, 32
-jne         .top
+dec     rax
+jne     .top
 dec     rdi
 jnz     .outer
 ret
 ud2
 %endmacro
 
-GLOBAL dsb_align_body_16,dsb_align_body_32
+GLOBAL dsb_alignment_cross64,dsb_alignment_nocross64
 
-ALIGN 32
-nop8
-nop8
-nop8
-nop8
-; the loop ends up 16-byte aligned, not 32 because the code before the loop is 16 bytes
-dsb_align_body_16:
+ALIGN 64
+times 4 nop8
+; the loop ends up crossing a 64-byte boundary
+dsb_alignment_cross64:
 dsb_body
 
-times 0 * 32 int3
-
-ALIGN 32
-dsb_align_body_32:
+ALIGN 64
+dsb_alignment_nocross64:
 dsb_body
 
