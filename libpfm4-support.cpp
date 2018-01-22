@@ -126,9 +126,8 @@ std::vector<PmuEvent> parseExtraEvents(Context& c, const std::string& event_list
             c.err() << "WARNING: Event '" << event_str << "' could not be resolved and will be ignored. Reason: " <<
                     pfm_strerror(ret) << "\n\tUse --list-events to list available events.\n";
         } else {
-            if (encode_info.count != 1) {
-                c.err() << "WARNING: Event '" << event_str << "' had an unexpected count of " << encode_info.count <<
-                        " and will be ignored.\n";
+            if (encode_info.count < 1) {
+                c.err() << "WARNING: Event '" << event_str << "' didn't have any codes and will be ignored.\n";
             } else {
                 pfm_event_info_t einfo;
                 memset(&einfo, 0, sizeof(einfo));
@@ -140,11 +139,16 @@ std::vector<PmuEvent> parseExtraEvents(Context& c, const std::string& event_list
                     c.err() << "WARNING: Event '" << event_str << "' is a perf_events-based event which aren't supported and will " <<
                             "be ignored.\n";
                 } else {
-                    uint64_t code = encode_info.codes[0];
-                    PmuEvent e(name, code);
-                    c.out() << "Event '" << event_str << "' resolved to '" << name <<
-                            ", short name: '" << e.short_name << "' with code 0x" << std::hex << e.code << std::dec << "\n";
-                    all_codes.push_back(e);
+                    for (int code_idx = 0; code_idx < encode_info.count; code_idx++) {
+                        uint64_t code = encode_info.codes[code_idx];
+                        PmuEvent e(name, code);
+                        c.out() << "Event '" << event_str << "' resolved to '" << name <<
+                                ", short name: '" << e.short_name << "' with code 0x" << std::hex << e.code << std::dec << "\n";
+                        all_codes.push_back(e);
+                        if (code_idx == 1) {
+                            c.err() << "WARNING: MULTIPLE CODES FOR '" << event_str << "'\n";
+                        }
+                    }
                 }
             }
         }

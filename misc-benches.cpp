@@ -13,6 +13,8 @@ bench2_f misc_add_loop64;
 bench2_f misc_port7;
 bench2_f misc_dsb_align_16;
 bench2_f misc_dsb_align_32;
+bench2_f dsb_align_body_16;
+bench2_f dsb_align_body_32;
 bench2_f bmi_tzcnt;
 bench2_f bmi_lzcnt;
 bench2_f bmi_popcnt;
@@ -44,9 +46,9 @@ void register_misc(GroupList& list) {
                 []{ return nullptr; }, iters),
 
         // https://dendibakh.github.io/blog/2018/01/18/Code_alignment_issues
-        default_maker::template make_bench<misc_dsb_align_16>(misc_group.get(), "dsb-align16", "Weird alignment effect 16", 1,
+        default_maker::template make_bench<dsb_align_body_16>(misc_group.get(), "dsb-align16", "Weird alignment effect 16", 1,
                 []{ return aligned_ptr(1024, 1024); }, 1024),
-        default_maker::template make_bench<misc_dsb_align_32>(misc_group.get(), "dsb-align32", "Weird alignment effect 32", 1,
+        default_maker::template make_bench<dsb_align_body_32>(misc_group.get(), "dsb-align32", "Weird alignment effect 32", 1,
                 []{ return aligned_ptr(1024, 1024); }, 1024),
     };
 

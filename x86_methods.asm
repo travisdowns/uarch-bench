@@ -512,46 +512,45 @@ nop7
 %assign i i+1
 %endrep
 
-%macro misc_dsb_align_macro 1
-GLOBAL misc_dsb_align_%1
-ALIGN 1024
-times 240 nop
-misc_dsb_align_%1:
-.top:
-nop5
-call    dsb_align_body_%1
-add     rdi, -1
-jnz     .top
-ret
-%endmacro
-
-misc_dsb_align_macro 16
-misc_dsb_align_macro 32
-
-%define ITERS 32
+%define ITERS 128
 
 %macro dsb_body 0
+.outer:
 mov         rax, -(ITERS * 32)
-vpcmpeqd    ymm0, ymm0, ymm0
-nop5        ; DWORD PTR [rax+rax*1+0x0]
+mov         rdx, rax
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop6
 .top:
-vmovdqu     ymm1, [rsi + rax + (ITERS * 32)]
-vpsubd      ymm1, ymm1, ymm0
-vmovdqu     [rsi + rax + (ITERS * 32)], ymm1
-
-add         rax,32
+nop9
+add         rdx, 32
 jne         .top
-vzeroupper
+dec     rdi
+jnz     .outer
 ret
+ud2
 %endmacro
 
+GLOBAL dsb_align_body_16,dsb_align_body_32
+
 ALIGN 32
+nop8
+nop8
+nop8
+nop8
 ; the loop ends up 16-byte aligned, not 32 because the code before the loop is 16 bytes
 dsb_align_body_16:
 dsb_body
 
+times 0 * 32 int3
+
 ALIGN 32
-; the loop ends up 16-byte aligned, not 32 because the code before the loop is 16 bytes
-times 16 nop
 dsb_align_body_32:
 dsb_body
+
