@@ -26,6 +26,7 @@ bench2_f retpoline_sparse_dep_call_lfence;
 bench2_f retpoline_sparse_dep_call_pause;
 bench2_f indirect_dense_call_pred;
 bench2_f indirect_dense_call_unpred;
+bench2_f loop_weirdness_fast;
 }
 
 template <typename TIMER>
@@ -48,6 +49,10 @@ void register_misc(GroupList& list) {
                 []{ return aligned_ptr(1024, 1024); }, 1024),
         default_maker::template make_bench<dsb_alignment_nocross64>(misc_group.get(), "dsb-align64-nocross", "No cross 64-byte i-boundary", 1,
                 []{ return aligned_ptr(1024, 1024); }, 1024),
+
+        // https://news.ycombinator.com/item?id=15935283
+        default_maker::template make_bench<loop_weirdness_fast>(misc_group.get(), "loop-weirdness-fast", "Loop weirdness fast", 1,
+                []{ return aligned_ptr(1024, 1024); }, 10000),
     };
 
     misc_group->add(benches);

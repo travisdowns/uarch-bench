@@ -145,7 +145,7 @@ void register_loadstore(GroupList& list) {
     list.push_back(LoadStoreGroup::make<TIMER, store256_any>("store/256-bit", 32));
 }
 
-#define REG_LOADSTORE(CLOCK) template void register_loadstore< CLOCK >(GroupList& list);
+#define REG_LOADSTORE(CLOCK) template void register_loadstore<CLOCK>(GroupList& list);
 
 ALL_TIMERS_X(REG_LOADSTORE)
 

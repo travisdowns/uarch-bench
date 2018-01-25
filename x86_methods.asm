@@ -8,7 +8,7 @@ thunk_boilerplate
 ; aligns and declares the global label for the bench with the given name
 ; also potentally checks the ABI compliance (if enabled)
 %macro define_bench 1
-ALIGN 32
+ALIGN 64
 abi_checked_function %1
 %endmacro
 
@@ -537,4 +537,24 @@ dsb_body
 ALIGN 64
 dsb_alignment_nocross64:
 dsb_body
+
+; https://news.ycombinator.com/item?id=15935283
+; https://eli.thegreenplace.net/2013/12/03/intel-i7-loop-performance-anomaly
+define_bench loop_weirdness_fast
+.top:
+add     QWORD [rsp - 8], 1
+times 10 mov eax, 1
+dec     rdi
+jne     .top
+rep ret
+
+define_bench fwd_dense_lat
+.top:
+add     QWORD [rsp - 8], 1
+times 10 mov eax, 1
+dec     rdi
+jne     .top
+rep ret
+
+
 

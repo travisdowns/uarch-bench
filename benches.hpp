@@ -12,6 +12,7 @@
 
 #include <vector>
 #include <memory>
+#include <cassert>
 
 #include "bench-declarations.h"
 #include "timer-info.hpp"
@@ -42,9 +43,14 @@ public:
     Benchmark(const BenchmarkGroup* parent, const std::string& id, const std::string& description,
             size_t ops_per_loop, full_bench_t full_bench, uint32_t loop_count);
 
+    /** get the longer, human-readable descripton for the group */
     std::string getDescription() const { return description; }
+
+    /** the short, command-line-friendly, ID for the group */
     std::string getId() const { return id; }
 
+    /** the unique group to which this */
+    const BenchmarkGroup& getGroup() const { return *parent; }
 
     /* get the raw timings for a full run of the underlying benchmark, doesn't normalize for loop_count or ops_per_loop */
     TimingResult getTimings();
@@ -82,10 +88,13 @@ public:
     virtual void runIf(Context &context, const TimerInfo &ti, const predicate_t& predicate);
 
     virtual void add(const std::vector<Benchmark> &more) {
-        benches_.insert(benches_.end(), more.begin(), more.end());
+        for (auto &b : more) {
+            add(b);
+        }
     }
 
     void add(const Benchmark &bench) {
+        assert(&bench.getGroup() == this);
         benches_.push_back(bench);
     }
 
@@ -125,12 +134,12 @@ public:
     static Benchmark make_bench(
             const BenchmarkGroup* parent,
             const std::string& id,
-            const std::string& name,
+            const std::string& description,
             size_t ops_per_loop,
             std::function<void * ()> arg_provider = []{ return nullptr; },
             uint32_t loop_count = Benchmark::default_loop_count) {
         TimingAbsolute<TIMER,BENCH_METHOD> timing(arg_provider);
-        return Benchmark{parent, id, name, ops_per_loop, TIMER::make_bench_method(timing), loop_count};
+        return Benchmark{parent, id, description, ops_per_loop, TIMER::make_bench_method(timing), loop_count};
     }
 
     /**
@@ -144,13 +153,13 @@ public:
     static Benchmark make_bench(
             const BenchmarkGroup* parent,
             const std::string& id,
-            const std::string& name,
+            const std::string& description,
             size_t ops_per_loop,
             std::function<void * ()> arg_provider = []{ return nullptr; },
             uint32_t loop_count = Benchmark::default_loop_count) {
         TimingAbsolute<TIMER, BASE_METHOD>   base(arg_provider);
         TimingAbsolute<TIMER,BENCH_METHOD> timing(arg_provider);
-        return Benchmark{parent, id, name, ops_per_loop, TIMER::make_delta_method(base, timing), loop_count};
+        return Benchmark{parent, id, description, ops_per_loop, TIMER::make_delta_method(base, timing), loop_count};
     }
 };
 
