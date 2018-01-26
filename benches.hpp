@@ -166,6 +166,9 @@ void register_misc(GroupList& list);
 template <typename TIMER>
 void register_mem(GroupList& list);
 
+template <typename TIMER>
+void register_cpp(GroupList& list);
+
 void printResultHeader(Context& c, const TimerInfo& ti);
 
 

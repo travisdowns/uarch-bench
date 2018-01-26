@@ -14,10 +14,8 @@ PFM_LIBDIR ?= $(PFM_DIR)/lib
 
 GIT_VERSION := $(shell git describe --dirty --always)
 
-HEADERS := $(wildcard *.h) $(wildcard *.hpp) $(wildcard *.hxx)
-
 O_LEVEL ?= -O2
-CPPFLAGS := -Wall -g $(O_LEVEL) -march=native -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC)
+CPPFLAGS := -MMD -Wall -g $(O_LEVEL) -march=haswell -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC)
 
 # files that should only be compiled if USE_LIBPFC is enabled
 PFC_SRC := libpfc-timer.cpp libpfm4-support.cpp
@@ -34,6 +32,7 @@ endif
 
 OBJECTS := $(SRC_FILES:.cpp=.o) x86_methods.o
 OBJECTS := $(OBJECTS:.c=.o)
+DEPFILES = $(OBJECTS:.o=.d)
 # $(info OBJECTS=$(OBJECTS))
 
 $(info USE_LIBPFC=${USE_LIBPFC})
@@ -44,8 +43,10 @@ $(info USE_LIBPFC=${USE_LIBPFC})
 
 all: uarch-bench
 
+-include $(DEPFILES)
+
 clean:	libpfc-clean
-	rm -f *.o uarch-bench
+	rm -f *.d *.o uarch-bench
 
 dist-clean: clean $(CLEAN_TARGETS)
 
@@ -55,7 +56,7 @@ uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
 	@wc -c uarch-bench | awk '{print "binary size: " $$1/1000 "KB"}'
 	@size uarch-bench --format=SysV | egrep '\.text|\.eh_frame|\.rodata|^section'
 
-%.o : %.cpp $(HEADERS) $(LIBPFC_DEP)
+%.o : %.cpp $(LIBPFC_DEP)
 	g++ $(CPPFLAGS) -c -std=c++11 -o $@ $<
 
 x86_methods.o: x86_methods.asm nasm-utils/nasm-utils-inc.asm
@@ -87,6 +88,3 @@ LOCAL_MK = $(wildcard local.mk)
 dummy.rebuild: Makefile config.mk $(LOCAL_MK)
 	touch $@
 	$(MAKE) -s clean
-	
-foo: barzzz
-
