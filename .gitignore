@@ -51,3 +51,6 @@ libpfm-4*/*
 /perf.*
 
 dummy.rebuild
+
+# local make config file
+local.mk

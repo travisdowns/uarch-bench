@@ -476,6 +476,7 @@ retpoline_sparse_dep_call lfence
 retpoline_sparse_dep_call pause
 
 define_bench indirect_dense_call_pred
+push r15
 lea r15, [empty_func]
 .top:
 %rep 32
@@ -484,6 +485,7 @@ dense_nop_padding
 %endrep
 dec rdi
 jnz .top
+pop r15
 ret
 
 define_bench indirect_dense_call_unpred
