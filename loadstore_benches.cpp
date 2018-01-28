@@ -55,7 +55,7 @@ public:
         using maker = BenchmarkMaker<TIMER>;
         for (ssize_t misalign = 0; misalign < 64; misalign++) {
             group->add(maker::template make_bench<METHOD>(group.get(), group->make_id(misalign), group->make_name(misalign), 128,
-                    [misalign]() { return misaligned_ptr(64, 64,  misalign); }));
+                    [misalign]() { return misaligned_ptr(64, 64,  misalign); }, 1000));
         }
         return group;
     }

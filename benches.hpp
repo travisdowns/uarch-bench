@@ -37,8 +37,8 @@ protected:
 
 public:
 
-    static constexpr uint32_t default_loop_count = 1000;
-    static constexpr int                 samples =   33;
+    static constexpr uint32_t default_loop_count = 10000;
+    static constexpr int                 samples =    33;
 
     Benchmark(const BenchmarkGroup* parent, const std::string& id, const std::string& description,
             size_t ops_per_loop, full_bench_t full_bench, uint32_t loop_count);

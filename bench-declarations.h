@@ -22,6 +22,7 @@ extern "C" {
  */
 typedef long (bench2_f)(uint64_t iters, void *arg);
 
+bench2_f dummy_bench;
 }
 
 #endif /* BENCH_DECLARATIONS_H_ */

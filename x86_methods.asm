@@ -29,6 +29,11 @@ sub rdi, 1
 jnz add_calibration
 ret
 
+; a benchmark that immediately returns, useful as the "base" method
+; to cancel out some forms of overhead
+define_bench dummy_bench
+ret
+
 define_bench dep_add_rax_rax
 xor eax, eax
 .top:
@@ -550,13 +555,49 @@ dec     rdi
 jne     .top
 rep ret
 
-define_bench fwd_dense_lat
+%macro fwd_lat_with_delay 1
+define_bench fwd_lat_delay_%1
+lea     rdx, [rsp - 8]
 .top:
-add     QWORD [rsp - 8], 1
-times 10 mov eax, 1
+mov     rcx, [rdx]
+mov     [rdx], rcx
+times   %1  add rdx, 0
 dec     rdi
 jne     .top
 rep ret
+%endmacro
 
+fwd_lat_with_delay 0
+fwd_lat_with_delay 1
+fwd_lat_with_delay 2
+fwd_lat_with_delay 3
+fwd_lat_with_delay 4
+fwd_lat_with_delay 5
 
+%macro fwd_tput_conc 1
+define_bench fwd_tput_conc_%1
+sub     rsp, 256
+lea     rdx, [rsp - 8]
+.top:
+%assign offset 0
+%rep %1
+mov     rcx, [rdx + offset]
+mov     [rdx + offset], rcx
+%assign offset offset+8
+%endrep
+dec     rdi
+jne     .top
+add     rsp, 256
+rep ret
+%endmacro
 
+fwd_tput_conc 1
+fwd_tput_conc 2
+fwd_tput_conc 3
+fwd_tput_conc 4
+fwd_tput_conc 5
+fwd_tput_conc 6
+fwd_tput_conc 7
+fwd_tput_conc 8
+fwd_tput_conc 9
+fwd_tput_conc 10

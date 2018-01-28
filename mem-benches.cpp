@@ -26,7 +26,23 @@ BENCH_DECL_X(prefetcht1_bench)
 BENCH_DECL_X(prefetcht2_bench)
 BENCH_DECL_X(prefetchnta_bench)
 
-bench2_f fwd_dense_lat;
+bench2_f fwd_lat_delay_0;
+bench2_f fwd_lat_delay_1;
+bench2_f fwd_lat_delay_2;
+bench2_f fwd_lat_delay_3;
+bench2_f fwd_lat_delay_4;
+bench2_f fwd_lat_delay_5;
+
+bench2_f fwd_tput_conc_1;
+bench2_f fwd_tput_conc_2;
+bench2_f fwd_tput_conc_3;
+bench2_f fwd_tput_conc_4;
+bench2_f fwd_tput_conc_5;
+bench2_f fwd_tput_conc_6;
+bench2_f fwd_tput_conc_7;
+bench2_f fwd_tput_conc_8;
+bench2_f fwd_tput_conc_9;
+bench2_f fwd_tput_conc_10;
 }
 
 template <typename TIMER, bench2_f FUNC>
@@ -69,9 +85,34 @@ void register_mem(GroupList& list) {
 
         using default_maker = BenchmarkMaker<TIMER>;
 
+#define LAT_DELAY_BENCH(delay) \
+        default_maker::template make_bench<dummy_bench, fwd_lat_delay_ ## delay >(fwd_group.get(), "latency-" #delay, \
+                    "Store forward latency delay " #delay, 1, []{ return nullptr; /*aligned_ptr(4096, 2048 * 1024);*/ })
+
+#define TPUT_BENCH(conc) \
+        default_maker::template make_bench<dummy_bench, fwd_tput_conc_ ## conc >(fwd_group.get(), "concurrency-" #conc, \
+                    "Store fwd tput concurrency " #conc, conc, []{ return nullptr; /*aligned_ptr(4096, 2048 * 1024);*/ })
+
+
         auto benches = std::vector<Benchmark> {
-            default_maker::template make_bench<fwd_dense_lat>(fwd_group.get(), "fwd-dense-lat",
-                    "Dense store forward latency", 1, []{ return nullptr; /*aligned_ptr(4096, 2048 * 1024);*/ })
+            LAT_DELAY_BENCH(0),
+            LAT_DELAY_BENCH(1),
+            LAT_DELAY_BENCH(2),
+            LAT_DELAY_BENCH(3),
+            LAT_DELAY_BENCH(4),
+            LAT_DELAY_BENCH(5),
+
+            TPUT_BENCH(1),
+            TPUT_BENCH(2),
+            TPUT_BENCH(3),
+            TPUT_BENCH(4),
+            TPUT_BENCH(5),
+            TPUT_BENCH(6),
+            TPUT_BENCH(7),
+            TPUT_BENCH(8),
+            TPUT_BENCH(9),
+            TPUT_BENCH(10)
+
         };
 
         fwd_group->add(benches);
