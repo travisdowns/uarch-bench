@@ -1,11 +1,16 @@
-**This project is a work-in-progress, and is currently in a very early state. Use is welcome, but don't expect miracles.**
+# uarch-bench
 
-The uarch-bench project is a collection of micro-benchmarks that try to stress certain microarchitectural features of modern CPUs.
+A fine-grained micro-benchmark intended to investigate micro-architectural details of a target CPU, or to precisely benchmark small functions in a repeatable manner.
 
-At the moment it covers only x86, using assembly-level benchmarks, the suite also contain (in the future) C or C++ versions of 
-many of the benchmarks, allowing them (in prinicple) to be run on other platforms. Of course, for any non-asm benchmark,
-it is possible that the compiler makes a transformation that invalidates the intent of the benchmark. You could detect this this
-is mostly noticable as a large difference between the C and asm scores.
+## Disclaimer
+
+**This project is very much a work-in-progress, and is currently in a very early state with limited documentation and testing. Pull requests and issues welcome.**
+
+## Purpose
+
+The uarch-bench project is a collection of micro-benchmarks that try to stress certain microarchitectural features of modern CPUs. Using [libpfc](https://github.com/obilaniu/libpfc) you can accurate track the value of Intel performance counters across the benchmarked region (you must run as root to use this feature).
+
+At the moment it supports only x86, using mosty assembly and a few C++ benchmarks. In the future, I'd like to have more C or C++ benchmarks, allowing coverage (in prinicple) of more platforms (non-x86 assembly level benchmarks are also welcome). Of course, for any non-asm benchmark, it is possible that the compiler makes a transformation that invalidates the intent of the benchmark. You could detect this as a large difference between the C/C++ and asm scores.
 
 Of course, these have all the pitfalls of any microbenchmark and are not really intended to be a simple measure of the overall 
 performance of any CPU architecture. Rather they are mostly useful to:
@@ -33,16 +38,24 @@ On Intel platforms install `msr-tools` which is needed to read and write msrs to
 
 ## Building
 
-Just run `make` in the project directory.
+Just run `make` in the project directory. If you want to modify any of the make settings, you can do it directly in `config.mk` or in a newly create local file `local.mk` (the latter having the advantage that this file is ignored by git so you won't have any merge conflicts on later pulls and won't automatically commit your local build settings).
 
 ## Running
 
-Just run `sudo ./uarch-bench.sh` after building. The `sudo` is required since `rdmsr` and `wrmsr` are used to query
+Ideally, you run `./uarch-bench.sh` as root, since this allows the permissions needed to disable frequency scaling, as well as making it possible use `USE_LIBPFC=1` mode. If you don't have root or don't want to run a random project as root, you can also run it has non-root as `uarch-bench` (i.e., without the wrapper shell script), which will still work with some limitations. There is current [an open issue](https://github.com/travisdowns/uarch-bench/issues/31) for making non-root use a bit smoother.
+
+### With Root
+
+Just run `./uarch-bench.sh` after building. The script  required since `rdmsr` and `wrmsr` are used to query
 and modify the turbo boost state on Intel platforms (turbo is disabled for the benchmark and restored to its original state after).
+
+### Without Root
 
 You can also run the binary as `./uarch-bench` directly, which doesn't require sudo, but doesn't disable frequency scaling.
 
-The program currently accepts no arguments.
+### Command Line Arguments
+
+Run `uarch-bench --help` to see a list and brief description of command line arguments.
 
 ### Frequency Scaling
 
