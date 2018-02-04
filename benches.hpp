@@ -116,7 +116,7 @@ public:
     virtual void printBenches(std::ostream& out) const;
 
     /**
-     * Print a single benchmark to the given output stream.
+     * Print a single benchmark description to the given output stream.
      */
     static void printBench(std::ostream& out, const Benchmark& bench);
 };

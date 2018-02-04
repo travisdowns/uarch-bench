@@ -11,6 +11,7 @@ extern "C" {
 bench2_f misc_add_loop32;
 bench2_f misc_add_loop64;
 bench2_f misc_port7;
+bench2_f misc_fusion_add;
 bench2_f dsb_alignment_cross64;
 bench2_f dsb_alignment_nocross64;
 bench2_f bmi_tzcnt;
@@ -43,6 +44,8 @@ void register_misc(GroupList& list) {
                 []{ return nullptr; }, iters),
         default_maker::template make_bench<misc_port7>(misc_group.get(), "port7", "Can port7 be used by loads", 1,
                 []{ return nullptr; }, iters),
+        default_maker::template make_bench<misc_fusion_add>(misc_group.get(), "fusion-add", "Test micro-fused add", 128,
+                        []{ return nullptr; }, iters),
 
         // https://dendibakh.github.io/blog/2018/01/18/Code_alignment_issues
         default_maker::template make_bench<dsb_alignment_cross64>(misc_group.get(), "dsb-align64-cross", "Crosses 64-byte i-boundary", 1,
