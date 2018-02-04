@@ -297,6 +297,15 @@ dec rdi
 jnz .top
 ret
 
+define_bench misc_fusion_add
+ALIGN 32
+xor eax, eax
+.top:
+times 128 add ecx, [rsp]
+dec rdi
+jnz .top
+ret
+
 %macro bmi_bench 1
 define_bench bmi_%1
 xor eax, eax
