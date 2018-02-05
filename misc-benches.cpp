@@ -18,6 +18,12 @@ bench2_f bmi_tzcnt;
 bench2_f bmi_lzcnt;
 bench2_f bmi_popcnt;
 
+bench2_f dendibakh_fused;
+bench2_f dendibakh_fused_simple;
+bench2_f dendibakh_fused_add;
+bench2_f dendibakh_fused_add_simple;
+bench2_f dendibakh_unfused;
+
 bench2_f retpoline_dense_call_lfence;
 bench2_f retpoline_dense_call_pause;
 bench2_f retpoline_sparse_call_base;
@@ -60,6 +66,18 @@ void register_misc(GroupList& list) {
 
     misc_group->add(benches);
     list.push_back(misc_group);
+
+    // Tests from https://dendibakh.github.io/blog/2018/02/04/Micro-ops-fusion
+    std::shared_ptr<BenchmarkGroup> dendibakh = std::make_shared<BenchmarkGroup>("dendibakh", "Fusion tests from dendibakh blog");
+
+    dendibakh->add(std::vector<Benchmark> {
+        default_maker::template make_bench<dummy_bench,dendibakh_fused>  (dendibakh.get(),   "fused-original",  "Fused (original)",  1, []{ return nullptr; }, 1024),
+        default_maker::template make_bench<dummy_bench,dendibakh_fused_simple>  (dendibakh.get(),   "fused-simple",  "Fused (simple addr)", 1, []{ return nullptr; }, 1024),
+        default_maker::template make_bench<dummy_bench,dendibakh_fused_add>  (dendibakh.get(),"fused-add",  "Fused (add [reg + reg * 4], 1)",  1, []{ return nullptr; }, 1024),
+        default_maker::template make_bench<dummy_bench,dendibakh_fused_add_simple>  (dendibakh.get(),"fused-add-simple",  "Fused (add [reg], 1)",  1, []{ return nullptr; }, 1024),
+        default_maker::template make_bench<dummy_bench,dendibakh_unfused>(dendibakh.get(), "unfused-original","Unfused (original)",  1, []{ return nullptr; }, 1024)
+    });
+    list.push_back(dendibakh);
 
     std::shared_ptr<BenchmarkGroup> bmi_group = std::make_shared<BenchmarkGroup>("bmi", "BMI false-dependency tests");
 

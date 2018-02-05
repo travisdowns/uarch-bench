@@ -285,7 +285,6 @@ pop rbp
 ret
 
 define_bench misc_port7
-ALIGN 32
 mov rax, rsp
 mov rsi, [rsp]
 xor edx, edx
@@ -298,12 +297,72 @@ jnz .top
 ret
 
 define_bench misc_fusion_add
-ALIGN 32
 xor eax, eax
 .top:
 times 128 add ecx, [rsp]
 dec rdi
 jnz .top
+ret
+
+define_bench dendibakh_fused
+mov     rax, rdi
+shl     rax, 2
+sub     rsp, rax
+.fused_loop:
+inc     DWORD [rsp + rdi * 4 - 4]
+dec     rdi
+jnz     .fused_loop
+add     rsp, rax
+ret
+
+define_bench dendibakh_fused_simple
+mov     rax, rdi
+shl     rax, 2
+lea     rcx, [rsp - 4]
+sub     rsp, rax
+.fused_loop:
+inc     DWORD [rcx]
+sub     rcx, 4
+dec     rdi
+jnz     .fused_loop
+add     rsp, rax
+ret
+
+define_bench dendibakh_fused_add_simple
+mov     rax, rdi
+shl     rax, 2
+lea     rcx, [rsp - 4]
+sub     rsp, rax
+.fused_loop:
+add     DWORD [rcx], 1
+sub     rcx, 4
+dec     rdi
+jnz     .fused_loop
+add     rsp, rax
+ret
+
+define_bench dendibakh_fused_add
+mov     rax, rdi
+shl     rax, 2
+sub     rsp, rax
+.fused_loop:
+add     DWORD [rsp + rdi * 4 - 4], 1
+dec     rdi
+jnz     .fused_loop
+add     rsp, rax
+ret
+
+define_bench dendibakh_unfused
+mov     rax, rdi
+shl     rax, 2
+sub     rsp, rax
+.unfused_loop:
+mov     edx, DWORD [rsp + rdi * 4 - 4]
+inc     edx
+mov     DWORD [rsp + rdi * 4 - 4], edx
+dec     rdi
+jnz     .unfused_loop
+add     rsp, rax
 ret
 
 %macro bmi_bench 1

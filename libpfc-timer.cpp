@@ -131,7 +131,7 @@ void LibpfcTimer::customRunHandler(Context& c) {
         unsigned ecount = 0;
         for (auto& event : extra_events) {
             if (ecount >= GP_COUNTERS) {
-                c.err() << "Too many events requested, event " << event.full_name << " won't be recorded";
+                c.err() << "Too many events requested, event " << event.full_name << " won't be recorded" << std::endl;
             } else {
                 // assign slots consecutively starting after FIXED_COUNTERS slots
                 event.slot = FIXED_COUNTERS + ecount;
