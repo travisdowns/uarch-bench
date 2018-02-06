@@ -455,6 +455,60 @@ jnz     .unfused_loop
 add     rsp, rax
 ret
 
+%define fused_unroll_order 4
+%define fused_unroll (1 << fused_unroll_order)
+
+define_bench fusion_better_fused
+push_callee_saved
+xor     eax, eax
+xor     edx, edx
+xor     r8d, r8d
+shr     rdi, fused_unroll_order
+mov     rcx, rsi
+jmp     .top
+ALIGN 64
+.top:
+%assign offset 0
+%rep    fused_unroll
+add      r8d, DWORD [rcx ]
+add      r9d, DWORD [rcx ]
+add     r10d, DWORD [rcx ]
+add     r11d, DWORD [rcx ]
+
+
+test     r12d, 1
+test     r13d, 1
+test     r14d, 1
+test     r15d, 1
+
+
+; xor     r14d, r10d
+; xor     r15d, r11d
+%assign offset (offset + 16)
+%endrep
+add     rcx, (fused_unroll * 16)
+dec     rdi
+jnz     .top
+xor     eax, edx
+pop_callee_saved
+ret
+
+define_bench fusion_better_unfused
+xor     eax, eax
+mov     rcx, rsi
+jmp     .top
+ALIGN 64
+.top:
+add     eax, DWORD [rcx]
+add     edx, DWORD [rcx + 4]
+add     rcx, 8
+dec     rdi
+jnz     .top
+xor     eax, edx
+ret
+
+
+
 %macro bmi_bench 1
 define_bench bmi_%1
 xor eax, eax

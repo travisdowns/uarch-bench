@@ -107,11 +107,11 @@ void register_mem(GroupList& list) {
         using default_maker = BenchmarkMaker<TIMER>;
 
 #define LAT_DELAY_BENCH(delay) \
-        default_maker::template make_bench<dummy_bench, fwd_lat_delay_ ## delay >(fwd_group.get(), "latency-" #delay, \
+        default_maker::template make_bench<fwd_lat_delay_ ## delay, dummy_bench>(fwd_group.get(), "latency-" #delay, \
                     "Store forward latency delay " #delay, 1, []{ return nullptr; /*aligned_ptr(4096, 2048 * 1024);*/ })
 
 #define TPUT_BENCH(conc) \
-        default_maker::template make_bench<dummy_bench, fwd_tput_conc_ ## conc >(fwd_group.get(), "concurrency-" #conc, \
+        default_maker::template make_bench<fwd_tput_conc_ ## conc, dummy_bench>(fwd_group.get(), "concurrency-" #conc, \
                     "Store fwd tput concurrency " #conc, conc, []{ return nullptr; /*aligned_ptr(4096, 2048 * 1024);*/ })
 
 

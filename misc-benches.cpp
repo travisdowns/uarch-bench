@@ -5,6 +5,7 @@
  */
 
 #include "benches.hpp"
+#include "util.hpp"
 
 extern "C" {
 /* misc benches */
@@ -23,6 +24,8 @@ bench2_f dendibakh_fused_simple;
 bench2_f dendibakh_fused_add;
 bench2_f dendibakh_fused_add_simple;
 bench2_f dendibakh_unfused;
+bench2_f fusion_better_fused;
+bench2_f fusion_better_unfused;
 
 bench2_f retpoline_dense_call_lfence;
 bench2_f retpoline_dense_call_pause;
@@ -53,12 +56,6 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<misc_fusion_add>(misc_group.get(), "fusion-add", "Test micro-fused add", 128,
                         []{ return nullptr; }, iters),
 
-        // https://dendibakh.github.io/blog/2018/01/18/Code_alignment_issues
-        default_maker::template make_bench<dsb_alignment_cross64>(misc_group.get(), "dsb-align64-cross", "Crosses 64-byte i-boundary", 1,
-                []{ return aligned_ptr(1024, 1024); }, 1024),
-        default_maker::template make_bench<dsb_alignment_nocross64>(misc_group.get(), "dsb-align64-nocross", "No cross 64-byte i-boundary", 1,
-                []{ return aligned_ptr(1024, 1024); }, 1024),
-
         // https://news.ycombinator.com/item?id=15935283
         default_maker::template make_bench<loop_weirdness_fast>(misc_group.get(), "loop-weirdness-fast", "Loop weirdness fast", 1,
                 []{ return aligned_ptr(1024, 1024); }, 10000),
@@ -71,11 +68,22 @@ void register_misc(GroupList& list) {
     std::shared_ptr<BenchmarkGroup> dendibakh = std::make_shared<BenchmarkGroup>("dendibakh", "Fusion tests from dendibakh blog");
 
     dendibakh->add(std::vector<Benchmark> {
+
+        // https://dendibakh.github.io/blog/2018/01/18/Code_alignment_issues
+        default_maker::template make_bench<dsb_alignment_cross64>(dendibakh.get(), "dsb-align64-cross", "Crosses 64-byte i-boundary", 1,
+                []{ return aligned_ptr(1024, 1024); }, 1024),
+        default_maker::template make_bench<dsb_alignment_nocross64>(dendibakh.get(), "dsb-align64-nocross", "No cross 64-byte i-boundary", 1,
+                []{ return aligned_ptr(1024, 1024); }, 1024),
+
         default_maker::template make_bench<dummy_bench,dendibakh_fused>  (dendibakh.get(),   "fused-original",  "Fused (original)",  1, []{ return nullptr; }, 1024),
         default_maker::template make_bench<dummy_bench,dendibakh_fused_simple>  (dendibakh.get(),   "fused-simple",  "Fused (simple addr)", 1, []{ return nullptr; }, 1024),
         default_maker::template make_bench<dummy_bench,dendibakh_fused_add>  (dendibakh.get(),"fused-add",  "Fused (add [reg + reg * 4], 1)",  1, []{ return nullptr; }, 1024),
         default_maker::template make_bench<dummy_bench,dendibakh_fused_add_simple>  (dendibakh.get(),"fused-add-simple",  "Fused (add [reg], 1)",  1, []{ return nullptr; }, 1024),
-        default_maker::template make_bench<dummy_bench,dendibakh_unfused>(dendibakh.get(), "unfused-original","Unfused (original)",  1, []{ return nullptr; }, 1024)
+        default_maker::template make_bench<dummy_bench,dendibakh_unfused>(dendibakh.get(), "unfused-original","Unfused (original)",  1, []{ return nullptr; }, 1024),
+
+        default_maker::template make_bench<dummy_bench,fusion_better_fused>(dendibakh.get(), "fusion-better-fused", "Fused summation",  1, []{ return aligned_ptr(64, 8000); }, 1024),
+        default_maker::template make_bench<dummy_bench,fusion_better_unfused>(dendibakh.get(), "fusion-better-unfused", "Unfused summation",  1, []{ return aligned_ptr(64, 8000); }, 1024)
+
     });
     list.push_back(dendibakh);
 
@@ -94,10 +102,10 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<retpoline_dense_call_lfence>(retpoline_group.get(), "retp-call-lfence", "Dense retpoline call lfence", 32),
         default_maker::template make_bench<indirect_dense_call_pred>(retpoline_group.get(),    "ibra-call-pred", "Dense indirect pred calls", 32),
         default_maker::template make_bench<indirect_dense_call_unpred>(retpoline_group.get(),  "ibra-call-unpred", "Dense indirect unpred calls", 32),
-        default_maker::template make_bench<retpoline_sparse_call_base, retpoline_sparse_indep_call_pause> (retpoline_group.get(), "retp-sparse-indep-call-pause", "Sparse retpo indep call  pause", 8),
-        default_maker::template make_bench<retpoline_sparse_call_base, retpoline_sparse_indep_call_lfence>(retpoline_group.get(), "retp-sparse-indep-call-lfence", "Sparse retpo indep call lfence", 8),
-        default_maker::template make_bench<retpoline_sparse_call_base, retpoline_sparse_dep_call_pause> (retpoline_group.get(),   "retp-sparse-dep-call-pause", "Sparse retpo dep call  pause", 8),
-        default_maker::template make_bench<retpoline_sparse_call_base, retpoline_sparse_dep_call_lfence>(retpoline_group.get(),   "retp-sparse-dep-call-lfence", "Sparse retpo dep call lfence", 8)
+        default_maker::template make_bench<retpoline_sparse_indep_call_pause,retpoline_sparse_call_base> (retpoline_group.get(), "retp-sparse-indep-call-pause", "Sparse retpo indep call  pause", 8),
+        default_maker::template make_bench<retpoline_sparse_indep_call_lfence,retpoline_sparse_call_base>(retpoline_group.get(), "retp-sparse-indep-call-lfence", "Sparse retpo indep call lfence", 8),
+        default_maker::template make_bench<retpoline_sparse_dep_call_pause,retpoline_sparse_call_base> (retpoline_group.get(),   "retp-sparse-dep-call-pause", "Sparse retpo dep call  pause", 8),
+        default_maker::template make_bench<retpoline_sparse_dep_call_lfence,retpoline_sparse_call_base>(retpoline_group.get(),   "retp-sparse-dep-call-lfence", "Sparse retpo dep call lfence", 8)
     });
     list.push_back(retpoline_group);
 }

@@ -153,21 +153,6 @@ using GroupList = std::vector<std::shared_ptr<BenchmarkGroup>>;
 template <typename TIMER>
 class BenchmarkMaker {
 public:
-    /**
-     * Make a benchmark with the given parameters - this measures absolute time of the single
-     * BENCH_METHOD without a mechanism for removing constant overhead.
-     */
-    template <bench2_f BENCH_METHOD>
-    static Benchmark make_bench(
-            const BenchmarkGroup* parent,
-            const std::string& id,
-            const std::string& description,
-            size_t ops_per_loop,
-            std::function<void * ()> arg_provider = []{ return nullptr; },
-            uint32_t loop_count = BenchmarkBase::default_loop_count) {
-        TimingAbsolute<TIMER,BENCH_METHOD> timing(arg_provider);
-        return std::make_shared<LoopedBenchmark>(parent, id, description, ops_per_loop, TIMER::make_bench_method(timing), loop_count);
-    }
 
     /**
      * Makes a benchmark with the given BASE_METHOD and BENCH_METHOD. The effective time is the difference
@@ -176,7 +161,7 @@ public:
      * to include (i.e., it is possible to create "sparse" benchmarks where the code under test is surrounded
      * by code that shouldn't contribute to the result).
      */
-    template <bench2_f BASE_METHOD, bench2_f BENCH_METHOD>
+    template <bench2_f BENCH_METHOD, bench2_f BASE_METHOD = dummy_bench>
     static Benchmark make_bench(
             const BenchmarkGroup* parent,
             const std::string& id,
