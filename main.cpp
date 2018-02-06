@@ -17,6 +17,10 @@
 
 #include <sys/mman.h>
 
+#ifdef USE_BACKWARD_CPP
+#include "backward-cpp/backward.hpp"
+#endif
+
 #include "stats.hpp"
 #include "version.hpp"
 #include "args.hxx"
@@ -277,13 +281,16 @@ void Context::run() {
     }
 }
 
+#if USE_BACKWARD_CPP
+backward::SignalHandling sh;
+#endif
+
 int main(int argc, char **argv) {
     cout << "Welcome to uarch-bench (" << GIT_VERSION << ")" << endl;
 
     try {
         Context context(argc, argv, &std::cout);
         context.run();
-
     } catch (SilentSuccess& e) {
     } catch (SilentFailure& e) {
         return EXIT_FAILURE;

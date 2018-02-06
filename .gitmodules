@@ -4,3 +4,6 @@
 [submodule "nasm-utils"]
 	path = nasm-utils
 	url = https://github.com/travisdowns/nasm-utils
+[submodule "backward-cpp"]
+	path = backward-cpp
+	url = https://github.com/bombela/backward-cpp.git

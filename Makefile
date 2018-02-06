@@ -15,7 +15,8 @@ PFM_LIBDIR ?= $(PFM_DIR)/lib
 GIT_VERSION := $(shell git describe --dirty --always)
 
 O_LEVEL ?= -O2
-CPPFLAGS := -MMD -Wall -g $(O_LEVEL) -march=haswell -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC)
+CPPFLAGS := -MMD -Wall -g $(O_LEVEL) -march=haswell -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC) \
+-DUSE_BACKWARD_CPP=$(USE_BACKWARD_CPP) -DBACKWARD_HAS_BFD=$(BACKWARD_HAS_BFD) -DBACKWARD_HAS_DW=$(BACKWARD_HAS_DW)
 
 # files that should only be compiled if USE_LIBPFC is enabled
 PFC_SRC := libpfc-timer.cpp libpfm4-support.cpp
@@ -28,6 +29,14 @@ LDLIBS += -lpfc -lpfm
 LIBPFC_DEP += libpfc/libpfc.so $(PFM_LIBDIR)/libpfm.so
 CLEAN_TARGETS += libpfc-clean libpfm4-clean
 SRC_FILES += $(PFC_SRC)
+endif
+
+ifeq ($(BACKWARD_HAS_BFD),1)
+LDFLAGS += -lbfd -ldl
+endif
+
+ifeq ($(BACKWARD_HAS_DW),1)
+LDFLAGS += -ldw
 endif
 
 OBJECTS := $(SRC_FILES:.cpp=.o) x86_methods.o
