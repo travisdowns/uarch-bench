@@ -21,27 +21,27 @@
 
 class BenchmarkGroup;
 
-class Benchmark final {
+class BenchmarkBase {
 
     const BenchmarkGroup* parent;
     std::string id;
     std::string description;
-    /* how many operations are involved in one iteration of the benchmark loop */
-    size_t ops_per_loop_;
-    full_bench_t full_bench_;
-    uint32_t loop_count_;
+
 
 protected:
 
-    unsigned getLoopCount() { return loop_count_; }
+    BenchmarkBase(const BenchmarkGroup* parent, const std::string& id, const std::string& description,
+                size_t ops_per_loop, full_bench_t full_bench);
+
+    /* how many operations are involved in one iteration of the benchmark loop */
+    size_t ops_per_loop_;
+    /* pointer to the benchmark function */
+    full_bench_t full_bench_;
 
 public:
 
     static constexpr uint32_t default_loop_count = 10000;
     static constexpr int                 samples =    33;
-
-    Benchmark(const BenchmarkGroup* parent, const std::string& id, const std::string& description,
-            size_t ops_per_loop, full_bench_t full_bench, uint32_t loop_count);
 
     /** get the longer, human-readable descripton for the group */
     std::string getDescription() const { return description; }
@@ -52,18 +52,45 @@ public:
     /** the unique group to which this */
     const BenchmarkGroup& getGroup() const { return *parent; }
 
-    /* get the raw timings for a full run of the underlying benchmark, doesn't normalize for loop_count or ops_per_loop */
-    TimingResult getTimings();
-
     /* like getTimings, except that everything is normalized, so the results should reflect the cost for a single operation */
-    TimingResult run();
+    virtual TimingResult run() = 0;
 
-    void runAndPrint(Context& c);
+    /* call run() and print the results to context */
+    virtual void runAndPrint(Context& c) = 0;
 
     /* the full "path" of the benchmark, which is the group id and the benchmark id, like group-name/bench-name */
     std::string getPath() const;
 
+    virtual ~BenchmarkBase() = default;
 };
+
+using Benchmark = std::shared_ptr<BenchmarkBase>;
+
+/**
+ * The original benchmark which calculates timings based on a variable-sized loop inside the benchmark.
+ */
+class LoopedBenchmark : public BenchmarkBase {
+
+    uint32_t loop_count_;
+
+    /* get the raw timings for a full run of the underlying benchmark, doesn't normalize for loop_count or ops_per_loop */
+    virtual TimingResult getTimings();
+
+public:
+
+    LoopedBenchmark(const BenchmarkGroup* parent, const std::string& id, const std::string& description,
+                    size_t ops_per_loop, full_bench_t full_bench, uint32_t loop_count)
+: BenchmarkBase(parent, id, description, ops_per_loop, full_bench), loop_count_{loop_count} {}
+
+    unsigned getLoopCount() { return loop_count_; }
+
+    virtual void runAndPrint(Context& c);
+
+    virtual TimingResult run();
+
+};
+
+
 
 /* a predicate which can select a benchmark, given the fully qualified ID and Benchmark object */
 using predicate_t = std::function<bool(const Benchmark&)>;
@@ -94,7 +121,7 @@ public:
     }
 
     void add(const Benchmark &bench) {
-        assert(&bench.getGroup() == this);
+        assert(&bench->getGroup() == this);
         benches_.push_back(bench);
     }
 
@@ -137,9 +164,9 @@ public:
             const std::string& description,
             size_t ops_per_loop,
             std::function<void * ()> arg_provider = []{ return nullptr; },
-            uint32_t loop_count = Benchmark::default_loop_count) {
+            uint32_t loop_count = BenchmarkBase::default_loop_count) {
         TimingAbsolute<TIMER,BENCH_METHOD> timing(arg_provider);
-        return Benchmark{parent, id, description, ops_per_loop, TIMER::make_bench_method(timing), loop_count};
+        return std::make_shared<LoopedBenchmark>(parent, id, description, ops_per_loop, TIMER::make_bench_method(timing), loop_count);
     }
 
     /**
@@ -156,10 +183,10 @@ public:
             const std::string& description,
             size_t ops_per_loop,
             std::function<void * ()> arg_provider = []{ return nullptr; },
-            uint32_t loop_count = Benchmark::default_loop_count) {
+            uint32_t loop_count = BenchmarkBase::default_loop_count) {
         TimingAbsolute<TIMER, BASE_METHOD>   base(arg_provider);
         TimingAbsolute<TIMER,BENCH_METHOD> timing(arg_provider);
-        return Benchmark{parent, id, description, ops_per_loop, TIMER::make_delta_method(base, timing), loop_count};
+        return std::make_shared<LoopedBenchmark>(parent, id, description, ops_per_loop, TIMER::make_delta_method(base, timing), loop_count);
     }
 };
 

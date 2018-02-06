@@ -35,33 +35,33 @@ void printResultHeader(Context& c, const TimerInfo& ti) {
     c.out() << endl;
 }
 
-Benchmark::Benchmark(const BenchmarkGroup* parent, const std::string& id, const std::string& description,
-        size_t ops_per_loop, full_bench_t full_bench, uint32_t loop_count) :
+BenchmarkBase::BenchmarkBase(const BenchmarkGroup* parent, const std::string& id, const std::string& description,
+        size_t ops_per_loop, full_bench_t full_bench) :
         parent{parent},
         id{id},
         description{description},
         ops_per_loop_{ops_per_loop},
-        full_bench_{full_bench},
-        loop_count_{loop_count}
+        full_bench_{full_bench}
         {}
 
-TimingResult Benchmark::getTimings() {
-    return full_bench_(getLoopCount());
+
+
+std::string BenchmarkBase::getPath() const {
+    return parent->getId() + "/" + getId();
 }
 
-TimingResult Benchmark::run() {
+void LoopedBenchmark::runAndPrint(Context& c) {
+    TimingResult timing = run();
+    printResultLine(c, getDescription(), timing);
+}
+TimingResult LoopedBenchmark::run() {
     TimingResult timings = getTimings();
     double multiplier = 1.0 / (ops_per_loop_ * getLoopCount()); // normalize to time / op
     return timings * multiplier;
 }
 
-void Benchmark::runAndPrint(Context& c) {
-    TimingResult timing = run();
-    printResultLine(c, getDescription(), timing);
-}
-
-std::string Benchmark::getPath() const {
-    return parent->getId() + "/" + getId();
+TimingResult LoopedBenchmark::getTimings() {
+    return full_bench_(getLoopCount());
 }
 
 

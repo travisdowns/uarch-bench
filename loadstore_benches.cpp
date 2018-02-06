@@ -65,7 +65,7 @@ public:
         // because this BenchmarkGroup is really more like a single benchmark (i.e., the 64 actual Benchmark objects
         // don't their name printed but are show in a grid instead, we run the predicate on a fake Benchmark created
         // based on the group name
-        Benchmark fake(this, "fake", getDescription(), 1, full_bench_t(), 1);
+        Benchmark fake = std::make_shared<LoopedBenchmark>(this, "fake", getDescription(), 1, full_bench_t(), 1);
         if (!predicate(fake)) {
             return;
         }
@@ -87,7 +87,7 @@ public:
         vector<double> results(benches.size());
         for (size_t i = 0; i < benches.size(); i++) {
             Benchmark& b = benches[i];
-            results[i] = b.run().getCycles();
+            results[i] = b->run().getCycles();
         }
 
         for (unsigned row = 0, i = 0; row < rows_; row++) {

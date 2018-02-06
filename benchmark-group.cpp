@@ -19,7 +19,7 @@ void BenchmarkGroup::runIf(Context &context, const TimerInfo &ti, const predicat
                 printResultHeader(context, ti);
                 header = true;
             }
-            b.runAndPrint(context);
+            b->runAndPrint(context);
         }
     }
 }
@@ -31,7 +31,7 @@ void BenchmarkGroup::printBenches(std::ostream& out) const {
 }
 
 void BenchmarkGroup::printBench(std::ostream& out, const Benchmark& bench) {
-    out << left << setw(BENCH_ID_WIDTH) << bench.getPath() << ": " << bench.getDescription() << endl;
+    out << left << setw(BENCH_ID_WIDTH) << bench->getPath() << ": " << bench->getDescription() << endl;
 }
 
 

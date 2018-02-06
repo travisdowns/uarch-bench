@@ -268,7 +268,7 @@ void Context::run() {
         timer_info_->init(*this);
         predicate_t pred;
         if (arg_test_name) {
-            pred =  [this](const Benchmark& b){ return wildcard_match(b.getPath(), arg_test_name.Get()); };
+            pred =  [this](const Benchmark& b){ return wildcard_match(b->getPath(), arg_test_name.Get()); };
         } else {
             pred =  [](const Benchmark&){ return true; };
         }
