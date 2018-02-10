@@ -205,6 +205,9 @@ void register_mem(GroupList& list);
 template <typename TIMER>
 void register_cpp(GroupList& list);
 
+template <typename TIMER>
+void register_vector(GroupList& list);
+
 void printResultHeader(Context& c, const TimerInfo& ti);
 
 

@@ -669,3 +669,41 @@ fwd_tput_conc 7
 fwd_tput_conc 8
 fwd_tput_conc 9
 fwd_tput_conc 10
+
+%macro bypass_mov_latency 1
+define_bench bypass_%1_latency
+sub     rsp, 120
+xor     eax, eax
+vpxor   xmm1, xmm1, xmm1
+.top:
+%1      xmm0, [rsp + rax] ; 7 cycles
+vpand   xmm0, xmm0, xmm1  ; 1 cycle
+vmovq    rax, xmm0         ; 1 cycle
+dec     rdi
+jnz     .top
+add     rsp, 120
+ret
+%endmacro
+
+bypass_mov_latency vmovdqa
+bypass_mov_latency vmovdqu
+bypass_mov_latency vmovups
+bypass_mov_latency vmovupd
+
+define_bench bypass_movq_latency
+vpxor    xmm0, xmm0
+.top:
+vmovq    rax,  xmm0         ; 1 cycle
+vmovq    xmm0,  rax         ; 1 cycle
+dec     rdi
+jnz     .top
+ret
+
+define_bench bypass_movd_latency
+vpxor   xmm0, xmm0, xmm0
+.top:
+vmovd    eax,  xmm0         ; 1 cycle
+vmovd    xmm0,  eax         ; 1 cycle
+dec     rdi
+jnz     .top
+ret

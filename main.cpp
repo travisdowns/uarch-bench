@@ -114,6 +114,7 @@ GroupList make_benches() {
     register_mem<TIMER>(groupList);
     register_misc<TIMER>(groupList);
     register_cpp<TIMER>(groupList);
+    register_vector<TIMER>(groupList);
 
     return groupList;
 }
