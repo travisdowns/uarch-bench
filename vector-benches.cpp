@@ -25,10 +25,10 @@ void register_vector(GroupList& list) {
     using default_maker = BenchmarkMaker<TIMER>;
 
     auto benches = std::vector<Benchmark> {
-        default_maker::template make_bench<bypass_vmovdqa_latency>(vector_group.get(), "movdqa", "movdqa [mem] -> pxor latency", 1, []{ return nullptr; }, 100000),
-        default_maker::template make_bench<bypass_vmovdqu_latency>(vector_group.get(), "movdqu", "movdqu [mem] -> pxor latency", 1, []{ return nullptr; }, 100000),
-        default_maker::template make_bench<bypass_vmovups_latency>(vector_group.get(), "movups", "movups [mem] -> pxor latency", 1, []{ return nullptr; }, 100000),
-        default_maker::template make_bench<bypass_vmovupd_latency>(vector_group.get(), "movupd", "movupd [mem] -> pxor latency", 1, []{ return nullptr; }, 100000),
+        default_maker::template make_bench<bypass_vmovdqa_latency>(vector_group.get(), "movdqa", "movdqa [mem] -> paddb latency", 1, []{ return nullptr; }, 100000),
+        default_maker::template make_bench<bypass_vmovdqu_latency>(vector_group.get(), "movdqu", "movdqu [mem] -> paddb latency", 1, []{ return nullptr; }, 100000),
+        default_maker::template make_bench<bypass_vmovups_latency>(vector_group.get(), "movups", "movups [mem] -> paddb latency", 1, []{ return nullptr; }, 100000),
+        default_maker::template make_bench<bypass_vmovupd_latency>(vector_group.get(), "movupd", "movupd [mem] -> paddb latency", 1, []{ return nullptr; }, 100000),
 
         default_maker::template make_bench<bypass_movd_latency>(vector_group.get(), "movd",   "movq rax,xmm0 -> xmm0,rax lat", 1, []{ return nullptr; }, 100000),
         default_maker::template make_bench<bypass_movq_latency>(vector_group.get(), "movq",   "movq rax,xmm0 -> xmm0,rax lat", 1, []{ return nullptr; }, 100000)

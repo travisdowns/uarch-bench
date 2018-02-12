@@ -675,10 +675,11 @@ define_bench bypass_%1_latency
 sub     rsp, 120
 xor     eax, eax
 vpxor   xmm1, xmm1, xmm1
+vpsubb  xmm1, xmm1, [rsp + rax] ; to exactly cancel out the vpaddb below
 .top:
-%1      xmm0, [rsp + rax] ; 7 cycles
-vpand   xmm0, xmm0, xmm1  ; 1 cycle
-vmovq    rax, xmm0         ; 1 cycle
+%1      xmm0, [rsp + rax] ; 6 cycles
+vpaddb  xmm0, xmm0, xmm1  ; 1 cycle
+vmovq   rax, xmm0         ; 2 cycles
 dec     rdi
 jnz     .top
 add     rsp, 120
