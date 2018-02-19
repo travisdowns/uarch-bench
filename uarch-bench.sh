@@ -36,16 +36,15 @@ function restore_no_turbo {
 	if [ -e $NO_TURBO_FILE ]; then
 
 		NO_TURBO=$original_no_turbo
-		echo $NO_TURBO
 
 		# restore the no_turbo if we changed it
 		if [[ $NO_TURBO == 0 ]]; then
 			echo -e "Reverting no_turbo to $NO_TURBO"
 			sudo sh -c "echo $NO_TURBO > /sys/devices/system/cpu/intel_pstate/no_turbo"
 			if [[ $(cat /sys/devices/system/cpu/intel_pstate/no_turbo) == 0 ]]; then
-				echo -e "Succesfully restored no_turbo state: $NO_TURBO";
+				echo -e "Succesfully restored no_turbo state: $NO_TURBO"
 			else
-				echo -e "Failed to restore no_turbo state: $NO_TURBO";
+				echo -e "Failed to restore no_turbo state: $NO_TURBO"
 			fi
 		fi
 	else
@@ -65,17 +64,19 @@ function restore_no_turbo {
 
 function check_no_turbo {
 	if [ -e $NO_TURBO_FILE ]; then
-		
+
 		NO_TURBO=$(cat "$NO_TURBO_FILE")
 		original_no_turbo=$NO_TURBO
 
 		if [[ $NO_TURBO != 1 ]]; then
 			sudo sh -c "echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo"
 			if [[ $(cat /sys/devices/system/cpu/intel_pstate/no_turbo) == 1 ]]; then
-				echo "Succesfully disabled turbo boost";
+				echo "Succesfully disabled turbo boost using intel_pstate/no_turbo"
 			else
-				echo "Failed to disable turbo boost";
+				echo "Failed to disable turbo boost using intel_pstate/no_turbo"
 			fi
+		else
+			echo "intel_pstate/no_turbo reports that turbo is already disabled"
 		fi
 
 	else
