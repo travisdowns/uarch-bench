@@ -25,6 +25,7 @@ bool LibpfcTimer::is_init = false;
 static args::Group pfc_args("libpfc timer specific arguments");
 static args::Flag arg_listevents{pfc_args, "list-events", "Dislay the available available PMU events", {"list-events"}};
 static args::ValueFlag<std::string> arg_extraevents{pfc_args, "extra-events", "A comma separated list of extra PMU events to track", {"extra-events"}};
+static args::ValueFlag<int> pinned_cpu{pfc_args, "pinned-cpu", "Pin CPU to run all the test on one CPU", {'c', "pinned-cpu"}, 0};
 
 static std::vector<PmuEvent> all_events{PmuEvent("Cycles", FIXED_COUNTER_ENABLE, PFC_FIXEDCNT_CPU_CLK_UNHALTED)};
 
@@ -69,12 +70,12 @@ static void inner_init(Context &context) {
         throw std::runtime_error(std::string("pfcInit() failed (error ") + std::to_string(err) + ": " + msg + ")");
     }
 
-    err = pfcPinThread(0);
+    err = pfcPinThread(pinned_cpu.Get());
     if (err) {
         // let's treat this as non-fatal, it could occur if, for example
-        context.err() << "WARNING: Pinning to CPU 0 failed, continuing without pinning" << endl;
+        context.err() << "WARNING: Pinning to CPU " << pinned_cpu.Get() << " failed, continuing without pinning" << endl;
     } else {
-        context.log() << "Pinned to CPU 0" << endl;
+        context.log() << "Pinned to CPU " << pinned_cpu.Get() << endl;
     }
 
     PFC_CFG  cfg[7] = {};
