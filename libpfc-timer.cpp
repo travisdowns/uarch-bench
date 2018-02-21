@@ -47,11 +47,7 @@ LibpfcNow LibpfcTimer::delta(const LibpfcNow& a, const LibpfcNow& b) {
     return ret;
 }
 
-LibpfcNow LibpfcTimer::aggregate(const LibpfcNow *begin, const LibpfcNow *end) {
-    return *std::min_element(begin, end,
-            [](const LibpfcNow& left, const LibpfcNow& right) { return left.getClk() < right.getClk(); }
-    );
-}
+
 
 TimingResult LibpfcTimer::to_result(LibpfcNow delta) {
     vector<double> results;

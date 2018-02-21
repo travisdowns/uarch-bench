@@ -8,8 +8,20 @@ thunk_boilerplate
 ; aligns and declares the global label for the bench with the given name
 ; also potentally checks the ABI compliance (if enabled)
 %macro define_bench 1
+%define current_bench %1
 ALIGN 64
 abi_checked_function %1
+%endmacro
+
+; a variant of define_bench that puts a "touch" function immediately following
+; the
+%macro make_touch 0
+%ifndef current_bench
+%error "current_bench must be defined for this to work"
+%endif
+GLOBAL current_bench %+ _touch:function
+current_bench %+ _touch:
+ret
 %endmacro
 
 ;; This function executes a tight loop, where we expect that each iteration takes
@@ -32,6 +44,26 @@ ret
 ; a benchmark that immediately returns, useful as the "base" method
 ; to cancel out some forms of overhead
 define_bench dummy_bench
+;rdrand      rax
+;and     rax, 0xFF
+;add     rax, 1
+;.top
+;dec     rax
+;jnz     .top
+ret
+
+define_bench dummy_bench_oneshot1
+ret
+
+define_bench dummy_bench_oneshot2
+ret
+make_touch
+
+
+
+define_bench dep_add_noloop_128
+xor eax, eax
+times 128 add rax, rax
 ret
 
 define_bench dep_add_rax_rax
@@ -393,6 +425,62 @@ times 128 add ecx, [rsp]
 dec rdi
 jnz .top
 ret
+
+; does add-jo macro-fuse? (no, on Skylake and earlier)
+define_bench misc_macro_fusion_addjo
+xor eax, eax
+.top:
+%rep 128
+add     eax, 1
+jo      .never
+%endrep
+dec rdi
+jnz .top
+ret
+.never:
+ud2
+
+define_bench misc_flag_merge_1
+xor eax, eax
+.top:
+%rep 128
+add rcx, 5
+inc rax
+jna  .never
+%endrep
+dec rdi
+jnz .top
+ret
+.never:
+ud2
+
+define_bench misc_flag_merge_2
+xor eax, eax
+.top:
+%rep 128
+add rcx, 5
+inc rax
+jc  .never
+%endrep
+dec rdi
+jnz .top
+ret
+.never:
+ud2
+
+define_bench misc_flag_merge_3
+xor eax, eax
+.top:
+%rep 128
+inc rax
+add rcx, 5
+jo  .never
+%endrep
+dec rdi
+jnz .top
+ret
+.never:
+ud2
 
 define_bench dendibakh_fused
 mov     rax, rdi
@@ -830,6 +918,266 @@ fwd_lat_with_delay 3
 fwd_lat_with_delay 4
 fwd_lat_with_delay 5
 
+define_bench train_noalias
+;mov     r8, rbx
+;xor     eax, eax
+;cpuid
+;mov     rbx, r8
+lea     rdx, [rsi + 64]
+mov     rdi, 52
+xor     ecx, ecx
+.top:
+%rep 20
+imul    rdx, 1
+mov     DWORD [rdx], ecx
+mov     eax, DWORD [rsi]
+%endrep
+dec     rdi
+jnz     .top
+ret
+ud2
+
+define_bench aliasing_loads
+mov     rdx, rsi
+;xor     ecx, ecx
+times 0 nop
+lfence
+%rep 5
+imul    rdx, 1
+mov     DWORD [rdx], 0
+mov     eax, DWORD [rsi]
+%endrep
+ret
+ud2
+
+define_bench oneshot_try2_4
+mov     rdx, rsi
+%rep 4
+imul    rdx, 1
+mov     DWORD [rdx], 0
+mov     eax, DWORD [rsi]
+%endrep
+ret
+ud2
+
+define_bench oneshot_try2_10
+mov     rdx, rsi
+%rep 10
+imul    rdx, 1
+mov     DWORD [rdx], 0
+mov     eax, DWORD [rsi]
+%endrep
+ret
+ud2
+
+define_bench oneshot_try2_1000
+mov     rdx, rsi
+%rep 1000
+imul    rdx, 1
+mov     DWORD [rdx], 0
+mov     eax, DWORD [rsi]
+%endrep
+ret
+ud2
+
+define_bench oneshot_try2_20
+mov     rdx, rsi
+%rep 20
+imul    rdx, 1
+mov     DWORD [rdx], 0
+mov     eax, DWORD [rsi]
+%endrep
+ret
+ud2
+
+define_bench oneshot_try2
+mov     rdx, rsi
+%rep 100
+imul    rdx, 1
+mov     DWORD [rdx], 0
+mov     eax, DWORD [rsi]
+%endrep
+ret
+ud2
+
+define_bench oneshot_try1
+%rep 100
+mov     DWORD [rsi], 0
+mov     eax, DWORD [rsi]
+%endrep
+ret
+ud2
+
+
+
+
+%define ONESHOT_REPEAT_OUTER 1
+%define ONESHOT_REPEAT_INNER 1
+; like the fwd_lat_with_delay above, but without a loop, used in oneshot mode to
+; examine transient behavior with code code
+%macro fwd_lat_delay_oneshot 1
+define_bench fwd_lat_delay_oneshot_%1
+push    rbx
+
+xor     eax, eax
+cpuid
+xor     eax, eax
+xor     ecx, ecx
+lea     rdx, [rsi + 8]
+
+; put the CPU into hoist-OK mode (watchdog off)
+mov     rdi, 1600
+.topgood:
+times 10 imul    rsi, 1
+mov     [rax + rsi], rcx
+times 2 mov     rax, [rdx]
+times 5 imul    rsi, 1
+mov     [rax + rsi], rcx
+nop
+times 2 mov     rax, [rdx]
+times 5 imul    rsi, 1
+mov     [rax + rsi], rcx
+nop
+nop
+times 2 mov     rax, [rdx]
+times 5 imul    rsi, 1
+mov     [rax + rsi], rcx
+nop
+nop
+nop
+times 2 mov     rax, [rdx]
+times 5 imul    rsi, 1
+mov     [rax + rsi], rcx
+times 2 mov     rax, [rdx]
+dec     rdi
+jnz     .topgood
+
+; put the CPU into hoist-not-OK mode
+%rep 10
+times 5 imul rax, 1
+mov     [rsi + rax], rcx
+mov     rdi, [rsi]
+mov     rdi, [rsi]
+mov     rdi, [rsi]
+mov     rdi, [rsi]
+mov     rdi, [rsi]
+mov     rdi, [rsi]
+%endrep
+
+pop     rbx
+ret
+
+mov     rdi, 500
+.top:
+; chain of instructions that is much slower when loads aren't hoisted above stores with unknwon
+; addresses
+mov     [rsi + rax], rcx
+mov     rax, [rdx]
+dec     rdi
+jnz     .top
+
+ret
+
+.other:
+mov     rdi, 1000
+.top1:
+mov     [rax], DWORD 1
+mov     rsi, [rdx]
+dec     rdi
+jnz     .top1
+
+%rep ONESHOT_REPEAT_OUTER
+%rep ONESHOT_REPEAT_INNER
+imul    rdx, 1
+imul    rdx, 1
+imul    rdx, 1
+mov     [rdx], rsi
+add     rcx, [rax + 8]
+imul    rdx, 1
+imul    rdx, 1
+imul    rdx, 1
+mov     [rdx], rsi
+add     rcx, [rax + 8]
+imul    rdx, 1
+imul    rdx, 1
+imul    rdx, 1
+mov     [rdx], rsi
+add     rcx, [rax + 8]
+imul    rdx, 1
+imul    rdx, 1
+imul    rdx, 1
+mov     [rdx], rsi
+add     rcx, [rax + 8]
+
+mov     rdi, 1
+.top2:
+imul    rax, 1
+imul    rax, 1
+imul    rax, 1
+imul    rax, 1
+mov     [rax], DWORD 0
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [byte rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [byte rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [byte rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+mov     rsi, [rdx]
+dec     rdi
+jnz     .top2
+
+imul    rdx, 1
+imul    rdx, 1
+imul    rdx, 1
+mov     [rdx], rsi
+add     rcx, [rax + 8]
+imul    rdx, 1
+imul    rdx, 1
+imul    rdx, 1
+mov     [rdx], rsi
+add     rcx, [rax + 8]
+imul    rdx, 1
+imul    rdx, 1
+imul    rdx, 1
+mov     [rdx], rsi
+add     rcx, [rax + 8]
+
+
+;times   %1  add rcx, 0
+%endrep
+%rep ONESHOT_REPEAT_INNER * 0
+mov     [rdx], rcx
+mov     rcx, [rax - 8]
+;times   %1  add rdx, 0
+%endrep
+%endrep
+ret
+ud2
+%endmacro
+
+
+
+fwd_lat_delay_oneshot 0
+fwd_lat_delay_oneshot 1
+fwd_lat_delay_oneshot 2
+fwd_lat_delay_oneshot 3
+fwd_lat_delay_oneshot 4
+fwd_lat_delay_oneshot 5
+
 %macro fwd_tput_conc 1
 define_bench fwd_tput_conc_%1
 sub     rsp, 256
@@ -928,4 +1276,42 @@ vector_load_load_lat   movdqu,  63
 vector_load_load_lat   vmovdqu, 63
 vector_load_load_lat   lddqu,   63
 vector_load_load_lat   vlddqu,  63
+
+
+; do a single 64-bit readpmc with the given value leaving the result in rax
+%macro rdpmc1 1
+mov     rcx, %1
+lfence
+rdpmc
+shl     rdx, 32
+or      rax, rdx
+lfence
+%endmacro
+
+%macro readpmc_start 0
+rdpmc1  0x40000001
+movq    xmm0, rax
+%endmacro
+
+%macro readpmc_end 0
+rdpmc1  0x40000001
+movq    rdx, xmm0
+sub     rax, rdx
+%endmacro
+
+; store loop with raw rdpmc calls
+define_bench store_raw_libpfc
+sub     rsp, 8
+mov     r8, rdx
+readpmc_start
+.top:
+;add     rax, 1
+mov     [rsp], BYTE 42
+dec     rdi
+jnz     .top
+readpmc_end
+mov     QWORD [r8 + 8], rax
+add     rsp, 8
+ret
+
 

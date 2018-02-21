@@ -13,28 +13,26 @@
 
 template <typename TIMER>
 void register_cpp(GroupList& list) {
-    using default_maker = BenchmarkMaker<TIMER>;
 
     std::shared_ptr<BenchmarkGroup> cpp_group = std::make_shared<BenchmarkGroup>("cpp", "Tests written in C++");
-
-    size_t list_ops = LIST_COUNT;
-
-    cpp_group->add(std::vector<Benchmark> {
-        default_maker::template make_bench<div64_lat_inline>(cpp_group.get(), "div64-lat-inline",  "  Dependent inline divisions", 1,
-                []{ return (void *)100; }),
-        default_maker::template make_bench<div64_lat_noinline>(cpp_group.get(), "div64-lat-noinline",  "  Dependent 64-bit divisions", 1,
-                        []{ return (void *)100; }),
-        default_maker::template make_bench<div64_tput_inline>(cpp_group.get(), "div64-tput-inline", "Independent inline divisions", 1),
-        default_maker::template make_bench<div64_tput_noinline>(cpp_group.get(), "div64-tput-noinline", "Independent divisions", 1),
-
-        // linked list tests
-        default_maker::template make_bench<linkedlist_sentinel>(cpp_group.get(), "linkedlist-sentinel", "Linked-list w/ Sentinel", list_ops,
-                []{ return nullptr; }, 1000),
-        default_maker::template make_bench<linkedlist_counter>(cpp_group.get(), "linkedlist-counter", "Linked-list w/ count", list_ops,
-                []{ return nullptr; }, 1000),
-    });
-
     list.push_back(cpp_group);
+
+    {
+        auto maker = DeltaMaker<TIMER>(cpp_group.get());
+
+        maker.template make<div64_lat_inline>   ("div64-lat-inline",    "  Dependent inline divisions", 1, []{ return (void *)100; });
+        maker.template make<div64_lat_noinline> ("div64-lat-noinline",  "  Dependent 64-bit divisions", 1, []{ return (void *)100; });
+        maker.template make<div64_tput_inline>  ("div64-tput-inline",   "Independent inline divisions", 1);
+        maker.template make<div64_tput_noinline>("div64-tput-noinline", "Independent divisions",        1);
+    }
+
+    {
+        // linked list tests
+        auto maker = DeltaMaker<TIMER>(cpp_group.get(), 1000);
+        size_t list_ops = LIST_COUNT;
+        maker.template make<linkedlist_sentinel>("linkedlist-sentinel", "Linked-list w/ sentinel", list_ops, []{ return nullptr; });
+        maker.template make<linkedlist_counter>  ("linkedlist-counter",  "Linked-list w/ count", list_ops, []{ return nullptr; });
+    }
 }
 
 #define REG_DEFAULT(CLOCK) template void register_cpp<CLOCK>(GroupList& list);

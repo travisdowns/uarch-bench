@@ -5,6 +5,7 @@
  */
 
 #include "benches.hpp"
+#include "oneshot.hpp"
 #include "util.hpp"
 
 #define LOAD_LOOP_UNROLL    8
@@ -18,6 +19,11 @@
     bench2_f name ## 512;   \
     bench2_f name ## 2048;  \
 
+#define FWD_BENCH_DECL(delay) \
+        bench2_f fwd_lat_delay_ ## delay ; \
+        bench2_f fwd_lat_delay_oneshot_ ## delay ; \
+        bench2_f fwd_tput_conc_ ## delay ;
+
 extern "C" {
 /* misc benches */
 BENCH_DECL_X(load_loop)
@@ -27,28 +33,35 @@ BENCH_DECL_X(prefetcht2_bench)
 BENCH_DECL_X(prefetchnta_bench)
 BENCH_DECL_X(serial_load_bench)
 
-bench2_f fwd_lat_delay_0;
-bench2_f fwd_lat_delay_1;
-bench2_f fwd_lat_delay_2;
-bench2_f fwd_lat_delay_3;
-bench2_f fwd_lat_delay_4;
-bench2_f fwd_lat_delay_5;
+FWD_BENCH_DECL(0);
+FWD_BENCH_DECL(1);
+FWD_BENCH_DECL(2);
+FWD_BENCH_DECL(3);
+FWD_BENCH_DECL(4);
+FWD_BENCH_DECL(5);
 
-bench2_f fwd_tput_conc_1;
-bench2_f fwd_tput_conc_2;
-bench2_f fwd_tput_conc_3;
-bench2_f fwd_tput_conc_4;
-bench2_f fwd_tput_conc_5;
 bench2_f fwd_tput_conc_6;
 bench2_f fwd_tput_conc_7;
 bench2_f fwd_tput_conc_8;
 bench2_f fwd_tput_conc_9;
 bench2_f fwd_tput_conc_10;
+
+bench2_f oneshot_try1;
+bench2_f oneshot_try2;
+bench2_f oneshot_try2_4;
+bench2_f oneshot_try2_10;
+bench2_f oneshot_try2_20;
+bench2_f oneshot_try2_1000;
+bench2_f oneshot_try3;
+bench2_f oneshot_try4;
+
+bench2_f train_noalias;
+bench2_f aliasing_loads;
 }
 
 template <typename TIMER, bench2_f FUNC>
-static Benchmark make_load_bench(const BenchmarkGroup* parent, size_t kib, const std::string &suffix) {
-    using default_maker = BenchmarkMaker<TIMER>;
+static Benchmark make_load_bench(BenchmarkGroup* parent, size_t kib, const std::string &suffix) {
+    using default_maker = StaticMaker<TIMER>;
     std::string id = suffix + "-" + std::to_string(kib);
     std::string name = std::to_string(kib) +  "-KiB " + suffix;
     return default_maker::template make_bench<FUNC>(parent, id, name, LOAD_LOOP_UNROLL,
@@ -104,15 +117,15 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> fwd_group = std::make_shared<BenchmarkGroup>("memory/store-fwd", "Store forwaring latency and throughput");
 
-        using default_maker = BenchmarkMaker<TIMER>;
+        using default_maker = StaticMaker<TIMER>;
 
 #define LAT_DELAY_BENCH(delay) \
-        default_maker::template make_bench<fwd_lat_delay_ ## delay, dummy_bench>(fwd_group.get(), "latency-" #delay, \
-                    "Store forward latency delay " #delay, 1, []{ return nullptr; /*aligned_ptr(4096, 2048 * 1024);*/ })
+        default_maker::template make_bench<fwd_lat_delay_ ## delay>(fwd_group.get(), "latency-" #delay, \
+                    "Store forward latency delay " #delay, 1)
 
 #define TPUT_BENCH(conc) \
-        default_maker::template make_bench<fwd_tput_conc_ ## conc, dummy_bench>(fwd_group.get(), "concurrency-" #conc, \
-                    "Store fwd tput concurrency " #conc, conc, []{ return nullptr; /*aligned_ptr(4096, 2048 * 1024);*/ })
+        default_maker::template make_bench<fwd_tput_conc_ ## conc>(fwd_group.get(), "concurrency-" #conc, \
+                    "Store fwd tput concurrency " #conc, conc)
 
 
         auto benches = std::vector<Benchmark> {
@@ -139,6 +152,49 @@ void register_mem(GroupList& list) {
         fwd_group->add(benches);
         list.push_back(fwd_group);
     }
+
+    auto buf_provider = []{ return aligned_ptr(4096, 10 * 4096); };
+
+    {
+        std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("memory/store-fwd", "Store forwaring latency and throughput");
+        list.push_back(oneshot);
+
+        auto maker = OneshotMaker<TIMER, 20>(oneshot.get());
+
+        maker.template make<dummy_bench>("oneshot-dummy", "Empty oneshot bench", 1);
+
+#define LAT_DELAY_ONESHOT(delay) \
+        maker.template make<fwd_lat_delay_oneshot_ ## delay>("oneshot-latency-" #delay, \
+                    "StFwd oneshot lat (delay " #delay ")", 1, buf_provider)
+
+        //LAT_DELAY_ONESHOT(5);
+        //LAT_DELAY_ONESHOT(4);
+        //LAT_DELAY_ONESHOT(3);
+        LAT_DELAY_ONESHOT(2);
+        LAT_DELAY_ONESHOT(1);
+        LAT_DELAY_ONESHOT(0);
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("memory/store-fwd-try", "Store forward attempts");
+        list.push_back(oneshot);
+
+        auto maker = OneshotMaker<TIMER, 20>(oneshot.get());
+
+        maker.template make<dummy_bench>("oneshot-dummy", "Empty oneshot bench", 1);
+        maker.template make<oneshot_try1>("stfwd-try1", "stfwd-try1", 1, buf_provider);
+        maker.template make<oneshot_try2>("stfwd-try2", "stfwd-try2 100 loads", 1, buf_provider);
+        maker.template make<oneshot_try2_4>("stfwd-try2-4", "stfwd-try2 4 loads", 1, buf_provider);
+        maker.template make<oneshot_try2_10>("stfwd-try2-10", "stfwd-try2 10 loads", 1, buf_provider);
+        maker.template make<oneshot_try2_20>("stfwd-try2-20", "stfwd-try2 20 loads", 1, buf_provider);
+        maker.template make<oneshot_try2_1000>("stfwd-try2-1000", "stfwd-try2 1000 loads", 1, buf_provider);
+        maker.template make_warm<oneshot_try2_1000,dummy_bench>("stfwd-try2-1000w", "stfwd-try2 1000 loads warm", 1, buf_provider);
+
+        maker.template make<oneshot_try2>("stfwd-try2b", "stfwd-try2 100 loads", 1, buf_provider);
+        maker.template make_warm<aliasing_loads, train_noalias>("stfwd-try2c", "trained loads", 1, buf_provider);
+
+    }
+
 
 
 }

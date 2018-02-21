@@ -61,16 +61,40 @@ public:
 	}
 };
 
-template <typename iter_type>
-typename std::iterator_traits<iter_type>::value_type median(iter_type first, iter_type last) {
+template <typename iter_type, typename LESS>
+typename std::iterator_traits<iter_type>::value_type median(iter_type first, iter_type last, LESS comp) {
 	if (first == last) {
 		throw std::logic_error("can't get median of empty range");
 	}
 	using T = typename std::iterator_traits<iter_type>::value_type;
 	std::vector<T> copy(first, last);
-	std::sort(copy.begin(), copy.end());
+	std::sort(copy.begin(), copy.end(), comp);
 	size_t sz = copy.size(), half_sz = sz / 2;
 	return sz % 2 ? copy[half_sz] : (copy[half_sz - 1] + copy[half_sz]) / 2;
+}
+
+/**
+ * Like median above, except that with an even number of elements, where there are two middle elements with
+ * equal claim to the throne, the lesser of the two elements is returned rather trying to average them. This
+ * method is more generally applicable since it always returns on of the elements of the input range directly
+ * and doesn't require the elements to expose the operations required to calculate an average.
+ */
+template <typename iter_type, typename LESS>
+typename std::iterator_traits<iter_type>::value_type medianf(iter_type first, iter_type last, LESS comp) {
+    if (first == last) {
+        throw std::logic_error("can't get median of empty range");
+    }
+    using T = typename std::iterator_traits<iter_type>::value_type;
+    std::vector<T> copy(first, last);
+    std::sort(copy.begin(), copy.end(), comp);
+    assert(!copy.empty());
+    return copy[(copy.size() - 1) / 2];
+}
+
+template <typename iter_type>
+typename std::iterator_traits<iter_type>::value_type median(iter_type first, iter_type last) {
+    auto p = std::less<typename std::iterator_traits<iter_type>::value_type>();
+    return Stats::median<iter_type>(first, last, p);
 }
 
 

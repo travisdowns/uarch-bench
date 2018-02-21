@@ -52,7 +52,7 @@ public:
     template<typename TIMER, bench2_f METHOD>
     static shared_ptr<LoadStoreGroup> make(const string& id, unsigned op_size) {
         shared_ptr<LoadStoreGroup> group = make_group(id, id, op_size);
-        using maker = BenchmarkMaker<TIMER>;
+        using maker = StaticMaker<TIMER>;
         for (ssize_t misalign = 0; misalign < 64; misalign++) {
             group->add(maker::template make_bench<METHOD>(group.get(), group->make_id(misalign), group->make_name(misalign), 128,
                     [misalign]() { return misaligned_ptr(64, 64,  misalign); }, 1000));
@@ -65,7 +65,7 @@ public:
         // because this BenchmarkGroup is really more like a single benchmark (i.e., the 64 actual Benchmark objects
         // don't their name printed but are show in a grid instead, we run the predicate on a fake Benchmark created
         // based on the group name
-        Benchmark fake = std::make_shared<LoopedBenchmark>(this, "fake", getDescription(), 1, full_bench_t(), 1);
+        Benchmark fake = StaticMaker<DefaultClockTimer>::make_bench<dummy_bench>(this, "fake", getDescription(), 1);
         if (!predicate(fake)) {
             return;
         }

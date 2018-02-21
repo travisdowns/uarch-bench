@@ -8,6 +8,7 @@
 #include <limits>
 
 #include "libpfc/include/libpfc.h"
+#include "hedley.h"
 
 #include "timer-info.hpp"
 #include "libpfm4-support.hpp"
@@ -36,10 +37,11 @@ public:
 
     virtual void init(Context &) override;
 
+    HEDLEY_ALWAYS_INLINE
     static now_t now() {
         LibpfcNow now = {};
 
-        // in principle, PFCEND is supposed to be used with a matched pair of END/START pairs, like
+        // in principle, the PFCSTART/END macros are supposed to be used with a matched pair of END/START pairs, like
         //
         // PFCSTART(cnt);
         // ... code under test
@@ -63,11 +65,29 @@ public:
      */
     static LibpfcNow delta(const LibpfcNow& a, const LibpfcNow& b);
 
+    static PFC_CNT aggr_value(const LibpfcNow& now) {
+        return now.getClk();
+    }
+
     static LibpfcNow aggregate(const LibpfcNow *begin, const LibpfcNow *end);
 
 private:
 
     static bool is_init;
 };
+
+extern "C" {
+/** libpfc raw functions implement this function and result the results in result */
+typedef void (libpfc_raw1)(size_t loop_count, void *arg, LibpfcNow* results);
+}
+
+template <int samples, libpfc_raw1 METHOD>
+std::array<LibpfcNow, samples> libpfc_raw_adapt(size_t loop_count, void *arg) {
+    std::array<LibpfcNow, samples> result = {};
+    for (int i = 0; i < samples; i++) {
+        METHOD(loop_count, arg, &result[i]);
+    }
+    return result;
+}
 
 #endif /* LIFPFC_TIMER_HPP_ */

@@ -60,6 +60,7 @@ public:
         << getGHz() << " GHz" << std::endl;
     }
 
+    HEDLEY_ALWAYS_INLINE
     static int64_t now() {
         return CLOCK::nanos();
     }
@@ -75,11 +76,8 @@ public:
         return a - b;
     }
 
-    static int64_t aggregate(const int64_t *begin, const int64_t *end) {
-        // For now just choose the minimum element on the idea that there will be slower deviations from
-        // the true speed (e.g., cache misses, interrupts), but no negative deviations (how can the CPU
-        // run faster than idea?). For more complex cases this assumption doesn't always hold.
-        return *std::min_element(begin, end);
+    static int64_t aggr_value(int64_t delta) {
+        return delta;
     }
 
     /* return the statically calculated clock speed of the CPU in ghz for this clock */

@@ -165,6 +165,7 @@ GroupList make_benches() {
     register_cpp<TIMER>(groupList);
     register_vector<TIMER>(groupList);
     register_call<TIMER>(groupList);
+    register_oneshot<TIMER>(groupList);
 
     return groupList;
 }
@@ -237,7 +238,9 @@ TimeredList& getForTimer(Context &c) {
 
 void listBenches(Context& c) {
     std::ostream& out = c.out();
-    auto benchList = TimeredList::getAll(c).front().getGroups();
+    // note that we get the timer-specific list, since not all timers have identical benchmark lists mostly
+    // due to "raw" benchmarks which are written with a specific timer in mind
+    auto benchList = getForTimer(c).getGroups();
     out << "Listing " << benchList.size() << " benchmark groups" << endl << endl;
     for (auto& group : benchList) {
         out << "-------------------------------------\n";
@@ -269,6 +272,7 @@ void printClockOverheads(Context& c) {
     PRINT_CLOCK(StdClockAdapt<system_clock>);
     PRINT_CLOCK(StdClockAdapt<steady_clock>);
     PRINT_CLOCK(StdClockAdapt<high_resolution_clock>);
+
     PRINT_CLOCK(GettimeAdapter<CLOCK_REALTIME>);
     PRINT_CLOCK(GettimeAdapter<CLOCK_REALTIME_COARSE>);
     PRINT_CLOCK(GettimeAdapter<CLOCK_MONOTONIC>);

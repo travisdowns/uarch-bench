@@ -13,6 +13,7 @@
 
 #include "args.hxx"
 
+#include "stats.hpp"
 #include "bench-declarations.h"
 
 class Context;
@@ -30,7 +31,7 @@ public:
     TimingResult(std::vector<double> results) : results_(std::move(results)) {}
 
     /* multiply all values by the given value, useful when normalizing */
-    TimingResult operator*(double multipler) {
+    TimingResult operator*(double multipler) const {
         TimingResult result(*this);
         for (double& r : result.results_) {
             r *= multipler;
@@ -102,13 +103,26 @@ public:
 	 * implement the following static methods which called directly
 	 * from the measurement methods (and should ideally be inline or declared within the class).
 
-	static int64_t now() {
-        return duration_cast<nanoseconds>(CLOCK::now().time_since_epoch()).count();
+    // You want ALWAYS_INLINE to enforce consistency of behavior more than "it's faster" - if you don't say anything about
+    // the inlining, some benchamrks may inline the now() calls and some not, based on opaque compiler heuristics. For example,
+    // I found that the ::now calls for one-shot timers were being inlined in all the actual benchmarks, but not
+    // in the overhead calculation, meaning that a overhead-removed benchmark of dummy_bench showed up as -1 cycles, not 0.
+    HEDLEY_ALWAYS_INLINE
+	static now_t now() {
+        // return the current now_t
+        // this is the key timer method that will be inlined into the innermost loop when generating the
+        // core benchmarking code, so it should be as efficient and fast as possible
     }
 
-    static TimingResult to_result(int64_t nanos) {
-        return {nanos * ghz, (double)nanos};
+    static TimingResult to_result(delta_t now) {
+        // generate and return a TimingResult from now
+        // this method is called out of the core benchmark code, so doesn't have to be fast
     }
+
+
+    * Given a delta_t object, return a comparable value used for aggregation (usually the number of clocks or time
+    * taken).
+    static VALUE aggr_value(const delta_t& delta);
 
 	**************************/
 };
@@ -124,84 +138,34 @@ template <typename TIMER_INFO>
 class TimerBase : public TimerInfo {
 public:
 
-    static constexpr int warmup_samples =  2;
-    static constexpr int total_samples  = 35;
-
-    static_assert(warmup_samples < total_samples, "warmup samples must be less than total");
-
-//    using now_t2 = typename TIMER_INFO::now_t;
-
+    // TODO: this whole class is probably just noise after a refactoring - delete?
     TimerBase(const std::string& name, const std::string& description, const std::vector<std::string>& metric_names)
             : TimerInfo(name, description, metric_names) {}
 
-    template <typename TIMING>
-    static full_bench_t make_bench_method(TIMING t) {
-        return [t](int loop_count){ return doTiming(loop_count, t); };
-    }
-
-    template <typename TIMING>
-    static TimingResult doTiming(size_t loop_count, TIMING t) {
-        std::array<typename TIMER_INFO::now_t, total_samples> raw_results;
-
-        // note that the warmup and "real" samples use exactly the same loop, below
-        // this keeps the generated code smaller and, more importantly, consistent
-        // between warmup and actual iterations
-        for (int i = 0; i < total_samples; i++) {
-            raw_results[i] = t(loop_count);
-        }
-
-        typename TIMER_INFO::delta_t aggr = TIMER_INFO::aggregate(raw_results.begin() + warmup_samples, raw_results.end());
-        return TIMER_INFO::to_result(aggr);
-    }
-
-    template <typename BASE_TIMING, typename PRIMARY_TIMING>
-    static full_bench_t make_delta_method(BASE_TIMING base, PRIMARY_TIMING primary) {
-        return [base, primary](int loop_count){ return doTimingDelta(loop_count, base, primary); };
-    }
-
-    template <typename BASE_TIMING, typename PRIMARY_TIMING>
-    static TimingResult doTimingDelta(size_t loop_count, BASE_TIMING base, PRIMARY_TIMING primary) {
-        std::array<typename TIMER_INFO::now_t, total_samples>    base_results;
-        std::array<typename TIMER_INFO::now_t, total_samples> primary_results;
-
-        for (int i = 0; i < total_samples; i++) {
-            base_results[i]    =    base(loop_count);
-            primary_results[i] = primary(loop_count);
-        }
-
-        typename TIMER_INFO::delta_t    base_aggr = TIMER_INFO::aggregate(base_results.begin() + warmup_samples, base_results.end());
-        typename TIMER_INFO::delta_t primary_aggr = TIMER_INFO::aggregate(primary_results.begin() + warmup_samples, primary_results.end());
-        return TIMER_INFO::to_result(TIMER_INFO::delta(primary_aggr, base_aggr));
-    }
-
 };
 
-/*
- * A timing implementation that simply calls the METHOD once bracketed by calls to Timer::now().
- * The downside is that the overhead of the timer calls is not cancelled out, and there is no
- * mechanism to cancel out overhead within the METHOD call itself.
- *
- * The METHOD accepts two arguments: a loop counter, and an arbitrary benchmark-specific void *
- * which is most often used to use the same benchmark code repeatedly with different input values.
+/**
+ * Implements some useful method when instantiated on a timer.
  */
-template <typename TIMER, bench2_f METHOD>
-class TimingAbsolute {
-    arg_method_t arg_method_;
-    void* arg_;
-public:
-    TimingAbsolute(arg_method_t arg_method) :
-        arg_method_(arg_method), arg_(arg_method()) {}
+template <typename TIMER>
+struct TimerHelper {
 
-    typename TIMER::delta_t operator()(size_t loop_count) {
-        return time_inner(loop_count, arg_);
+    using delta_t = typename TIMER::delta_t;
+
+    static bool less(const delta_t& left, const delta_t& right) {
+        return TIMER::aggr_value(left) < TIMER::aggr_value(right);
     }
 
-    static typename TIMER::delta_t time_inner(size_t loop_count, void* arg) {
-        auto t0 = TIMER::now();
-        METHOD(loop_count, arg);
-        auto t1 = TIMER::now();
-        return TIMER::delta(t1, t0);
-    }
+    template <typename IT>
+    static delta_t min(IT&& begin, IT&& end) { return *std::min_element(begin, end, less); }
+
+    template <typename IT>
+    static delta_t max(IT&& begin, IT&& end) { return *std::max_element(begin, end, less); }
+
+    template <typename IT>
+    static delta_t median(IT&& begin, IT&& end) { return Stats::medianf(begin, end, less); }
+
+
 };
 
 

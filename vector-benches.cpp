@@ -34,7 +34,7 @@ void register_vector(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> vector_group = std::make_shared<BenchmarkGroup>("vector/bypass", "Vector unit bypass latency");
 
-        using default_maker = BenchmarkMaker<TIMER>;
+        using default_maker = StaticMaker<TIMER>;
 
         auto benches = std::vector<Benchmark> {
             default_maker::template make_bench<bypass_vmovdqa_latency>(vector_group.get(), "movdqa", "movdqa [mem] -> paddb latency", 1, []{ return nullptr; }, 100000),
@@ -53,7 +53,7 @@ void register_vector(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> vector_group = std::make_shared<BenchmarkGroup>("vector/load-load", "Vector load-load latency");
 
-        using default_maker = BenchmarkMaker<TIMER>;
+        using default_maker = StaticMaker<TIMER>;
 
         auto benches = std::vector<Benchmark> {
             default_maker::template make_bench< vector_load_load_lat_movdqu_0>(vector_group.get(),  "movdqu-aligned",    "aligned  movdqu load lat", 1, []{ return nullptr; }, 100000),

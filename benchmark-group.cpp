@@ -10,16 +10,16 @@ using namespace std;
 constexpr int BENCH_ID_WIDTH = 16;
 
 
-void BenchmarkGroup::runIf(Context &context, const TimerInfo &ti, const predicate_t& predicate) {
+void BenchmarkGroup::runIf(Context &c, const TimerInfo &ti, const predicate_t& predicate) {
     bool header = false;
     for (auto& b : benches_) {
         if (predicate(b)) {
             if (!header) {
-                context.out() << std::endl << "** Running benchmark group " << getDescription() << " **" << std::endl;
-                printResultHeader(context, ti);
+                c.out() << std::endl << "** Running benchmark group " << getDescription() << " **" << std::endl;
+                printGroupHeader(c);
                 header = true;
             }
-            b->runAndPrint(context);
+            b->runAndPrint(c);
         }
     }
 }
