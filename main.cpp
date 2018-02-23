@@ -93,9 +93,31 @@ DescriptiveStats CalcClockRes() {
 
     for (int r = 0; r < 3; r++) {
         for (size_t i = 0; i < ITERS; i++) {
-            auto t0 = CLOCK::now();
-            auto t1 = CLOCK::now();
-            results[i] = duration_cast<nanoseconds>(t1 - t0).count();
+            auto t0 = CLOCK::nanos();
+            auto t1 = CLOCK::nanos();
+            results[i] = t1 - t0;
+        }
+    }
+
+    return get_stats(results.begin(), results.end());
+}
+
+volatile int64_t sink;
+
+template <size_t ITERS, typename CLOCK>
+DescriptiveStats CalcClockCost() {
+    std::array<double, ITERS> results;
+    using timer = DefaultClockTimer;
+
+    for (int r = 0; r < 3; r++) {
+        for (size_t i = 0; i < ITERS; i++) {
+            int64_t sum = 0;
+            int64_t before = timer::now();
+            for (int j = 0; j < 1000; j++) {
+                sum += CLOCK::nanos();
+            }
+            results[i] = (timer::now() - before) / 1000.0;
+            sink = sum;
         }
     }
 
@@ -198,14 +220,38 @@ void listBenches(Context& c) {
     }
 }
 
+
+template <typename CLOCK>
+void printOneClock(std::ostream& out, const char* name) {
+    out << setw(48) << name << setw(28) << CalcClockRes<100,CLOCK>().getString4(5,1);
+    out << setw(30) << CalcClockCost<100,CLOCK>().getString4(5,1) << endl;
+
+}
+
+struct DumbClock {
+    static int64_t nanos() { return 0; }
+};
+
 void printClockOverheads(Context& c) {
-    constexpr int cw = 22;
     std::ostream& out = c.out();
-    out << "Clock overhead: " << setw(cw) << "system_clock" << setw(cw) << "steady_clock" << setw(cw) << "hi_res_clock" << endl;
-    out << "min/med/avg/max ";
-    out << setw(cw) << CalcClockRes<100,system_clock>().getString4(1);
-    out << setw(cw) << CalcClockRes<100,steady_clock>().getString4(1);
-    out << setw(cw) << CalcClockRes<100,high_resolution_clock>().getString4(1);
+    out << "----- Clock Stats --------\n";
+    out << "                                                      Resolution (ns)               Runtime (ns)" << endl;
+    out << "                           Name                        min/  med/  avg/  max         min/  med/  avg/  max" << endl;
+#define PRINT_CLOCK(clock) printOneClock< clock >(out, #clock);
+    PRINT_CLOCK(StdClockAdapt<system_clock>);
+    PRINT_CLOCK(StdClockAdapt<steady_clock>);
+    PRINT_CLOCK(StdClockAdapt<high_resolution_clock>);
+    PRINT_CLOCK(GettimeAdapter<CLOCK_REALTIME>);
+    PRINT_CLOCK(GettimeAdapter<CLOCK_REALTIME_COARSE>);
+    PRINT_CLOCK(GettimeAdapter<CLOCK_MONOTONIC>);
+    PRINT_CLOCK(GettimeAdapter<CLOCK_MONOTONIC_COARSE>);
+    PRINT_CLOCK(GettimeAdapter<CLOCK_MONOTONIC_RAW>);
+    PRINT_CLOCK(GettimeAdapter<CLOCK_PROCESS_CPUTIME_ID>);
+    PRINT_CLOCK(GettimeAdapter<CLOCK_THREAD_CPUTIME_ID>);
+    PRINT_CLOCK(GettimeAdapter<CLOCK_BOOTTIME>);
+
+    PRINT_CLOCK(DumbClock);
+
     out << endl;
 }
 

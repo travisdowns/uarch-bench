@@ -37,12 +37,12 @@ double CalcCpuFreq() {
 
     for (size_t w = 0; w < WARMUP + 1; w++) {
         for (size_t r = 0; r < TRIES; r++) {
-            auto t0 = CLOCK::now();
+            auto t0 = CLOCK::nanos();
             add_calibration(ITERS, nullptr);
-            auto t1 = CLOCK::now();
+            auto t1 = CLOCK::nanos();
             add_calibration(ITERS * 2, nullptr);
-            auto t2 = CLOCK::now();
-            results[r] = duration_cast<nanoseconds>((t2 - t1) - (t1 - t0)).count();
+            auto t2 = CLOCK::nanos();
+            results[r] = (t2 - t1) - (t1 - t0);
         }
     }
 

@@ -19,6 +19,25 @@
 #include "libpfc-timer.hpp"
 #endif
 
+/**
+ * Adapt any of the clocks offered by clock_gettime into a clock suitable for use by ClockTimerT
+ */
+template <int CLOCK>
+struct GettimeAdapter {
+    static int64_t nanos() {
+        struct timespec ts;
+        clock_gettime(CLOCK, &ts);
+        return (int64_t)ts.tv_sec * 1000000000 + ts.tv_nsec;
+    }
+};
+
+
+template <typename STD_CLOCK>
+struct StdClockAdapt {
+    static int64_t nanos() {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(STD_CLOCK::now().time_since_epoch()).count();
+    }
+};
 
 /*
  * This class measures cycles indirectly by measuring the wall-time for each test, and then converting
@@ -42,7 +61,7 @@ public:
     }
 
     static int64_t now() {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(CLOCK::now().time_since_epoch()).count();
+        return CLOCK::nanos();
     }
 
     static TimingResult to_result(int64_t nanos) {
@@ -68,7 +87,7 @@ public:
 };
 
 // the default ClockTimer will use high_resolution_clock
-using DefaultClockTimer = ClockTimerT<std::chrono::high_resolution_clock>;
+using DefaultClockTimer = ClockTimerT<StdClockAdapt<std::chrono::high_resolution_clock>>;
 
 
 // this x macro lists all the timers in use, which can be useful for example to explicitly instantiate a benchmark

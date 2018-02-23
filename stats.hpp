@@ -49,13 +49,13 @@ public:
 	 * Return a string with the values of min/median/avg/max at the specified precision.
 	 * Note that the count is not included.
 	 */
-	std::string getString4(int precision) const {
+	std::string getString4(int width, int precision) const {
 		std::ostringstream os;
 		os << std::fixed << std::setprecision(precision) <<
-				getMin() << "/" <<
-				getMedian() << "/" <<
-				getAvg() << "/" <<
-				getMax();
+				std::setw(width) << getMin() << "/" <<
+				std::setw(width) << getMedian() << "/" <<
+				std::setw(width) << getAvg() << "/" <<
+				std::setw(width) << getMax();
 
 		return os.str();
 	}
