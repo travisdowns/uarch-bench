@@ -34,6 +34,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace Stats;
 
+
 template <size_t ITERS, typename CLOCK>
 DescriptiveStats CalcClockRes() {
     std::array<nanoseconds::rep, ITERS> results;
@@ -86,6 +87,7 @@ GroupList make_benches() {
     register_vector<TIMER>(groupList);
     register_call<TIMER>(groupList);
     register_oneshot<TIMER>(groupList);
+    register_syscall<TIMER>(groupList);
 
     return groupList;
 }

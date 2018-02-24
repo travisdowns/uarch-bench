@@ -1509,3 +1509,89 @@ add     rsp, 128
 ret
 
 
+
+define_bench syscall_asm
+.top:
+mov eax, esi
+syscall
+dec rdi
+jnz .top
+ret
+
+define_bench syscall_asm_lfence_before
+.top:
+mov eax, esi
+lfence
+syscall
+dec rdi
+jnz .top
+ret
+
+define_bench syscall_asm_lfence_after
+.top:
+mov eax, esi
+syscall
+lfence
+dec rdi
+jnz .top
+ret
+
+define_bench lfence_only
+.top:
+times 8 lfence
+dec rdi
+jnz .top
+ret
+
+ud2
+
+%define STRIDE 12736  ; 13 * 64
+
+
+%define SIZE   (1 << 25)
+%define MASK   (SIZE - 1)
+
+; parallel loads with large stride (across pages, defeating prefetcher)
+%macro parallel_miss_macro 1
+xor     edx, edx
+.top:
+mov     eax, DWORD [rsi + rdx]
+%1
+add     rdx, STRIDE
+and     rdx, MASK
+dec     rdi
+jnz     .top
+ret
+%endmacro
+
+define_bench parallel_misses
+parallel_miss_macro nop
+
+define_bench lfenced_misses
+parallel_miss_macro lfence
+
+define_bench mfenced_misses
+parallel_miss_macro mfence
+
+define_bench sfenced_misses
+parallel_miss_macro sfence
+
+%macro syscall_123456 0
+mov     eax, 123456
+syscall
+%endmacro
+
+define_bench syscall_misses
+parallel_miss_macro syscall_123456
+
+%macro syscall_123456_lfence 0
+lfence
+syscall_123456
+%endmacro
+
+define_bench syscall_misses_lfence
+parallel_miss_macro syscall_123456_lfence
+
+
+ud2
+

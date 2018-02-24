@@ -26,8 +26,7 @@ bool wildcard_match(const std::string& target, const std::string& pattern) {
 }
 
 const size_t TWO_MB = 2 * 1024 * 1024;
-const int STORAGE_SIZE = TWO_MB;  // * 4 because we overalign the pointer in order to guarantee minimal alignemnt
-//unsigned char unaligned_storage[STORAGE_SIZE];
+const int STORAGE_SIZE = 100 * 1024 * 1024;  // 100 MB
 void *storage_ptr = 0;
 
 volatile int zero = 0;
@@ -74,15 +73,10 @@ void *align(size_t base_alignment, size_t required_size, void* p, size_t space) 
     return r;
 }
 
-/*
- * Returns a pointer that is minimally aligned to base_alignment. That is, it is
- * aligned to base_alignment, but *not* aligned to 2 * base_alignment. Each call returns
- * the same pointer, so you probably shouldn't write to this memory region.
- */
 void *aligned_ptr(size_t base_alignment, size_t required_size) {
     assert(required_size <= STORAGE_SIZE);
     assert(is_pow2(base_alignment));
-    assert(base_alignment < TWO_MB);
+    assert(base_alignment <= TWO_MB);
     if (!storage_ptr) {
         storage_ptr = new_huge_ptr(STORAGE_SIZE);
     }
@@ -91,7 +85,7 @@ void *aligned_ptr(size_t base_alignment, size_t required_size) {
 
 
 /**
- * Returns a pointer that is first *minimally* aligned to the given base alignment (per
+ * Returns a pointer that is first aligned to the given base alignment (per
  * aligned_ptr()) and then is offset by the amount given by misalignment.
  */
 void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misalignment) {
