@@ -1,7 +1,7 @@
 /*
- * default_benches.cpp
+ * mem-benches.cpp
  *
- * Various "default" benchmarks.
+ * Testing various memory and prefetching patterns for latency and throughput.
  */
 
 #include "benches.hpp"

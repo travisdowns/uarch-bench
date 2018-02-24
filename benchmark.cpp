@@ -56,7 +56,7 @@ void LoopedBenchmark::runAndPrint(Context& c) {
 }
 TimingResult LoopedBenchmark::run() {
     TimingResult timings = getTimings();
-    double multiplier = 1.0 / (ops_per_loop_ * getLoopCount()); // normalize to time / op
+    double multiplier = 1.0 / (ops_per_loop_ * (size_t)getLoopCount()); // normalize to time / op
     return timings * multiplier;
 }
 

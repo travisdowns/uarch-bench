@@ -208,6 +208,9 @@ void register_cpp(GroupList& list);
 template <typename TIMER>
 void register_vector(GroupList& list);
 
+template <typename TIMER>
+void register_syscall(GroupList& list);
+
 void printResultHeader(Context& c, const TimerInfo& ti);
 
 

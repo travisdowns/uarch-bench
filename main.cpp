@@ -42,7 +42,7 @@ static inline bool is_pow2(T x) {
 
 const int MAX_ALIGN = 4096;
 const size_t TWO_MB = 2 * 1024 * 1024;
-const int STORAGE_SIZE = TWO_MB;  // * 4 because we overalign the pointer in order to guarantee minimal alignemnt
+const int STORAGE_SIZE = 32 * TWO_MB;  // * 4 because we overalign the pointer in order to guarantee minimal alignemnt
 //unsigned char unaligned_storage[STORAGE_SIZE];
 void *storage_ptr = 0;
 
@@ -58,7 +58,8 @@ void *aligned_ptr(size_t base_alignment, size_t required_size) {
     assert(is_pow2(base_alignment));
     assert(base_alignment < TWO_MB);
     if (!storage_ptr) {
-        assert(posix_memalign(&storage_ptr, TWO_MB, STORAGE_SIZE + TWO_MB) == 0);
+        int ret = posix_memalign(&storage_ptr, TWO_MB, STORAGE_SIZE + TWO_MB);
+        assert(ret == 0);
         madvise(storage_ptr, STORAGE_SIZE + TWO_MB, MADV_HUGEPAGE);
         storage_ptr = ((char *)storage_ptr + TWO_MB);
 
@@ -137,6 +138,7 @@ GroupList make_benches() {
     register_misc<TIMER>(groupList);
     register_cpp<TIMER>(groupList);
     register_vector<TIMER>(groupList);
+    register_syscall<TIMER>(groupList);
 
     return groupList;
 }
