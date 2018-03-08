@@ -46,12 +46,11 @@ Ideally, you run `./uarch-bench.sh` as root, since this allows the permissions n
 
 ### With Root
 
-Just run `./uarch-bench.sh` after building. The script  required since `rdmsr` and `wrmsr` are used to query
-and modify the turbo boost state on Intel platforms (turbo is disabled for the benchmark and restored to its original state after).
+Just run `./uarch-bench.sh` after building. The script will generally invoke `sudo` to prompt you for root credentials in order to disable frequency scaling (either using the `no_turbo` flag if `intel_pstate` governor is used, or `rdmsr` and `wrmsr` otherwise).
 
 ### Without Root
 
-You can also run the binary as `./uarch-bench` directly, which doesn't require sudo, but doesn't disable frequency scaling.
+You can also run the binary as `./uarch-bench` directly, which doesn't require sudo, but frequency scaling won't be automatically disabled in this case (you can still separately disable it prior to running `uarch-bench`).
 
 ### Command Line Arguments
 
