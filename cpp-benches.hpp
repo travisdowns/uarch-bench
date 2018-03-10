@@ -1,5 +1,5 @@
 /*
- * cpp-benches.h
+ * cpp-benches.hpp
  */
 
 #ifndef CPP_BENCHES_HPP_

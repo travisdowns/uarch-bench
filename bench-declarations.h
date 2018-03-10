@@ -9,7 +9,9 @@
 
 #include <stdint.h>
 
+#if defined(__cplusplus)
 extern "C" {
+#endif
 
 /**
  * The prototype for a benchmark function.
@@ -23,6 +25,9 @@ extern "C" {
 typedef long (bench2_f)(uint64_t iters, void *arg);
 
 bench2_f dummy_bench;
+
+#if defined(__cplusplus)
 }
+#endif
 
 #endif /* BENCH_DECLARATIONS_H_ */
