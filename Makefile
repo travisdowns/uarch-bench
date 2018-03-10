@@ -5,8 +5,10 @@ include config.mk
 
 .PHONY: all clean libpfc libpfc-clean
 
+CXX ?= g++
+CC ?= gcc
 ASM ?= nasm
-ASM_FLAGS ?= -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all -l x86_methods.list 
+ASM_FLAGS ?= -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all -l x86_methods.list
 
 PFM_VER ?= 4.8.0
 PFM_DIR ?= libpfm-$(PFM_VER)
@@ -14,13 +16,19 @@ PFM_LIBDIR ?= $(PFM_DIR)/lib
 
 GIT_VERSION := $(shell git describe --dirty --always)
 
+ifneq ($(CPU_ARCH),)
+ARCH_FLAGS := -march=$(CPU_ARCH)
+endif
 O_LEVEL ?= -O2
-CPPFLAGS := -MMD -Wall -g $(O_LEVEL) -march=haswell -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC) \
+
+COMMON_FLAGS := -MMD -Wall $(ARCH_FLAGS) -g $(O_LEVEL) -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC) \
 -DUSE_BACKWARD_CPP=$(USE_BACKWARD_CPP) -DBACKWARD_HAS_BFD=$(BACKWARD_HAS_BFD) -DBACKWARD_HAS_DW=$(BACKWARD_HAS_DW)
+CPPFLAGS := $(COMMON_FLAGS)
+CFLAGS := $(COMMON_FLAGS)
 
 # files that should only be compiled if USE_LIBPFC is enabled
 PFC_SRC := libpfc-timer.cpp libpfm4-support.cpp
-SRC_FILES := $(wildcard *.cpp) nasm-utils/nasm-utils-helper.c
+SRC_FILES := $(wildcard *.cpp) $(wildcard *.c) nasm-utils/nasm-utils-helper.c
 SRC_FILES := $(filter-out $(PFC_SRC), $(SRC_FILES))
 
 ifeq ($(USE_LIBPFC),1)
@@ -65,8 +73,11 @@ uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
 	@wc -c uarch-bench | awk '{print "binary size: " $$1/1000 "KB"}'
 	@size uarch-bench --format=SysV | egrep '\.text|\.eh_frame|\.rodata|^section'
 
+%.o : %.c $(LIBPFC_DEP)
+	$(CC) $(CFLAGS) -c -std=c11 -o $@ $<
+
 %.o : %.cpp $(LIBPFC_DEP)
-	g++ $(CPPFLAGS) -c -std=c++11 -o $@ $<
+	$(CXX) $(CPPFLAGS) -c -std=c++11 -o $@ $<
 
 x86_methods.o: x86_methods.asm nasm-utils/nasm-utils-inc.asm
 	$(ASM) $(ASM_FLAGS) -f elf64 x86_methods.asm
