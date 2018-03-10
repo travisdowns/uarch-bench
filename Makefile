@@ -14,8 +14,11 @@ PFM_LIBDIR ?= $(PFM_DIR)/lib
 
 GIT_VERSION := $(shell git describe --dirty --always)
 
+ifneq ($(CPU_ARCH),)
+ARCH_FLAGS := -march=$(CPU_ARCH)
+endif
 O_LEVEL ?= -O2
-CPPFLAGS := -MMD -Wall -g $(O_LEVEL) -march=haswell -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC) \
+CPPFLAGS := -MMD -Wall -g $(O_LEVEL) $(ARCH_FLAGS) -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC) \
 -DUSE_BACKWARD_CPP=$(USE_BACKWARD_CPP) -DBACKWARD_HAS_BFD=$(BACKWARD_HAS_BFD) -DBACKWARD_HAS_DW=$(BACKWARD_HAS_DW)
 
 # files that should only be compiled if USE_LIBPFC is enabled
