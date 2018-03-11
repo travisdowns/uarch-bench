@@ -82,6 +82,96 @@ dec rdi
 jnz .top
 ret
 
+define_bench dense_calls
+.top:
+%rep 16
+call dummy_bench
+;nop
+%endrep
+dec rdi
+jnz .top
+ret
+
+%macro sparse_calls 1
+define_bench sparse %+ %1 %+ _calls
+xor     eax, eax
+.top:
+%rep 16
+call dummy_bench
+times %1 add eax, 1
+%endrep
+dec rdi
+jnz .top
+ret
+%endmacro
+
+sparse_calls 0
+sparse_calls 1
+sparse_calls 2
+sparse_calls 3
+sparse_calls 4
+sparse_calls 5
+sparse_calls 6
+sparse_calls 7
+
+
+
+%macro chained_calls 1
+define_bench chained %+ %1 %+ _calls
+xor     eax, eax
+.top:
+%rep 4
+call call_chain_3
+times %1 add eax, 1
+%endrep
+dec rdi
+jnz .top
+ret
+%endmacro
+
+chained_calls 0
+chained_calls 1
+chained_calls 2
+chained_calls 3
+
+pushpop:
+push rax
+pop  rax
+ret
+
+define_bench pushpop_calls
+xor     eax, eax
+.top:
+%rep 16
+call pushpop
+%endrep
+dec rdi
+jnz .top
+ret
+
+%macro addrsp 1
+addrsp%1:
+add     QWORD [rax - %1], 0
+add     QWORD [rax - %1], 0
+ret
+%endmacro
+
+%macro addrsp_calls 1
+addrsp %1
+define_bench addrsp%1_calls
+lea     rax, [rsp - 8]
+.top:
+%rep 16
+call addrsp%1
+%endrep
+dec rdi
+jnz .top
+ret
+%endmacro
+
+addrsp_calls 0
+addrsp_calls 8
+
 
 ; because the 64x64=128 imul uses an implicit destination & first source
 ; we need to clear out eax each iteration to make it idenpendent, although
