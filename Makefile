@@ -10,8 +10,7 @@ CC ?= gcc
 ASM ?= nasm
 ASM_FLAGS ?= -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all -l x86_methods.list
 
-PFM_VER ?= 4.8.0
-PFM_DIR ?= libpfm-$(PFM_VER)
+PFM_DIR ?= libpfm4
 PFM_LIBDIR ?= $(PFM_DIR)/lib
 
 GIT_VERSION := $(shell git describe --dirty --always)
@@ -95,11 +94,11 @@ insmod: libpfc
 	sudo insmod libpfc/pfc.ko
 
 $(PFM_LIBDIR)/libpfm.so:
-	tar xzf libpfm-4.8.0.tar.gz
 	$(MAKE) -C $(PFM_DIR) lib
 
 libpfm4-clean:
-	rm -rf $(PFM_DIR)
+	$(MAKE) -C $(PFM_DIR) clean
+
 
 	
 LOCAL_MK = $(wildcard local.mk)
