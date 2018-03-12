@@ -6,7 +6,7 @@
 #include <cstring>
 #include <vector>
 
-#include "libpfm-4.8.0/include/perfmon/pfmlib.h"
+#include "libpfm4/include/perfmon/pfmlib.h"
 
 #include "libpfm4-support.hpp"
 #include "context.hpp"
