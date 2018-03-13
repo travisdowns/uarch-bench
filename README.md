@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/travisdowns/uarch-bench.svg?branch=master)](https://travis-ci.org/travisdowns/uarch-bench)
+
 # uarch-bench
 
 A fine-grained micro-benchmark intended to investigate micro-architectural details of a target CPU, or to precisely benchmark small functions in a repeatable manner.
