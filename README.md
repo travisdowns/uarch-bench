@@ -8,7 +8,7 @@ A fine-grained micro-benchmark intended to investigate micro-architectural detai
 
 ## Purpose
 
-The uarch-bench project is a collection of micro-benchmarks that try to stress certain microarchitectural features of modern CPUs. Using [libpfc](https://github.com/obilaniu/libpfc) you can accurate track the value of Intel performance counters across the benchmarked region (you must run as root to use this feature).
+The uarch-bench project is a collection of micro-benchmarks that try to stress certain microarchitectural features of modern CPUs and a framework for writing such benchmarks. Using [libpfc](https://github.com/obilaniu/libpfc) you can accurately track the value of Intel performance counters across the benchmarked region - often with precision of a single cycle.
 
 At the moment it supports only x86, using mosty assembly and a few C++ benchmarks. In the future, I'd like to have more C or C++ benchmarks, allowing coverage (in prinicple) of more platforms (non-x86 assembly level benchmarks are also welcome). Of course, for any non-asm benchmark, it is possible that the compiler makes a transformation that invalidates the intent of the benchmark. You could detect this as a large difference between the C/C++ and asm scores.
 
