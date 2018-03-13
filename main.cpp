@@ -71,7 +71,20 @@ void *aligned_ptr(size_t base_alignment, size_t required_size) {
     }
     void *p = storage_ptr;
     size_t space = STORAGE_SIZE;
-    void *r = std::align(base_alignment, required_size, p, space);
+
+    /* std::align isn't available in GCC and clang until fairly
+     * recently. This just gives us a bit more portability for older
+     * compilers. Code from https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57350#c11 */
+    void *r;
+    {
+	std::uintptr_t pn = reinterpret_cast< std::uintptr_t >( p );
+	std::uintptr_t aligned = ( pn + base_alignment - 1 ) & - base_alignment;
+	std::size_t padding = aligned - pn;
+	if ( space < required_size + padding )
+	    r = nullptr;
+	space -= padding;
+	r = reinterpret_cast< void * >( aligned );
+    }
     assert(r);
     assert((((uintptr_t)r) & (base_alignment - 1)) == 0);
     return r;
@@ -349,5 +362,3 @@ int main(int argc, char **argv) {
 
     return EXIT_SUCCESS;
 }
-
-

@@ -1,0 +1,31 @@
+language: c
+sudo: false
+branches:
+  except:
+    - /^(wip\/)?(appveyor|msvc|mingw|windows)(\-.+)?$/
+
+matrix:
+  include:
+    - env: C_COMPILER=gcc-6 CXX_COMPILER=g++-6
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-6
+          - g++-6
+          - nasm
+    - env: C_COMPILER=clang-6.0 CXX_COMPILER=clang++-6.0
+      addons:
+        apt:
+          sources:
+          - llvm-toolchain-trusty-6.0
+          - ubuntu-toolchain-r-test
+          packages:
+          - clang-6.0
+          - clang++-6.0
+          - nasm
+
+script:
+- make CC=${C_COMPILER} CXX=${CXX_COMPILER} USE_LIBPFC=0 -j
+- ./uarch-bench --test-name=default/*
