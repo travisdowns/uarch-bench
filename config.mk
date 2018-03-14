@@ -36,3 +36,13 @@ else
 O_LEVEL ?= -O2
 NASM_DEBUG ?= 0
 endif
+
+ifdef CC_OVERRIDE
+CC := $(CC_OVERRIDE)
+$(info Overiding CC to $(CC))
+endif 
+
+ifdef CXX_OVERRIDE
+CXX := $(CXX_OVERRIDE)
+$(info Overiding CXX to $(CXX))
+endif 

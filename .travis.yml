@@ -4,28 +4,45 @@ branches:
   except:
     - /^(wip\/)?(appveyor|msvc|mingw|windows)(\-.+)?$/
 
+addons:
+  apt:
+    packages: &default_pacakges
+      - nasm
+
 matrix:
   include:
-    - env: C_COMPILER=gcc-6 CXX_COMPILER=g++-6
+    # default travis gcc (currently 4.8.4) - doesn't support <regex>
+    # - compiler: gcc busted
+    # default travis clang (currently 5.0) - doesn't support <regex>
+    - compiler: clang
+      env: CXXFLAGS=-stdlib=libc++
+    - env: TRUE_CC=gcc-6 TRUE_CXX=g++-6
       addons:
         apt:
           sources:
           - ubuntu-toolchain-r-test
           packages:
+          - *default_pacakges
           - gcc-6
           - g++-6
-          - nasm
-    - env: C_COMPILER=clang-6.0 CXX_COMPILER=clang++-6.0
+    - env: TRUE_CC=clang-6.0 TRUE_CXX=clang++-6.0
       addons:
         apt:
           sources:
           - llvm-toolchain-trusty-6.0
           - ubuntu-toolchain-r-test
           packages:
+          - *default_pacakges
           - clang-6.0
           - clang++-6.0
-          - nasm
+
+before_install:
+# The TravisCI framework will set CC and CXX after the env commands specified in the matrix are run, overwriting whatever
+# we've specified there, so we need to reset them here. See also https://github.com/travis-ci/travis-ci/issues/6633 . 
+  - CC=${TRUE_CC:-$CC}
+  - CXX=${TRUE_CXX:-$CXX}
 
 script:
-- make CC=${C_COMPILER} CXX=${CXX_COMPILER} USE_LIBPFC=0 -j
+- set -e && echo "CC is ${CC}, CXX is ${CXX}"
+- make USE_LIBPFC=0
 - ./uarch-bench --test-name=default/*

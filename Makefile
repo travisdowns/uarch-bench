@@ -77,7 +77,7 @@ uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
 	$(CC) $(CFLAGS) -c -std=c11 -o $@ $<
 
 %.o : %.cpp $(LIBPFC_DEP)
-	$(CXX) $(CPPFLAGS) -c -std=c++11 -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -std=c++11 -o $@ $<
 
 %.o: %.asm nasm-utils/nasm-utils-inc.asm
 	$(ASM) $(ASM_FLAGS) ${NASM_DEFINES} -f elf64 $<
