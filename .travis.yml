@@ -6,43 +6,78 @@ branches:
 
 addons:
   apt:
+    sources: &default_sources
+      - ubuntu-toolchain-r-test
     packages: &default_pacakges
       - nasm
+      - yasm
+      
+env:
+  global:
+    - GLOBAL=value
 
 matrix:
   include:
-    # default travis gcc (currently 4.8.4) - doesn't support <regex>
-    # - compiler: gcc busted
-    # default travis clang (currently 5.0) - doesn't support <regex>
-    - compiler: clang
-      env: CXXFLAGS=-stdlib=libc++
-    - env: TRUE_CC=gcc-6 TRUE_CXX=g++-6
+      # clang-5.0 is the default installed on travis VMs
+    - compiler: clang-default
+      env: TRUE_CC=clang TRUE_CXX=clang++ CXXFLAGS=-stdlib=libc++
       addons:
         apt:
           sources:
-          - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - *default_pacakges
+            - libc++abi1
+            - libc++1
+    - compiler: gcc-4.9
+      env: TRUE_CC=gcc-4.9 TRUE_CXX=g++-4.9
+      addons:
+        apt:
+          sources:
+          - *default_sources
+          packages:
+          - *default_pacakges
+          - gcc-4.9
+          - g++-4.9
+    - compiler: gcc-6
+      env: TRUE_CC=gcc-6 TRUE_CXX=g++-6
+      addons:
+        apt:
+          sources:
+          - *default_sources
           packages:
           - *default_pacakges
           - gcc-6
           - g++-6
-    - env: TRUE_CC=clang-6.0 TRUE_CXX=clang++-6.0
+    - compiler: gcc-6-yasm
+      env: TRUE_CC=gcc-6 TRUE_CXX=g++-6 ASM=yasm
       addons:
         apt:
           sources:
+          - *default_sources
+          packages:
+          - *default_pacakges
+          - gcc-6
+          - g++-6
+    - compiler: clang-6.0
+      env: TRUE_CC=clang-6.0 TRUE_CXX=clang++-6.0
+      addons:
+        apt:
+          sources:
+          - *default_sources
           - llvm-toolchain-trusty-6.0
-          - ubuntu-toolchain-r-test
           packages:
           - *default_pacakges
           - clang-6.0
           - clang++-6.0
 
 before_install:
-# The TravisCI framework will set CC and CXX after the env commands specified in the matrix are run, overwriting whatever
+# Travis will set CC and CXX after the env commands specified in the matrix are run, overwriting whatever
 # we've specified there, so we need to reset them here. See also https://github.com/travis-ci/travis-ci/issues/6633 . 
   - CC=${TRUE_CC:-$CC}
   - CXX=${TRUE_CXX:-$CXX}
 
 script:
-- set -e && echo "CC is ${CC}, CXX is ${CXX}"
-- make USE_LIBPFC=0
+- set -e && echo "CC is ${CC}, CXX is ${CXX}" && ${CC} --version && ${CXX} --version
+- make
 - ./uarch-bench --test-name=default/*
