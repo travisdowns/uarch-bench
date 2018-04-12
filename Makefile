@@ -29,6 +29,7 @@ CFLAGS := $(COMMON_FLAGS)
 PFC_SRC := libpfc-timer.cpp libpfm4-support.cpp
 SRC_FILES := $(wildcard *.cpp) $(wildcard *.c) nasm-utils/nasm-utils-helper.c
 SRC_FILES := $(filter-out $(PFC_SRC), $(SRC_FILES))
+LDFLAGS += -no-pie
 
 ifeq ($(USE_LIBPFC),1)
 LDFLAGS += -Llibpfc '-Wl,-rpath=$$ORIGIN/libpfc/' -L$(PFM_LIBDIR) '-Wl,-rpath=$$ORIGIN/$(PFM_LIBDIR)/'
