@@ -524,6 +524,50 @@ all_parallel_benches prefetcht1,prefetcht1_bench
 all_parallel_benches prefetcht2,prefetcht2_bench
 all_parallel_benches prefetchnta,prefetchnta_bench
 
+; %1 - bench size in KiB
+; %2 - bench name
+%macro serial_load_bench_tmpl 1
+; parallel loads with large stride (across pages, defeating prefetcher)
+define_bench serial_load_bench%1
+%define SIZE   (%1 * 1024)
+%define MASK   (SIZE - 1)
+xor     eax, eax
+xor     ecx, ecx
+mov     rdx, rsi
+.top:
+
+%define UF 8
+
+%assign s 0
+%rep UF
+mov     rax, [rax + rdx + STRIDE * s]
+%assign s s+1
+%endrep
+
+; check if final read of the next unrolled iteration will exceed the requested size
+; and if so, wrap back to the start. Due to the runolling this means that the last
+; few loads might be skipped, making the effective footprint somewhat smaler than
+; requested by something like UF * 0.5 * STRIDE on average (mostly relevant for buffer
+; sizes just above a cache size boundary)
+lea     edx, [ecx + STRIDE * (UF*2-1) - SIZE]
+add     ecx, STRIDE * UF
+test    edx, edx
+cmovns  ecx, edx
+lea     rdx, [rsi + rcx]
+
+dec rdi
+jnz .top
+ret
+%endmacro
+
+serial_load_bench_tmpl   16
+serial_load_bench_tmpl   32
+serial_load_bench_tmpl   64
+serial_load_bench_tmpl  128
+serial_load_bench_tmpl  256
+serial_load_bench_tmpl  512
+serial_load_bench_tmpl 2048
+
 ; retpoline stuff
 
 ; the generic retpoline thunk, parameterized on the loop instruction
