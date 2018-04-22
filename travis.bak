@@ -1,0 +1,37 @@
+language: cpp
+sudo: false
+branches:
+  except:
+    - /^(wip\/)?(appveyor|msvc|mingw|windows)(\-.+)?$/
+
+matrix:
+  include:
+    # default travis gcc (currently 4.8.4) - doesn't support <regex>
+    # - compiler: gcc busted
+    # default travis clang (currently 5.0) - doesn't support <regex>
+    - compiler: clang
+      env: CXXFLAGS=-stdlib=libc++
+    - env: CC_OVERRIDE=gcc-6 CXX_OVERRIDE=g++-6
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-6
+          - g++-6
+          - nasm
+    - env: CXX_OVERRIDE=clang-6.0 CXX_OVERRIDE=clang++-6.0
+      addons:
+        apt:
+          sources:
+          - llvm-toolchain-trusty-6.0
+          - ubuntu-toolchain-r-test
+          packages:
+          - clang-6.0
+          - clang++-6.0
+          - nasm
+
+script:
+- echo "CXX is $(CXX)"
+- make USE_LIBPFC=0
+- ./uarch-bench --test-name=default/*
