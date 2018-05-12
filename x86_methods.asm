@@ -842,3 +842,36 @@ vmovd    xmm0,  eax         ; 1 cycle
 dec     rdi
 jnz     .top
 ret
+
+%macro vector_load_load_lat 2
+define_bench vector_load_load_lat_%1_%2
+push    rbp
+vzeroupper
+mov     rbp, rsp
+sub     rsp, 128
+and     rsp, -64
+xor     eax, eax
+vpxor   xmm0, xmm0, xmm0
+vmovdqu [rsp], ymm0
+vmovdqu [rsp + 32], ymm0
+vmovdqu [rsp + 64], ymm0
+vmovdqu [rsp + 96], ymm0
+.top:
+%1      xmm0, [rsp + rax + %2] ; 6 cycles
+vmovq   rax, xmm0         ; 2 cycles
+dec     rdi
+jnz     .top
+mov     rsp, rbp
+pop     rbp
+ret
+%endmacro
+
+vector_load_load_lat   movdqu,  0
+vector_load_load_lat   vmovdqu, 0
+vector_load_load_lat   lddqu,   0
+vector_load_load_lat   vlddqu,  0
+vector_load_load_lat   movdqu,  63
+vector_load_load_lat   vmovdqu, 63
+vector_load_load_lat   lddqu,   63
+vector_load_load_lat   vlddqu,  63
+
