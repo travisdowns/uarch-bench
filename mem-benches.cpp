@@ -8,6 +8,8 @@
 #include "oneshot.hpp"
 #include "util.hpp"
 
+#include <random>
+
 #define LOAD_LOOP_UNROLL    8
 
 #define BENCH_DECL_X(name) \
