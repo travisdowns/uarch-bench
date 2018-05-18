@@ -702,13 +702,15 @@ jnz .top
 ret
 %endmacro
 
-serial_load_bench_tmpl   16
-serial_load_bench_tmpl   32
-serial_load_bench_tmpl   64
-serial_load_bench_tmpl  128
-serial_load_bench_tmpl  256
-serial_load_bench_tmpl  512
-serial_load_bench_tmpl 2048
+; classic pointer chasing benchmark
+define_bench serial_load_bench
+
+.top:
+mov rsi, [rsi]
+
+dec rdi
+jnz .top
+ret
 
 ; retpoline stuff
 
