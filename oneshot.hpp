@@ -111,7 +111,7 @@ public:
         c.out() << std::endl;
     }
 
-    virtual void runAndPrint(Context& c) {
+    virtual void runAndPrint(Context& c) override {
         void *arg = arg_provider();
         raw_result raw = raw_func(loop_count, arg);
         removeOverhead(c, raw);

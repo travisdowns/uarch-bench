@@ -40,7 +40,6 @@ static inline bool is_pow2(T x) {
     return x && !(x & (x - 1));
 }
 
-const int MAX_ALIGN = 4096;
 const size_t TWO_MB = 2 * 1024 * 1024;
 const int STORAGE_SIZE = TWO_MB;  // * 4 because we overalign the pointer in order to guarantee minimal alignemnt
 //unsigned char unaligned_storage[STORAGE_SIZE];

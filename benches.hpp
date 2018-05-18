@@ -21,6 +21,13 @@
 #include "timers.hpp"
 #include "context.hpp"
 
+#if defined(__GNUC__) && !defined(__clang__)
+#define NO_STACK_PROTECTOR __attribute__((optimize("no-stack-protector")))
+#else
+#define NO_STACK_PROTECTOR
+#endif
+
+
 typedef std::function<void *()> arg_provider_t;
 
 extern const arg_provider_t null_provider;
@@ -187,7 +194,7 @@ public:
 
 using GroupList = std::vector<std::shared_ptr<BenchmarkGroup>>;
 
-static TimingResult normalize(const TimingResult& result, const BenchArgs& args, size_t loop_count) {
+static inline TimingResult normalize(const TimingResult& result, const BenchArgs& args, size_t loop_count) {
     return result * (1.0 / ((uint64_t)loop_count * args.ops_per_loop));
 }
 
@@ -245,7 +252,7 @@ struct DeltaRaw {
 
 template <typename TIMER, int samples, bench2_f METHOD>
 HEDLEY_NEVER_INLINE
-__attribute__((optimize("no-stack-protector")))
+NO_STACK_PROTECTOR
 std::array<typename TIMER::delta_t,samples> time_one(size_t loop_count, void* arg) {
     std::array<typename TIMER::delta_t,samples> result;
     for (int i = 0; i < samples; i++) {
@@ -260,7 +267,7 @@ std::array<typename TIMER::delta_t,samples> time_one(size_t loop_count, void* ar
 /** just like time_one, except that it runs an untimed WARMUP method before each METHOD invocation */
 template <typename TIMER, int samples, bench2_f METHOD, bench2_f WARMUP>
 HEDLEY_NEVER_INLINE
-__attribute__((optimize("no-stack-protector")))
+NO_STACK_PROTECTOR
 std::array<typename TIMER::delta_t,samples> time_one_warm(size_t loop_count, void* arg) {
     std::array<typename TIMER::delta_t,samples> result;
     for (int i = 0; i < samples; i++) {
@@ -370,7 +377,7 @@ public:
             uint32_t ops_per_loop,
             const arg_provider_t& arg_provider = null_provider)
     {
-        typename BenchTemplate<TIMER, DeltaAlgo<TIMER>>::template raw_f *f = DeltaAlgo<TIMER>::template delta_bench<BENCH_METHOD, BASE_METHOD>;
+        typename BenchTemplate<TIMER, DeltaAlgo<TIMER>>::raw_f *f = DeltaAlgo<TIMER>::template delta_bench<BENCH_METHOD, BASE_METHOD>;
         return MakerBase<TIMER>::template make_bench_from_raw<DeltaAlgo<TIMER>>(id, description, ops_per_loop, f, arg_provider);
     }
 };

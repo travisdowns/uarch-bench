@@ -37,10 +37,10 @@ class LoadStoreGroup : public BenchmarkGroup {
     static constexpr unsigned DEFAULT_ROWS =  4;
     static constexpr unsigned DEFAULT_COLS = 16;
 
-    unsigned rows_, cols_, total_cells_, op_size_;
+    unsigned rows_, cols_, op_size_;
 public:
     LoadStoreGroup(const string& id, const string& name, unsigned op_size, unsigned rows, unsigned cols)
-: BenchmarkGroup(id, name), rows_(rows), cols_(cols), total_cells_(rows * cols), op_size_(op_size) {
+: BenchmarkGroup(id, name), rows_(rows), cols_(cols), op_size_(op_size) {
         assert(rows < 10000 && cols < 10000);
     }
 
