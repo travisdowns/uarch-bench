@@ -14,6 +14,7 @@
 
 #include "timer-info.hpp"
 #include "context.hpp"
+#include "hedley.h"
 
 #if USE_LIBPFC
 #include "libpfc-timer.hpp"

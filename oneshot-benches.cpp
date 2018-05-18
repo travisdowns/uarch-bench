@@ -38,10 +38,12 @@ void oneshot_store_test(size_t loop_count, void *arg, LibpfcNow* results) {
 
 template <>
 void register_specific<LibpfcTimer>(BenchmarkGroup* oneshot) {
+#if USE_LIBPFC
     constexpr int samples = 20;
     auto maker = OneshotMaker<LibpfcTimer, samples>(oneshot, nullptr, 1000);
 
     maker.template make_raw<libpfc_raw_adapt<samples, oneshot_store_test>>("raw-store", "raw store benchmark", 1);
+#endif
 }
 #endif
 

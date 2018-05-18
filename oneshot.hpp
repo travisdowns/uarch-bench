@@ -83,7 +83,6 @@ private:
 
 public:
 
-
     OneshotBench(
             BenchArgs args,
             uint32_t loop_count,
