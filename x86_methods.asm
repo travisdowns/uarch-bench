@@ -482,6 +482,21 @@ ret
 .never:
 ud2
 
+define_bench misc_flag_merge_4
+xor eax, eax
+.top:
+%rep 128
+add rcx, 5
+dec rax
+nop
+jg  .never
+%endrep
+dec rdi
+jnz .top
+ret
+.never:
+ud2
+
 define_bench dendibakh_fused
 mov     rax, rdi
 shl     rax, 2

@@ -17,6 +17,7 @@ bench2_f misc_fusion_add;
 bench2_f misc_flag_merge_1;
 bench2_f misc_flag_merge_2;
 bench2_f misc_flag_merge_3;
+bench2_f misc_flag_merge_4;
 bench2_f dsb_alignment_cross64;
 bench2_f dsb_alignment_nocross64;
 bench2_f bmi_tzcnt;
@@ -70,6 +71,8 @@ void register_misc(GroupList& list) {
                 null_provider, iters),
         default_maker::template make_bench<misc_flag_merge_3>(misc_group.get(), "flag-merge-3", "Flag merge 3", 128,
                 null_provider, iters),
+        default_maker::template make_bench<misc_flag_merge_4>(misc_group.get(), "flag-merge-4", "Flag merge 4", 128,
+                        null_provider, iters),
 
         // https://news.ycombinator.com/item?id=15935283
         default_maker::template make_bench<loop_weirdness_fast>(misc_group.get(), "loop-weirdness-fast", "Loop weirdness fast", 1,
