@@ -44,6 +44,10 @@ bench2_f indirect_dense_call_pred;
 bench2_f indirect_dense_call_unpred;
 bench2_f loop_weirdness_fast;
 
+bench2_f tight_loop1;
+bench2_f tight_loop2;
+bench2_f tight_loop3;
+
 bench2_f dep_add_noloop_128;
 }
 
@@ -72,7 +76,13 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<misc_flag_merge_3>(misc_group.get(), "flag-merge-3", "Flag merge 3", 128,
                 null_provider, iters),
         default_maker::template make_bench<misc_flag_merge_4>(misc_group.get(), "flag-merge-4", "Flag merge 4", 128,
-                        null_provider, iters),
+                null_provider, iters),
+        default_maker::template make_bench<tight_loop1>(misc_group.get(), "tight-loop1", "Tight dec loop", 1,
+                null_provider, iters * 10),
+        default_maker::template make_bench<tight_loop2>(misc_group.get(), "tight-loop2", "Tight dec loop taken jmp", 1,
+                null_provider, iters * 10),
+        default_maker::template make_bench<tight_loop3>(misc_group.get(), "tight-loop3", "Tight dec loop untaken jmp", 1,
+                null_provider, iters * 10),
 
         // https://news.ycombinator.com/item?id=15935283
         default_maker::template make_bench<loop_weirdness_fast>(misc_group.get(), "loop-weirdness-fast", "Loop weirdness fast", 1,

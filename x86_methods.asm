@@ -916,6 +916,33 @@ dec     rdi
 jne     .top
 rep ret
 
+define_bench tight_loop1
+.top:
+dec     rdi
+jne     .top
+rep ret
+
+
+define_bench tight_loop2
+.top:
+xor eax, eax
+jz .l1
+nop
+.l1:
+dec     rdi
+jne     .top
+rep ret
+
+define_bench tight_loop3
+.top:
+xor eax, eax
+jnz .l1
+nop
+.l1:
+dec     rdi
+jne     .top
+rep ret
+
 %macro fwd_lat_with_delay 1
 define_bench fwd_lat_delay_%1
 lea     rdx, [rsp - 8]
