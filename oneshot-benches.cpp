@@ -19,33 +19,32 @@ bench2_f oneshot2_touch;
 template <typename TIMER>
 void register_specific(BenchmarkGroup* oneshot) {}
 
-#ifdef USE_LIBPFC
+#if USE_LIBPFC
 
 #include "libpfc-timer.hpp"
+#include "libpfc-raw-helpers.hpp"
 
-extern "C" libpfc_raw1 store_raw_libpfc;
+extern "C" {
+    libpfc_raw1 store_raw_libpfc;
+}
 
 volatile int store_sink;
 
 void oneshot_store_test(size_t loop_count, void *arg, LibpfcNow* results) {
-//    PFCSTART(results->cnt);
-//    while (loop_count-- > 0) {
-//        store_sink = loop_count;
-//    }
     store_raw_libpfc(loop_count, nullptr, results);
-//    PFCEND(results->cnt);
 }
 
 template <>
 void register_specific<LibpfcTimer>(BenchmarkGroup* oneshot) {
-#if USE_LIBPFC
-    constexpr int samples = 20;
-    auto maker = OneshotMaker<LibpfcTimer, samples>(oneshot, nullptr, 1000);
+    constexpr int samples = 40;
+    auto maker = OneshotMaker<LibpfcTimer, samples>(oneshot);
 
-    maker.template make_raw<libpfc_raw_adapt<samples, oneshot_store_test>>("raw-store", "raw store benchmark", 1);
-#endif
+    maker.
+    template withOverhead(libpfc_raw_overhead_adapt<raw_rdpmc4_overhead>("raw_rdpmc4")).
+    template make_raw<libpfc_raw_adapt<samples, oneshot_store_test>>("raw-store", "raw store benchmark", 1);
 }
-#endif
+
+#endif  // USE_LIBPFC
 
 template <typename TIMER>
 void register_oneshot(GroupList& list) {
@@ -61,8 +60,9 @@ void register_oneshot(GroupList& list) {
     // order here is important: oneshot2 follows oneshot1 in the file, so if you run them in the other order
     // prefetching will apparently grab the line for oneshot1 as a result of executing oneshot1, so we do
     // it in the other order
-    maker.template make<dummy_bench_oneshot2,dummy_bench_oneshot2_touch>("oneshot-dummy-touch", "Empty touched oneshot bench", 1);
     maker.template make<dummy_bench_oneshot1>("oneshot-dummy-notouch", "Empty untouched oneshot bench", 1);
+
+    maker.template withTouch<dummy_bench_oneshot2_touch>().template make<dummy_bench_oneshot2>("oneshot-dummy-touch", "Empty touched oneshot bench", 1);
 
 //    maker.template make<dep_imul128_rax>  ("dep-mul128", "Dependent imul 64->128",    128);
 //    maker.template make<dep_imul64_rax>   ("dep-mul64",  "Dependent imul 64->64",     128);

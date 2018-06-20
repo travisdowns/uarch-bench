@@ -2,16 +2,10 @@ BITS 64
 default rel
 
 %include "nasm-utils/nasm-utils-inc.asm"
+%include "x86_helpers.asm"
 
+nasm_util_assert_boilerplate
 thunk_boilerplate
-
-; aligns and declares the global label for the bench with the given name
-; also potentally checks the ABI compliance (if enabled)
-%macro define_bench 1
-%define current_bench %1
-ALIGN 64
-abi_checked_function %1
-%endmacro
 
 ; a variant of define_bench that puts a "touch" function immediately following
 ; the
@@ -968,31 +962,21 @@ define_bench train_noalias
 ;cpuid
 ;mov     rbx, r8
 lea     rdx, [rsi + 64]
-mov     rdi, 52
+mov     rdi, 520000
 xor     ecx, ecx
 .top:
-%rep 20
+%rep 100
 imul    rdx, 1
 mov     DWORD [rdx], ecx
 mov     eax, DWORD [rsi]
+nop3
 %endrep
 dec     rdi
 jnz     .top
 ret
 ud2
 
-define_bench aliasing_loads
-mov     rdx, rsi
-;xor     ecx, ecx
-times 0 nop
-lfence
-%rep 5
-imul    rdx, 1
-mov     DWORD [rdx], 0
-mov     eax, DWORD [rsi]
-%endrep
-ret
-ud2
+
 
 define_bench oneshot_try2_4
 mov     rdx, rsi
@@ -1052,8 +1036,50 @@ mov     eax, DWORD [rsi]
 ret
 ud2
 
+define_bench aliasing_loads
+mov     rdx, rsi
+;xor     ecx, ecx
+times 0 nop
+lfence
+%rep 5
+imul    rdx, 1
+mov     DWORD [rdx], 0
+mov     eax, DWORD [rsi]
+%endrep
+ret
+ud2
 
 
+; combined training and timed regions
+define_bench aliasing_loads_raw2
+
+mov     r8, rdx
+mov     r11, 1  ; 2 iterations
+
+.outer:
+mov     r10, 2000 ; rdi
+lea     r9, [rsi + r11 * 8]
+
+readpmc4_start
+.top:
+%rep 4
+imul    r9, 1
+imul    r9, 1
+imul    r9, 1
+mov     DWORD [r9], 0
+add     eax, DWORD [rsi]
+nop
+%endrep
+dec r10
+jnz .top
+
+dec     ecx
+jns     .outer
+
+readpmc4_end
+store_pfcnow4 r8
+ret
+ud2
 
 %define ONESHOT_REPEAT_OUTER 1
 %define ONESHOT_REPEAT_INNER 1
@@ -1322,40 +1348,44 @@ vector_load_load_lat   lddqu,   63
 vector_load_load_lat   vlddqu,  63
 
 
-; do a single 64-bit readpmc with the given value leaving the result in rax
-%macro rdpmc1 1
-mov     rcx, %1
-lfence
-rdpmc
-shl     rdx, 32
-or      rax, rdx
-lfence
-%endmacro
 
-%macro readpmc_start 0
-rdpmc1  0x40000001
-movq    xmm0, rax
-%endmacro
 
-%macro readpmc_end 0
-rdpmc1  0x40000001
-movq    rdx, xmm0
-sub     rax, rdx
-%endmacro
+define_bench raw_rdpmc0_overhead
+assert_eq rdi, 0
+assert_eq rsi, 0
+mov     r8, rdx
+readpmc0_start
+readpmc0_end
+store_pfcnow0 r8
+ret
+
+define_bench raw_rdpmc4_overhead
+assert_eq rdi, 0
+assert_eq rsi, 0
+mov     r8, rdx
+readpmc4_start
+readpmc4_end
+store_pfcnow4 r8
+ret
+
 
 ; store loop with raw rdpmc calls
 define_bench store_raw_libpfc
-sub     rsp, 8
+; loop count should be 1 since we don't have a loop here
+assert_eq rdi, 1
+sub     rsp, 128
 mov     r8, rdx
-readpmc_start
+readpmc4_start
 .top:
-;add     rax, 1
+%assign offset 0
+%rep 100
 mov     [rsp], BYTE 42
-dec     rdi
-jnz     .top
-readpmc_end
-mov     QWORD [r8 + 8], rax
-add     rsp, 8
+;sfence
+%assign offset offset+1
+%endrep
+readpmc4_end
+store_pfcnow4 r8
+add     rsp, 128
 ret
 
 

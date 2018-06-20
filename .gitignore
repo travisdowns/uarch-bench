@@ -50,6 +50,8 @@ libpfm-4*/*
 # perf files
 /perf.*
 
+/tmp/*
+
 dummy.rebuild
 
 # local make config file

@@ -1,5 +1,5 @@
 /*
- * lifpfc-timer.hpp
+ * libpfc-timer.hpp
  */
 
 #ifndef LIFPFC_TIMER_HPP_
@@ -75,19 +75,5 @@ private:
 
     static bool is_init;
 };
-
-extern "C" {
-/** libpfc raw functions implement this function and result the results in result */
-typedef void (libpfc_raw1)(size_t loop_count, void *arg, LibpfcNow* results);
-}
-
-template <int samples, libpfc_raw1 METHOD>
-std::array<LibpfcNow, samples> libpfc_raw_adapt(size_t loop_count, void *arg) {
-    std::array<LibpfcNow, samples> result = {};
-    for (int i = 0; i < samples; i++) {
-        METHOD(loop_count, arg, &result[i]);
-    }
-    return result;
-}
 
 #endif /* LIFPFC_TIMER_HPP_ */

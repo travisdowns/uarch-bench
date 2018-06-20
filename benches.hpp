@@ -32,6 +32,16 @@ typedef std::function<void *()> arg_provider_t;
 
 extern const arg_provider_t null_provider;
 
+/**
+ * Empty bench2_f function that can be inlined, so it will generally be optimized away completely at
+ * the call site. Useful mostly as a "no-op" function
+ * in cases where you don't want to do anything (e.g,. as a default for TOUCH).
+ */
+bench2_f inlined_empty;
+inline long inlined_empty(uint64_t iters, void *arg) {
+    return 0;
+}
+
 class BenchmarkGroup;
 
 struct BenchArgs {
@@ -56,7 +66,7 @@ template <typename T>
 // the width is either the expected max width of the value, or the with of the name, plus COLUMN_PAD
 static void printOneMetric(Context &c, const T& metric) {
     unsigned int width = std::max(c.getTimerInfo().getMetricNames().size(), 4UL + c.getPrecision()) + COLUMN_PAD;
-    c.out() << std::setw(width) << metric;
+    c.out() << " " << std::setw(width) << metric;
 }
 
 template <typename T>
@@ -250,28 +260,23 @@ struct DeltaRaw {
     one_result base, bench;
 };
 
-template <typename TIMER, int samples, bench2_f METHOD>
+/**
+ * The core benchmark loop, which performs samples calls to METHOD and returns an array of the timing for
+ * each one.
+ *
+ * TIMER      - the TIMER to use for timing.
+ * METHOD     - the method being timed
+ * WARM_ONE   - an untimed warmup method called once before any timing takes place
+ * WARM_EVERY - an untimed warmup method that is called before every sample is taken
+ */
+template <typename TIMER, int samples, bench2_f METHOD, bench2_f WARM_ONCE = inlined_empty, bench2_f WARM_EVERY = inlined_empty>
 HEDLEY_NEVER_INLINE
 NO_STACK_PROTECTOR
 std::array<typename TIMER::delta_t,samples> time_one(size_t loop_count, void* arg) {
+    WARM_ONCE(loop_count, arg);
     std::array<typename TIMER::delta_t,samples> result;
     for (int i = 0; i < samples; i++) {
-        auto t0 = TIMER::now();
-        METHOD(loop_count, arg);
-        auto t1 = TIMER::now();
-        result[i] = TIMER::delta(t1, t0);
-    }
-    return result;
-}
-
-/** just like time_one, except that it runs an untimed WARMUP method before each METHOD invocation */
-template <typename TIMER, int samples, bench2_f METHOD, bench2_f WARMUP>
-HEDLEY_NEVER_INLINE
-NO_STACK_PROTECTOR
-std::array<typename TIMER::delta_t,samples> time_one_warm(size_t loop_count, void* arg) {
-    std::array<typename TIMER::delta_t,samples> result;
-    for (int i = 0; i < samples; i++) {
-        WARMUP(loop_count, arg);
+        WARM_EVERY(loop_count, arg);
         auto t0 = TIMER::now();
         METHOD(loop_count, arg);
         auto t1 = TIMER::now();

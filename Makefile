@@ -47,7 +47,7 @@ ifeq ($(BACKWARD_HAS_DW),1)
 LDFLAGS += -ldw
 endif
 
-OBJECTS := $(SRC_FILES:.cpp=.o) x86_methods.o
+OBJECTS := $(SRC_FILES:.cpp=.o) x86_methods.o x86_methods2.o
 OBJECTS := $(OBJECTS:.c=.o)
 DEPFILES = $(OBJECTS:.o=.d)
 # $(info OBJECTS=$(OBJECTS))
@@ -79,8 +79,8 @@ uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
 %.o : %.cpp $(LIBPFC_DEP)
 	$(CXX) $(CPPFLAGS) -c -std=c++11 -o $@ $<
 
-x86_methods.o: x86_methods.asm nasm-utils/nasm-utils-inc.asm
-	$(ASM) $(ASM_FLAGS) -f elf64 x86_methods.asm
+%.o: %.asm nasm-utils/nasm-utils-inc.asm
+	$(ASM) $(ASM_FLAGS) ${NASM_DEFINES} -f elf64 $<
 
 libpfc/libpfc.so:
 	@echo "Buiding libpfc..."

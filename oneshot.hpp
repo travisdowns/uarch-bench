@@ -36,28 +36,53 @@ struct OneshotAlgo {
     using raw_result = std::array<delta_t, samples>;
     using raw_f =  raw_result (size_t loop_count, void *arg);
 
-
-    template <bench2_f METHOD>
+    template <bench2_f METHOD, bench2_f WARM_ONCE, bench2_f WARM_EVERY>
     static raw_result bench(size_t loop_count, void *arg) {
-        return time_one<TIMER, samples, METHOD>(loop_count, arg);
-    }
-
-    template <bench2_f METHOD, bench2_f TOUCH>
-    static raw_result bench(size_t loop_count, void *arg) {
-        TOUCH(0, nullptr);
-        return bench<METHOD>(loop_count, arg);
-    }
-
-    template <bench2_f METHOD, bench2_f WARMUP>
-    static raw_result bench_warm(size_t loop_count, void *arg) {
-        return time_one_warm<TIMER, samples, METHOD, WARMUP>(loop_count, arg);
+        return time_one<TIMER, samples, METHOD, WARM_ONCE, WARM_EVERY>(loop_count, arg);
     }
 };
+
+/** number of ignored warmup samples for overhead adjustment */
+constexpr static int ONESHOT_OVERHEAD_WARMUP =  3;
+/** number of real samples used following the warmup, should be odd for simple median */
+constexpr static int ONESHOT_OVERHEAD_REAL = 11;
+constexpr static int ONESHOT_OVERHEAD_TOTAL = ONESHOT_OVERHEAD_WARMUP + ONESHOT_OVERHEAD_REAL;
+
+template <typename TIMER>
+static void printOne(Context& c, const std::string& name, const typename TIMER::delta_t& delta) {
+    TimingResult result = TIMER::to_result(delta);
+    printBenchName(c, std::string("Oneshot overhead ") + name);
+    printAlignedMetrics(c, result.getResults());
+    c.out() << std::endl;
+}
+
+/**
+ * Take a method that can produce a raw result, and calculate the overhead based on the median
+ * result. The first OVERHEAD_WARMUP results are skipped in the calculation.
+ */
+template <typename TIMER, typename F>
+static typename TIMER::delta_t rawToOverhead(Context &c, F f, const std::string &name) {
+    auto raw = f();
+
+    c.out() << "\n---------- Oneshot calibration start (" << name << ") --------------\n";
+
+    printResultHeader(c);
+
+    assert(raw.size() > ONESHOT_OVERHEAD_WARMUP);
+    auto b = std::begin(raw) + ONESHOT_OVERHEAD_WARMUP;
+    auto e = std::end(raw);
+    printOne<TIMER>(c, "min   ", TimerHelper<TIMER>::min(b,e));
+    printOne<TIMER>(c, "median (used)", TimerHelper<TIMER>::median(b,e));
+    printOne<TIMER>(c, "max   ", TimerHelper<TIMER>::max(b,e));
+
+    c.out() << "---------- Oneshot calibration end   (" << name << ") --------------\n\n";
+    return TimerHelper<TIMER>::median(b,e);
+}
 
 template <typename TIMER, int samples>
 class OneshotBench : public BenchmarkBase {
 public:
-    using overhead_f = typename TIMER::delta_t(Context &c);
+    using overhead_f = std::function<typename TIMER::delta_t(Context &c)>;
 
 private:
 
@@ -73,7 +98,7 @@ private:
     raw_f* raw_func;
     void*  func_addr;
     arg_provider_t arg_provider;
-    overhead_f* overhead_func;
+    overhead_f overhead_func;
 
     /*
      * If true, we try to subtract out the measurement overhead by subtracting from the measured metric
@@ -89,7 +114,7 @@ public:
             raw_f* raw_func,
             void* func_addr,
             arg_provider_t arg_provider,
-            overhead_f* overhead_func = defaultGetOverhead) :
+            overhead_f overhead_func) :
                 BenchmarkBase(std::move(args)),
                 loop_count{loop_count},
                 raw_func{raw_func},
@@ -111,62 +136,57 @@ public:
         c.out() << std::endl;
     }
 
+    template <typename M>
+    void printOneSample(Context& c, const typename TIMER::delta_t& raw, const M& sampleNum) {
+        const TimingResult& result = normalize(TIMER::to_result(raw), this->args, loop_count);
+        printBenchName(c, this);
+        printOneMetric(c, sampleNum);
+        printAlignedMetrics(c, result.getResults());
+        c.out() << std::endl;
+    }
+
     virtual void runAndPrint(Context& c) override {
         void *arg = arg_provider();
         raw_result raw = raw_func(loop_count, arg);
         removeOverhead(c, raw);
         printHeader(c);
         for (int i = 0; i < samples; i++) {
-            TimingResult result = normalize(TIMER::to_result(raw[i]), this->args, loop_count);
-            printBenchName(c, this);
-            printOneMetric(c, i + 1);
-            printAlignedMetrics(c, result.getResults());
-            c.out() << std::endl;
+            printOneSample(c, raw[i], i + 1);
         }
+
+        // include median
+        printOneSample(c, TimerHelper<TIMER>::median(std::begin(raw), std::end(raw)), "median");
+
         c.out() << std::endl;
     }
 
-    static typename TIMER::delta_t defaultGetOverhead(Context &c) {
-        using O_ALGO = OneshotAlgo<TIMER, OVERHEAD_TOTAL>;
+    /**
+     * Turn a bench2_f method into an overhead calculator. This method will only calculate the
+     * overhead once across the entire process for a given METHOD and passes 0 and nullptr for loops
+     * and arg (since an overhead calculation that will be used generically shoudln't rely on
+     * specific values from the first test that requires overhead compensation).
+     */
+    template <bench2_f METHOD>
+    static typename TIMER::delta_t benchToOverhead_(Context &c, const std::string& name) {
+        using O_ALGO = OneshotAlgo<TIMER, ONESHOT_OVERHEAD_TOTAL>;
+        auto f = []() { return O_ALGO::template bench<METHOD, inlined_empty, inlined_empty>(0, nullptr); };
+        static typename TIMER::delta_t overhead = rawToOverhead<TIMER>(c, f, name);
+        return overhead;
+    }
 
-        typename O_ALGO::raw_result raw = O_ALGO::template bench<dummy_bench>(0, nullptr);
-
-        c.out() << "\n---------- Oneshot calibration start --------------\n";
-
-        printResultHeader(c);
-
-        auto b = std::begin(raw) + OVERHEAD_WARMUP;
-        auto e = b + OVERHEAD_REAL;
-        printOne(c, "min   ", TimerHelper<TIMER>::min(b,e));
-        printOne(c, "median (used)", TimerHelper<TIMER>::median(b,e));
-        printOne(c, "max   ", TimerHelper<TIMER>::max(b,e));
-
-        c.out() << "---------- Oneshot calibration end   --------------\n\n";
-        return TimerHelper<TIMER>::median(b,e);
+    template <bench2_f METHOD>
+    static overhead_f benchToOverhead(const std::string& name) {
+        return [name](Context &c) { return benchToOverhead_<METHOD>(c, name); };
     }
 
 private:
-
-    /** number of ignored warmup samples for overhead adjustment */
-    constexpr static int OVERHEAD_WARMUP =  3;
-    /** number of real samples used following the warmup, should be odd for simple median */
-    constexpr static int OVERHEAD_REAL = 11;
-    constexpr static int OVERHEAD_TOTAL = OVERHEAD_WARMUP + OVERHEAD_REAL;
-
-    static void printOne(Context& c, const std::string& name, const typename TIMER::delta_t& delta) {
-        TimingResult result = TIMER::to_result(delta);
-        printBenchName(c, std::string("Oneshot overhead ") + name);
-        printAlignedMetrics(c, result.getResults());
-        c.out() << std::endl;
-    }
-
 
     /**
      * Subtract out the overhead of an empty run.
      */
     void removeOverhead(Context& c, raw_result& results) {
         if (overhead_func) {
-            static typename TIMER::delta_t overhead = overhead_func(c);
+            typename TIMER::delta_t overhead = overhead_func(c);
             for (auto& raw : results) {
                 raw = TIMER::delta(raw, overhead);
             }
@@ -178,22 +198,45 @@ private:
  * A factory for one-shot benchmarks, which run a method only a few times and report individual results (no aggregation)
  * for each run.
  */
-template <typename TIMER, int SAMPLES = 10>
+template <typename TIMER, int SAMPLES = 10,
+        bench2_f WARM_ONCE  = inlined_empty,
+        bench2_f WARM_EVERY = inlined_empty>
 class OneshotMaker : public MakerBase<TIMER> {
+public:
     using bench = OneshotBench<TIMER, SAMPLES>;
     using overhead_f = typename bench::overhead_f;
 
-    typename bench::overhead_f* overhead_func;
-public:
+private:
+    overhead_f overhead;
 
+public:
     static constexpr int samples = SAMPLES;
 
     using ALGO = OneshotAlgo<TIMER, samples>;
 
-    OneshotMaker(BenchmarkGroup* parent, overhead_f* overhead_func = bench::defaultGetOverhead, size_t loop_count = 1) :
-        MakerBase<TIMER>(parent, loop_count),
-        overhead_func{overhead_func}
+    OneshotMaker(BenchmarkGroup* parent, uint32_t loop_count = 1, overhead_f overhead = bench::template benchToOverhead<dummy_bench>("default")) :
+        MakerBase<TIMER>{parent, loop_count},
+        overhead{overhead}
     {}
+
+//    template <typename TIMER_, int SAMPLES_, bench2_f TOUCH_, bench2_f WARMX_>
+//    OneshotMaker<TIMER, SAMPLES, TOUCH_, WARMX_> copy() { return {this->parent, overhead_func, this->loop_count}; }
+
+    template <bench2_f NEW_TOUCH>
+    OneshotMaker<TIMER, SAMPLES, NEW_TOUCH, WARM_EVERY> withTouch    () { return {this->parent, this->loop_count, this->overhead}; }
+
+    template <bench2_f NEW_WARM>
+    OneshotMaker<TIMER, SAMPLES, WARM_ONCE,   NEW_WARM> withWarm     () { return {this->parent, this->loop_count, this->overhead}; }
+
+    OneshotMaker<TIMER, SAMPLES, WARM_ONCE, WARM_EVERY> withOverhead (overhead_f o) {
+        return {this->parent, this->loop_count, o};
+    }
+
+    template <bench2_f NEW_OVERH>
+    OneshotMaker<TIMER, SAMPLES, WARM_ONCE,     WARM_EVERY  > withOverhead (const std::string& name) {
+        return withOverhead(bench::template benchToOverhead<NEW_OVERH>(name));
+    }
+
 
     template <bench2_f METHOD>
     void make(
@@ -202,22 +245,7 @@ public:
             uint32_t ops_per_invocation,
             const arg_provider_t& arg_provider = null_provider)
     {
-        typename ALGO::raw_f *f = ALGO::template bench<METHOD>;
-        make2(BenchArgs{this->parent, id, description, ops_per_invocation}, f, (void *)METHOD, arg_provider);
-    }
-
-    /**
-     * This variant of make accepts a TOUCH method that will be called once before the benchmark starts, useful
-     * perhaps to touch the same cache line as the primary function to bring it into L1I.
-     */
-    template <bench2_f METHOD, bench2_f TOUCH>
-    void make(
-            const std::string& id,
-            const std::string& description,
-            uint32_t ops_per_invocation,
-            const arg_provider_t& arg_provider = null_provider)
-    {
-        typename ALGO::raw_f *f = ALGO::template bench<METHOD, TOUCH>;
+        typename ALGO::raw_f *f = ALGO::template bench<METHOD, WARM_ONCE, WARM_EVERY>;
         make2(BenchArgs{this->parent, id, description, ops_per_invocation}, f, (void *)METHOD, arg_provider);
     }
 
@@ -241,21 +269,6 @@ public:
         make2(BenchArgs{this->parent, id, description, ops_per_invocation}, METHOD, (void *)METHOD, arg_provider);
     }
 
-    /**
-     * This variant of make accepts a WARMUP method that will be called before *each sample* of the benchmark starts,
-     * useful perhaps to put various predictors into a known state.
-     */
-    template <bench2_f METHOD, bench2_f WARMUP>
-    void make_warm(
-            const std::string& id,
-            const std::string& description,
-            uint32_t ops_per_invocation,
-            const arg_provider_t& arg_provider = null_provider)
-    {
-        typename ALGO::raw_f *f = ALGO::template bench_warm<METHOD, WARMUP>;
-        make2(BenchArgs{this->parent, id, description, ops_per_invocation}, f, (void *)METHOD, arg_provider);
-    }
-
 
 private:
     void make2(
@@ -264,7 +277,7 @@ private:
             void* f_addr,
             const arg_provider_t& arg_provider = null_provider)
     {
-        Benchmark b = new OneshotBench<TIMER, samples>(args, this->loop_count, f, f_addr, arg_provider, overhead_func);
+        Benchmark b = new OneshotBench<TIMER, samples>(args, this->loop_count, f, f_addr, arg_provider, overhead);
         this->parent->add(b);
     }
 };
