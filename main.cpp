@@ -17,7 +17,7 @@
 
 #include <sys/mman.h>
 
-#ifdef USE_BACKWARD_CPP
+#if USE_BACKWARD_CPP
 #include "backward-cpp/backward.hpp"
 #endif
 

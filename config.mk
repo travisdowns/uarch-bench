@@ -39,10 +39,10 @@ endif
 
 ifdef CC_OVERRIDE
 CC := $(CC_OVERRIDE)
-$(info Overiding CC to $(CC))
+$(info Overriding CC to $(CC))
 endif 
 
 ifdef CXX_OVERRIDE
 CXX := $(CXX_OVERRIDE)
-$(info Overiding CXX to $(CXX))
+$(info Overriding CXX to $(CXX))
 endif 
