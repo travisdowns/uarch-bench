@@ -79,6 +79,5 @@ before_install:
 
 script:
 - set -e && echo "CC is ${CC}, CXX is ${CXX}" && ${CC} --version && ${CXX} --version
-- ls -l /lib/modules
-- make
+- make -j
 - ./uarch-bench --test-name=default/*
