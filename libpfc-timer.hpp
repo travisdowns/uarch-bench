@@ -5,13 +5,16 @@
 #ifndef LIFPFC_TIMER_HPP_
 #define LIFPFC_TIMER_HPP_
 
+
 #include <limits>
 
-#include "libpfc/include/libpfc.h"
 #include "hedley.h"
 
 #include "timer-info.hpp"
 #include "libpfm4-support.hpp"
+
+#if USE_LIBPFC
+#include "libpfc/include/libpfc.h"
 
 #define FIXED_COUNTERS 3
 #define    GP_COUNTERS 4
@@ -75,5 +78,7 @@ private:
 
     static bool is_init;
 };
+
+#endif
 
 #endif /* LIFPFC_TIMER_HPP_ */

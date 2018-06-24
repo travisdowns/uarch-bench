@@ -1049,38 +1049,6 @@ mov     eax, DWORD [rsi]
 ret
 ud2
 
-
-; combined training and timed regions
-define_bench aliasing_loads_raw2
-
-mov     r8, rdx
-mov     r11, 1  ; 2 iterations
-
-.outer:
-mov     r10, 2000 ; rdi
-lea     r9, [rsi + r11 * 8]
-
-readpmc4_start
-.top:
-%rep 4
-imul    r9, 1
-imul    r9, 1
-imul    r9, 1
-mov     DWORD [r9], 0
-add     eax, DWORD [rsi]
-nop
-%endrep
-dec r10
-jnz .top
-
-dec     ecx
-jns     .outer
-
-readpmc4_end
-store_pfcnow4 r8
-ret
-ud2
-
 %define ONESHOT_REPEAT_OUTER 1
 %define ONESHOT_REPEAT_INNER 1
 ; like the fwd_lat_with_delay above, but without a loop, used in oneshot mode to

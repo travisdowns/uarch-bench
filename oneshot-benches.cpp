@@ -5,6 +5,8 @@
  */
 
 #include "oneshot.hpp"
+#include "libpfc-timer.hpp"
+#include "libpfc-raw-helpers.hpp"
 
 extern "C" {
 bench2_f dep_add_rax_rax;
@@ -19,10 +21,8 @@ bench2_f oneshot2_touch;
 template <typename TIMER>
 void register_specific(BenchmarkGroup* oneshot) {}
 
-#if USE_LIBPFC
 
-#include "libpfc-timer.hpp"
-#include "libpfc-raw-helpers.hpp"
+#if USE_LIBPFC
 
 extern "C" {
     libpfc_raw1 store_raw_libpfc;
@@ -36,7 +36,7 @@ void oneshot_store_test(size_t loop_count, void *arg, LibpfcNow* results) {
 
 template <>
 void register_specific<LibpfcTimer>(BenchmarkGroup* oneshot) {
-    constexpr int samples = 40;
+    constexpr int samples = 10;
     auto maker = OneshotMaker<LibpfcTimer, samples>(oneshot);
 
     maker.

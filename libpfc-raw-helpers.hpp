@@ -8,9 +8,9 @@
 #ifndef LIBPFC_RAW_HELPERS_HPP_
 #define LIBPFC_RAW_HELPERS_HPP_
 
-#if USE_LIBPFC
-
 #include "libpfc-timer.hpp"
+
+#if USE_LIBPFC
 
 #include <functional>
 

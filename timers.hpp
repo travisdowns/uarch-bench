@@ -16,9 +16,7 @@
 #include "context.hpp"
 #include "hedley.h"
 
-#if USE_LIBPFC
 #include "libpfc-timer.hpp"
-#endif
 
 /**
  * Adapt any of the clocks offered by clock_gettime into a clock suitable for use by ClockTimerT
