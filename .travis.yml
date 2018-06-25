@@ -30,7 +30,7 @@ matrix:
             - libc++abi1
             - libc++1
     - compiler: gcc-4.9
-      env: TRUE_CC=gcc-4.9 TRUE_CXX=g++-4.9
+      env: TRUE_CC=gcc-4.9 TRUE_CXX=g++-4.9 PIE=
       addons:
         apt:
           sources:
@@ -79,5 +79,5 @@ before_install:
 
 script:
 - set -e && echo "CC is ${CC}, CXX is ${CXX}" && ${CC} --version && ${CXX} --version
-- make LIBPFC_TARGET=libpfc.so -j
+- make LIBPFC_TARGET=libpfc.so
 - ./uarch-bench --test-name=default/*
