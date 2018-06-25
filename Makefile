@@ -10,6 +10,10 @@ CC ?= gcc
 ASM ?= nasm
 ASM_FLAGS ?= -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all -l x86_methods.list
 
+# The target to build when building libpfc (if we build it at all). By default, we are going
+# to build everything, but TravisCI, for example, would (usually) like to skip building the kernel module. 
+LIBPFC_TARGET ?= all
+
 PFM_DIR ?= libpfm4
 PFM_LIBDIR ?= $(PFM_DIR)/lib
 
@@ -83,8 +87,8 @@ uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
 	$(ASM) $(ASM_FLAGS) ${NASM_DEFINES} -f elf64 $<
 
 libpfc/libpfc.so:
-	@echo "Buiding libpfc..."
-	cd libpfc && make
+	@echo "Buiding libpfc target $(LIBPFC_TARGET)"
+	cd libpfc && make $(LIBPFC_TARGET)
 
 libpfc-clean:
 	cd libpfc && make clean
@@ -99,8 +103,6 @@ $(PFM_LIBDIR)/libpfm.so:
 
 libpfm4-clean:
 	$(MAKE) -C $(PFM_DIR) clean
-
-
 	
 LOCAL_MK = $(wildcard local.mk)
 	
