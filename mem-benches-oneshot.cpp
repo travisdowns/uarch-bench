@@ -55,12 +55,12 @@ void register_specific_stfwd<LibpfcTimer>(BenchmarkGroup* oneshot) {
     auto maker = OneshotMaker<LibpfcTimer, 20>(oneshot, 1);
 
     maker.
-            template withOverhead(libpfc_raw_overhead_adapt<raw_rdpmc4_overhead>("raw_rdpmc4")).
-            template make_raw<libpfc_raw_adapt<20, aliasing_loads_raw>>("stfwd-raw-trained", "trained loads raw", 1, buf_provider);
+            withOverhead(libpfc_raw_overhead_adapt<raw_rdpmc4_overhead>("raw_rdpmc4")).
+            make_raw<libpfc_raw_adapt<20, aliasing_loads_raw>>("stfwd-raw-trained", "trained loads raw", 1, buf_provider);
 
     maker.
-            template withOverhead(libpfc_raw_overhead_adapt<raw_rdpmc4_overhead>("raw_rdpmc4")).
-            template make_raw<libpfc_raw_adapt<20, mixed_loads_raw>>("stfwd-raw-mixed", "mixed aliasing raw", 1, buf_provider);
+            withOverhead(libpfc_raw_overhead_adapt<raw_rdpmc4_overhead>("raw_rdpmc4")).
+            make_raw<libpfc_raw_adapt<20, mixed_loads_raw>>("stfwd-raw-mixed", "mixed aliasing raw", 1, buf_provider);
 }
 #endif // USE_LIBPFC
 

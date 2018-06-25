@@ -40,8 +40,8 @@ void register_specific<LibpfcTimer>(BenchmarkGroup* oneshot) {
     auto maker = OneshotMaker<LibpfcTimer, samples>(oneshot);
 
     maker.
-    template withOverhead(libpfc_raw_overhead_adapt<raw_rdpmc4_overhead>("raw_rdpmc4")).
-    template make_raw<libpfc_raw_adapt<samples, oneshot_store_test>>("raw-store", "raw store benchmark", 1);
+    withOverhead(libpfc_raw_overhead_adapt<raw_rdpmc4_overhead>("raw_rdpmc4")).
+    make_raw<libpfc_raw_adapt<samples, oneshot_store_test>>("raw-store", "raw store benchmark", 1);
 }
 
 #endif  // USE_LIBPFC
