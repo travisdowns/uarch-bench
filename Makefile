@@ -42,7 +42,7 @@ LDFLAGS += $(PIE)
 ifeq ($(USE_LIBPFC),1)
 LDFLAGS += -Llibpfc '-Wl,-rpath=$$ORIGIN/libpfc/' -L$(PFM_LIBDIR) '-Wl,-rpath=$$ORIGIN/$(PFM_LIBDIR)/'
 LDLIBS += -lpfc -lpfm
-LIBPFC_DEP += libpfc/libpfc.so $(PFM_LIBDIR)/libpfm.so
+LIBPFC_DEP += libpfc/libpfc.so libpfc/pfc.ko $(PFM_LIBDIR)/libpfm.so
 CLEAN_TARGETS += libpfc-clean libpfm4-clean
 SRC_FILES += $(PFC_SRC)
 endif
@@ -90,7 +90,10 @@ uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
 %.o: %.asm nasm-utils/nasm-utils-inc.asm
 	$(ASM) $(ASM_FLAGS) ${NASM_DEFINES} -f elf64 $<
 
-libpfc/libpfc.so:
+# fake dependency, but prevents make from trying to build libpfc twice in parallel if both the ko and so are missing
+libpfc/pfc.ko: libpfc/libpfc.so
+
+libpfc/libpfc.so libpfc/pfc.ko:
 	@echo "Buiding libpfc target $(LIBPFC_TARGET)"
 	cd libpfc && make $(LIBPFC_TARGET)
 
