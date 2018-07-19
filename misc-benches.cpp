@@ -13,7 +13,6 @@ bench2_f misc_add_loop32;
 bench2_f misc_add_loop64;
 bench2_f misc_port7;
 bench2_f misc_fusion_add;
-bench2_f misc_fusion_add;
 bench2_f misc_flag_merge_1;
 bench2_f misc_flag_merge_2;
 bench2_f misc_flag_merge_3;
@@ -116,13 +115,12 @@ void register_misc(GroupList& list) {
     list.push_back(dendibakh);
 
     std::shared_ptr<BenchmarkGroup> bmi_group = std::make_shared<BenchmarkGroup>("bmi", "BMI false-dependency tests");
-
-    bmi_group->add(std::vector<Benchmark> {
-        default_maker::template make_bench<bmi_tzcnt>(bmi_group.get(), "dep-tzcnt", "dest-dependent tzcnt", 128),
-        default_maker::template make_bench<bmi_lzcnt>(bmi_group.get(), "dep-lzcnt", "dest-dependent lzcnt", 128),
-        default_maker::template make_bench<bmi_popcnt>(bmi_group.get(),"dep-popcnt", "dest-dependent popcnt", 128)
-    });
     list.push_back(bmi_group);
+    auto bmi_maker = DeltaMaker<TIMER>(bmi_group.get()).setTags({"default"});
+
+    bmi_maker.template make<bmi_tzcnt>("dep-tzcnt", "dest-dependent tzcnt", 128);
+    bmi_maker.template make<bmi_lzcnt>("dep-lzcnt", "dest-dependent lzcnt", 128);
+    bmi_maker.template make<bmi_popcnt>("dep-popcnt", "dest-dependent popcnt", 128);
 
     std::shared_ptr<BenchmarkGroup> retpoline_group = std::make_shared<BenchmarkGroup>("misc/retpoline", "retpoline tests");
     retpoline_group->add(std::vector<Benchmark> {

@@ -79,7 +79,8 @@ private:
     args::ValueFlag<std::string> arg_timer{parser, "TIMER-NAME", "Use the specified timer", {"timer"}};
     args::ValueFlag<unsigned int> arg_default_precision{parser, "PRECISION", "Use the specified number of decimal places"
             " to report values from most benchmarks", {"precision"}, (unsigned int)DEFAULT_PRECISION};
-    args::ValueFlag<std::string> arg_test_name{parser, "PATTERN", "Run only the tests matching the given pattern", {"test-name"}};
+    args::ValueFlag<std::string> arg_test_name{parser, "PATTERN", "Run only tests with name matching the given pattern", {"test-name"}};
+    args::ValueFlag<std::string> arg_test_tag{parser, "PATTERN", "Run only the tests with a tag matching the given pattern", {"test-tag"}};
 
 
     // internal flags: these aren't displayed to the user via help, but are used by some wrapper script to interact with the

@@ -132,57 +132,48 @@ void *shuffled_region(size_t size) {
 }
 
 template <typename TIMER, bench2_f FUNC>
-static Benchmark make_load_bench(BenchmarkGroup* parent, size_t kib, const std::string &suffix) {
-    using default_maker = StaticMaker<TIMER>;
+static void make_load_bench(DeltaMaker<TIMER>& maker, size_t kib, const std::string &suffix) {
     std::string id = suffix + "-" + std::to_string(kib);
     std::string name = std::to_string(kib) +  "-KiB " + suffix;
-    return default_maker::template make_bench<FUNC>(parent, id, name, LOAD_LOOP_UNROLL,
-                                    []{ return aligned_ptr(4096, 2048 * 1024); }, 100000);
+    maker.template make<FUNC>(id, name, LOAD_LOOP_UNROLL, []{ return aligned_ptr(4096, 2048 * 1024); } );
 }
 
 #define MAKE_PARALLEL(kib) \
-    make_load_bench<TIMER,load_loop ## kib>        (memload_group.get(), kib,      "parallel-loads"), \
-    make_load_bench<TIMER,prefetcht0_bench  ## kib>(memload_group.get(), kib, "parallel-prefetcht0"), \
-    make_load_bench<TIMER,prefetcht1_bench  ## kib>(memload_group.get(), kib, "parallel-prefetcht1"), \
-    make_load_bench<TIMER,prefetcht2_bench  ## kib>(memload_group.get(), kib, "parallel-prefetcht2"), \
-    make_load_bench<TIMER,prefetchnta_bench ## kib>(memload_group.get(), kib, "parallel-prefetchnta")
+    make_load_bench<TIMER,load_loop ## kib>        (maker, kib,      "parallel-loads"); \
+    make_load_bench<TIMER,prefetcht0_bench  ## kib>(maker, kib, "parallel-prefetcht0"); \
+    make_load_bench<TIMER,prefetcht1_bench  ## kib>(maker, kib, "parallel-prefetcht1"); \
+    make_load_bench<TIMER,prefetcht2_bench  ## kib>(maker, kib, "parallel-prefetcht2"); \
+    make_load_bench<TIMER,prefetchnta_bench ## kib>(maker, kib, "parallel-prefetchnta");
 
 #define MAKE_SERIAL(kib) \
-        maker::template make_bench<serial_load_bench>(memload_group.get(),  \
+        maker.template make<serial_load_bench>(                   \
         std::string("serial-loads-") + std::to_string(kib),       \
         std::to_string(kib) + std::string("-KiB serial loads") ,  \
         1,                                                        \
-        []{ return shuffled_region(kib * 1024); }, 1024 * 1024),
+        []{ return shuffled_region(kib * 1024); });
 
 template <typename TIMER>
 void register_mem(GroupList& list) {
     {
-        std::shared_ptr<BenchmarkGroup> memload_group = std::make_shared<BenchmarkGroup>("memory/load-parallel", "Parallel load/prefetches from fixed-size regions");
-        list.push_back(memload_group);
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-parallel", "Parallel load/prefetches from fixed-size regions");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 100000).setTags({"default"});
 
-        auto benches = std::vector<Benchmark> {
-            MAKE_PARALLEL(16),
-            MAKE_PARALLEL(32),
-            MAKE_PARALLEL(64),
-            MAKE_PARALLEL(128),
-            MAKE_PARALLEL(256),
-            MAKE_PARALLEL(512),
-            MAKE_PARALLEL(2048)
-        };
-
-        memload_group->add(benches);
+        MAKE_PARALLEL(16)
+        MAKE_PARALLEL(32)
+        MAKE_PARALLEL(64)
+        MAKE_PARALLEL(128)
+        MAKE_PARALLEL(256)
+        MAKE_PARALLEL(512)
+        MAKE_PARALLEL(2048)
     }
 
     {
-        std::shared_ptr<BenchmarkGroup> memload_group = std::make_shared<BenchmarkGroup>("memory/load-serial", "Serial loads from fixed-size regions");
-        list.push_back(memload_group);
-        using maker = StaticMaker<TIMER>;
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-serial", "Serial loads from fixed-size regions");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 1024 * 1024).setTags({"default"});
 
-        auto benches = std::vector<Benchmark> {
-            ALL_SIZES_X(MAKE_SERIAL)
-        };
-
-        memload_group->add(benches);
+        ALL_SIZES_X(MAKE_SERIAL)
     }
 
     {

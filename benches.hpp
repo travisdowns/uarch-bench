@@ -44,22 +44,35 @@ inline long inlined_empty(uint64_t iters, void *arg) {
 
 class BenchmarkGroup;
 
+typedef std::string tag_t;
+typedef std::vector<tag_t> taglist_t;
+
 struct BenchArgs {
     const BenchmarkGroup* parent;
     std::string id;
     std::string description;
+    taglist_t tags;
     /* how many operations are involved in one iteration of the benchmark loop */
     uint32_t ops_per_loop;
 
-    BenchArgs(const BenchmarkGroup* parent, const std::string& id, const std::string& description, uint32_t ops_per_loop) :
+    BenchArgs(
+            const BenchmarkGroup* parent,
+            const std::string& id,
+            const std::string& description,
+            taglist_t tags,
+            uint32_t ops_per_loop
+            ) :
     parent{parent},
     id{id},
     description{description},
+    tags{tags},
     ops_per_loop{ops_per_loop}
     {}
 };
 
-constexpr int  NAME_WIDTH =  30;
+/** the max width for the description for any benchmark - longer will cause jagged tables */
+constexpr int  DESC_WIDTH =  30;
+/** the max width for the id for any benchmark - longer will cause jagged tables */
 constexpr int  COLUMN_PAD =  3;
 
 template <typename T>
@@ -102,8 +115,11 @@ public:
     /** get the longer, human-readable descripton for the group */
     std::string getDescription() const { return args.description; }
 
-    /** the short, command-line-friendly, ID for the group */
+    /** the short, command-line-friendly, ID for the benchmark */
     std::string getId() const { return args.id; }
+
+    /** return the list of zero or more tags associated with the benchmark */
+    taglist_t getTags() const { return args.tags; }
 
     /** the unique group to which this */
     const BenchmarkGroup& getGroup() const { return *args.parent; }
@@ -134,6 +150,10 @@ using Benchmark = BenchmarkBase *;
 
 /* a predicate which can select a benchmark, given the fully qualified ID and Benchmark object */
 using predicate_t = std::function<bool(const Benchmark&)>;
+
+inline predicate_t pred_and(const predicate_t& left, const predicate_t& right) {
+    return [=](const Benchmark& b){ return left(b) && right(b); };
+}
 
 
 void printBenchName(Context& c, const std::string& name);
@@ -315,13 +335,14 @@ struct DeltaAlgo {
 };
 
 
-template <typename TIMER>
+template <typename TIMER, typename DERIVED>
 class MakerBase {
 protected:
     BenchmarkGroup* parent;
     uint32_t loop_count;
+    taglist_t tags;
 
-    MakerBase(BenchmarkGroup* parent, uint32_t loop_count) : parent{parent}, loop_count{loop_count} {}
+    MakerBase(BenchmarkGroup* parent, uint32_t loop_count) : parent{parent}, loop_count{loop_count}, tags{} {}
 
     template <typename ALGO>
     HEDLEY_NEVER_INLINE
@@ -332,8 +353,15 @@ protected:
             typename ALGO::raw_f raw_func,
             const arg_provider_t& arg_provider)
     {
-        BenchArgs args(parent, id, description, ops_per_loop);
+        BenchArgs args(parent, id, description, tags, ops_per_loop);
         return new BenchTemplate<TIMER, ALGO>(args, loop_count, raw_func, arg_provider);
+    }
+
+public:
+    DERIVED setTags(taglist_t tags) {
+        DERIVED ret(*static_cast<DERIVED*>(this));
+        ret.tags = std::move(tags);
+        return ret;
     }
 };
 
@@ -347,10 +375,13 @@ protected:
  * by code that shouldn't contribute to the result).
  */
 template <typename TIMER>
-class DeltaMaker : public MakerBase<TIMER> {
+class DeltaMaker : public MakerBase<TIMER, DeltaMaker<TIMER>> {
 public:
 
-    DeltaMaker(BenchmarkGroup* parent, uint32_t loop_count = default_loop_count) : MakerBase<TIMER>(parent, loop_count) {}
+    using base_t = MakerBase<TIMER, DeltaMaker<TIMER>>;
+
+    DeltaMaker(const DeltaMaker& ) = default;
+    DeltaMaker(BenchmarkGroup* parent, uint32_t loop_count = default_loop_count) : base_t(parent, loop_count) {}
 
     static constexpr uint32_t default_loop_count = 10000;
     static constexpr int                 samples =    33;
@@ -378,7 +409,7 @@ public:
             const arg_provider_t& arg_provider = null_provider)
     {
         typename BenchTemplate<TIMER, DeltaAlgo<TIMER>>::raw_f *f = DeltaAlgo<TIMER>::template delta_bench<BENCH_METHOD, BASE_METHOD>;
-        return MakerBase<TIMER>::template make_bench_from_raw<DeltaAlgo<TIMER>>(id, description, ops_per_loop, f, arg_provider);
+        return base_t::template make_bench_from_raw<DeltaAlgo<TIMER>>(id, description, ops_per_loop, f, arg_provider);
     }
 };
 
@@ -388,6 +419,18 @@ public:
 
     /**
      * Just a thin static wrapper around DeltaMaker<TIMER>(parent, loop_count).make(...).
+     *
+     * This doesn't support modern feartures like tags, so you should considering using DeltaMaker<> instead.
+     *
+     * You should consider replacing:
+     *
+     * using maker = StaticMaker<TIMER>;
+     * group->add(maker::template make_bench<METHOD>(group.get(), ..., [])(){ arg provider lambda }, loop_count));
+     *
+     * with
+     * auto maker = DeltaMaker<TIMER>(group.get(), loop_count);
+     * maker.template make<METHOD>(...);  // remove group.get() and loop_count from arg list
+     *
      */
     template <bench2_f BENCH_METHOD, bench2_f BASE_METHOD = dummy_bench>
     static Benchmark make_bench(

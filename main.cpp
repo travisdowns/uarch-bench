@@ -250,7 +250,14 @@ Context::Context(int argc, char **argv, std::ostream *out)
     }
 }
 
-
+static bool tag_matches(const Benchmark& b, const std::string& pattern) {
+    for (auto& tag : b->getTags()) {
+        if (wildcard_match(tag, pattern)) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void Context::run() {
 
@@ -270,10 +277,18 @@ void Context::run() {
         timer_info_ = &toRun.getTimerInfo();
         timer_info_->init(*this);
         predicate_t pred;
-        if (arg_test_name) {
-            pred =  [this](const Benchmark& b){ return wildcard_match(b->getPath(), arg_test_name.Get()); };
+        if (!arg_test_tag && !arg_test_name) {
+            // no predicates specified on the command line, use tag=* as default predicate
+            pred = [](const Benchmark& b){ return tag_matches(b, "default"); };
         } else {
-            pred =  [](const Benchmark&){ return true; };
+            // otherwise AND-together all set predicates
+            pred = [](const Benchmark& b){ return true; };
+            if (arg_test_name) {
+                pred = [this](const Benchmark& b){ return wildcard_match(b->getPath(), arg_test_name.Get()); };
+            }
+            if (arg_test_tag) {
+                pred = pred_and(pred, [this](const Benchmark& b){ return tag_matches(b, arg_test_tag.Get()); });
+            }
         }
 
         toRun.runIf(*this, pred);

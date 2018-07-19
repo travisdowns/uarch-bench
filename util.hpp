@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <memory>
 #include <vector>
+#include <sstream>
 
 #define UB_CACHE_LINE_SIZE    64
 
@@ -53,6 +54,21 @@ std::string string_format(const std::string& format, Args ... args) {
 /* stricty speaking this overload is not necessary but it avoids a gcc warning about a format operation without args */
 static inline std::string string_format(const std::string& format) {
     return format;
+}
+
+/** make a string like [1,2,3] out of anything supporting std::begin/end and whose elements support ostream << */
+template <typename T>
+std::string container_to_string(const T& container) {
+    std::stringstream ss;
+    ss << "[";
+    bool first = true;
+    for (const auto& e : container) {
+        if (!first) ss << ",";
+        first = false;
+        ss << e;
+    }
+    ss << "]";
+    return ss.str();
 }
 
 

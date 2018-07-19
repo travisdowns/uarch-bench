@@ -20,10 +20,10 @@ bench2_f indep_pushpop;
 
 template <typename TIMER>
 void register_default(GroupList& list) {
-    std::shared_ptr<BenchmarkGroup> default_group = std::make_shared<BenchmarkGroup>("default", "Default Group");
+    std::shared_ptr<BenchmarkGroup> default_group = std::make_shared<BenchmarkGroup>("basic", "Basic Benchmarks");
     list.push_back(default_group);
 
-    auto maker = DeltaMaker<TIMER>(default_group.get());
+    auto maker = DeltaMaker<TIMER>(default_group.get()).setTags({"default"});
 
     maker.template make<dep_add_rax_rax>  ("dep-add", "Dependent add chain",       128);
     maker.template make<indep_add>        ("indep-add", "Independent add chain",  50 * 8);

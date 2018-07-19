@@ -14,7 +14,7 @@ void *null() {
 const arg_provider_t null_provider = null;
 
 void printBenchName(Context& c, const std::string& name) {
-    c.out() << setprecision(c.getPrecision()) << fixed << setw(NAME_WIDTH) << name;
+    c.out() << setprecision(c.getPrecision()) << fixed << setw(DESC_WIDTH) << name;
 }
 
 void printBenchName(Context& c, const Benchmark& b) {
@@ -31,7 +31,7 @@ void printResultLine(Context& c, const Benchmark& b, const TimingResult& result)
 
 
 void printNameHeader(Context& c) {
-    c.out() << setw(NAME_WIDTH) << "Benchmark";
+    c.out() << setw(DESC_WIDTH) << "Benchmark";
 }
 
 void printResultHeader(Context& c) {

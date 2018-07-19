@@ -53,10 +53,10 @@ public:
     template<typename TIMER, bench2_f METHOD>
     static shared_ptr<LoadStoreGroup> make(const string& id, unsigned op_size) {
         shared_ptr<LoadStoreGroup> group = make_group(id, id, op_size);
-        using maker = StaticMaker<TIMER>;
+        auto maker = DeltaMaker<TIMER>(group.get(), 1000);
         for (ssize_t misalign = 0; misalign < 64; misalign++) {
-            group->add(maker::template make_bench<METHOD>(group.get(), group->make_id(misalign), group->make_name(misalign), 128,
-                    [misalign]() { return misaligned_ptr(64, 64,  misalign); }, 1000));
+            maker.template make<METHOD>(group->make_id(misalign), group->make_name(misalign), 128,
+                    [misalign]() { return misaligned_ptr(64, 64,  misalign); });
         }
         return group;
     }

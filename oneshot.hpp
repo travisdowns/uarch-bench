@@ -201,8 +201,9 @@ private:
 template <typename TIMER, int SAMPLES = 10,
         bench2_f WARM_ONCE  = inlined_empty,
         bench2_f WARM_EVERY = inlined_empty>
-class OneshotMaker : public MakerBase<TIMER> {
+class OneshotMaker : public MakerBase<TIMER, OneshotMaker<TIMER,SAMPLES,WARM_ONCE,WARM_EVERY>> {
 public:
+    using base_t = MakerBase<TIMER, OneshotMaker<TIMER,SAMPLES,WARM_ONCE,WARM_EVERY>>;
     using bench = OneshotBench<TIMER, SAMPLES>;
     using overhead_f = typename bench::overhead_f;
 
@@ -215,9 +216,10 @@ public:
     using ALGO = OneshotAlgo<TIMER, samples>;
 
     OneshotMaker(BenchmarkGroup* parent, uint32_t loop_count = 1, overhead_f overhead = bench::template benchToOverhead<dummy_bench>("default")) :
-        MakerBase<TIMER>{parent, loop_count},
+        base_t{parent, loop_count},
         overhead{overhead}
     {}
+
 
 //    template <typename TIMER_, int SAMPLES_, bench2_f TOUCH_, bench2_f WARMX_>
 //    OneshotMaker<TIMER, SAMPLES, TOUCH_, WARMX_> copy() { return {this->parent, overhead_func, this->loop_count}; }
@@ -246,7 +248,7 @@ public:
             const arg_provider_t& arg_provider = null_provider)
     {
         typename ALGO::raw_f *f = ALGO::template bench<METHOD, WARM_ONCE, WARM_EVERY>;
-        make2(BenchArgs{this->parent, id, description, ops_per_invocation}, f, (void *)METHOD, arg_provider);
+        make2(BenchArgs{this->parent, id, description, /*tags*/ {}, ops_per_invocation}, f, (void *)METHOD, arg_provider);
     }
 
     /**
@@ -266,7 +268,7 @@ public:
             uint32_t ops_per_invocation,
             const arg_provider_t& arg_provider = null_provider)
     {
-        make2(BenchArgs{this->parent, id, description, ops_per_invocation}, METHOD, (void *)METHOD, arg_provider);
+        make2(BenchArgs{this->parent, id, description, /*tags*/ {}, ops_per_invocation}, METHOD, (void *)METHOD, arg_provider);
     }
 
 
