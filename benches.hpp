@@ -195,11 +195,6 @@ public:
      * Print benchmark descriptions for the contained benchmarks to the given output stream.
      */
     virtual void printBenches(std::ostream& out) const;
-
-    /**
-     * Print a single benchmark description to the given output stream.
-     */
-    static void printBench(std::ostream& out, const Benchmark& bench);
 };
 
 using GroupList = std::vector<std::shared_ptr<BenchmarkGroup>>;

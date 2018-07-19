@@ -12,6 +12,7 @@
 #include "benches.hpp"
 #include "context.hpp"
 #include "timers.hpp"
+#include "table.hpp"
 
 extern "C" {
 bench2_f  store16_any;
@@ -100,12 +101,22 @@ public:
     }
 
     void printBenches(std::ostream& out) const override {
+        using namespace table;
         auto& benches = getBenches();
         assert(benches.size() >= 2);
-        printBench(out, benches[0]);
-        printBench(out, benches[1]);
-        out << "...\n";
-        printBench(out, benches.back());
+
+        Table t;
+        t.colInfo(0).justify = ColInfo::LEFT;
+        t.newRow().add("ID").add("Description");
+
+        for (const auto& bench : {benches[0], benches[1], benches.back()}) {
+            t.newRow().add(bench->getPath()).add(bench->getDescription());
+            if (bench == benches[1]) {
+                t.newRow().add("...").add(std::to_string(benches.size() - 3) + " more benches not shown");
+            }
+        }
+
+        out << t.str();
     }
 };
 

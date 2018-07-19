@@ -20,8 +20,8 @@ void register_cpp(GroupList& list) {
     {
         auto maker = DeltaMaker<TIMER>(cpp_group.get());
 
-        maker.template make<div64_lat_inline>   ("div64-lat-inline",    "  Dependent inline divisions", 1, []{ return (void *)100; });
-        maker.template make<div64_lat_noinline> ("div64-lat-noinline",  "  Dependent 64-bit divisions", 1, []{ return (void *)100; });
+        maker.template make<div64_lat_inline>   ("div64-lat-inline",      "Dependent inline divisions", 1, []{ return (void *)100; });
+        maker.template make<div64_lat_noinline> ("div64-lat-noinline",    "Dependent 64-bit divisions", 1, []{ return (void *)100; });
         maker.template make<div64_tput_inline>  ("div64-tput-inline",   "Independent inline divisions", 1);
         maker.template make<div64_tput_noinline>("div64-tput-noinline", "Independent divisions",        1);
     }

@@ -4,10 +4,11 @@
 #include <cassert>
 
 #include "benches.hpp"
+#include "table.hpp"
 
 using namespace std;
 
-constexpr int BENCH_ID_WIDTH = 16;
+using namespace table;
 
 
 void BenchmarkGroup::runIf(Context &c, const TimerInfo &ti, const predicate_t& predicate) {
@@ -25,14 +26,15 @@ void BenchmarkGroup::runIf(Context &c, const TimerInfo &ti, const predicate_t& p
 }
 
 void BenchmarkGroup::printBenches(std::ostream& out) const {
+    Table t;
+    t.colInfo(0).justify = ColInfo::LEFT;
+    t.newRow().add("ID").add("Description");
     for (auto& bench : getBenches()) {
-        printBench(out, bench);
+        t.newRow().add(bench->getPath()).add(bench->getDescription());
     }
+    out << t.str();
 }
 
-void BenchmarkGroup::printBench(std::ostream& out, const Benchmark& bench) {
-    out << left << setw(BENCH_ID_WIDTH) << bench->getPath() << ": " << bench->getDescription() << endl;
-}
 
 
 
