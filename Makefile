@@ -62,18 +62,23 @@ DEPFILES = $(OBJECTS:.o=.d)
 
 $(info USE_LIBPFC=${USE_LIBPFC})
 
+VPATH = test
+
 ###########
 # Targets #
 ###########
 
-all: uarch-bench
+all: uarch-bench unit-test
 
--include $(DEPFILES)
+-include $(DEPFILES) unit-test.d
 
 clean:	libpfc-clean
 	rm -f *.d *.o uarch-bench
 
 dist-clean: clean $(CLEAN_TARGETS)
+
+unit-test: unit-test.o unit-test-main.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 $^ -o $@
 
 uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
 	$(CXX) $(OBJECTS) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o uarch-bench
