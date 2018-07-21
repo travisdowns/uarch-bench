@@ -11,6 +11,16 @@
 
 #define LOAD_LOOP_UNROLL    8
 
+#define BENCH_SIZES_X(f)    \
+    f(16)    \
+    f(32)    \
+    f(64)    \
+    f(128)   \
+    f(256)   \
+    f(512)   \
+    f(2048)  \
+
+
 #define BENCH_DECL_X(name)  \
     bench2_f name ## 16;    \
     bench2_f name ## 32;    \
@@ -19,6 +29,15 @@
     bench2_f name ## 256;   \
     bench2_f name ## 512;   \
     bench2_f name ## 2048;  \
+
+#define LOADTYPE_X(f,arg)  \
+    f(       load, arg) \
+    f( prefetcht0, arg) \
+    f( prefetcht1, arg) \
+    f( prefetcht2, arg) \
+    f(prefetchnta, arg) \
+
+
 
 #define FWD_BENCH_DECL(delay) \
         bench2_f fwd_lat_delay_ ## delay ; \
@@ -67,7 +86,11 @@ BENCH_DECL_X(prefetcht1_bench)
 BENCH_DECL_X(prefetcht2_bench)
 BENCH_DECL_X(prefetchnta_bench)
 
-bench2_f serial_load_bench;
+bench2_f   serial_load_bench;
+
+#define PARALLEL_MEM_DECL(loadtype,arg) bench2_f parallel_mem_bench_ ## loadtype;
+LOADTYPE_X(PARALLEL_MEM_DECL,dummy);
+bench2_f parallel_load_bench;
 
 FWD_BENCH_DECL(0);
 FWD_BENCH_DECL(1);
@@ -105,7 +128,20 @@ size_t count(CacheLine* first) {
     return count;
 }
 
-void *shuffled_region(size_t size) {
+struct region {
+    size_t size;
+    void *start;
+};
+
+/**
+ * Return a region of memory of size bytes, where each cache line sized chunk points to another random chunk
+ * within the region. The pointers cover all chunks in a cycle of maximum size.
+ *
+ * The region_struct is returned by reference and points to a static variable that is overwritten every time
+ * this function is called.
+ */
+region& shuffled_region(const size_t size) {
+    assert(is_pow2(size));  // some of the asm benchmarks require a pow2 size
     assert(size <= MAX_SIZE);
     assert(size % UB_CACHE_LINE_SIZE == 0);
     size_t size_lines = size / UB_CACHE_LINE_SIZE;
@@ -121,14 +157,13 @@ void *shuffled_region(size_t size) {
 
     CacheLine* p = storage + indexes[0];
     for (size_t i = 1; i < size_lines; i++) {
-        p->next = storage + indexes[i];
-        p = p->next;
+        p = p->next = storage + indexes[i];
     }
     p->next = storage + indexes[0];
 
     assert(count(storage) == size_lines);
 
-    return storage;
+    return *(new region{ size, storage }); // leak
 }
 
 template <typename TIMER, bench2_f FUNC>
@@ -139,18 +174,27 @@ static void make_load_bench(DeltaMaker<TIMER>& maker, size_t kib, const std::str
 }
 
 #define MAKE_PARALLEL(kib) \
-    make_load_bench<TIMER,load_loop ## kib>        (maker, kib,      "parallel-loads"); \
+    make_load_bench<TIMER,load_loop         ## kib>(maker, kib,      "parallel-loads"); \
     make_load_bench<TIMER,prefetcht0_bench  ## kib>(maker, kib, "parallel-prefetcht0"); \
     make_load_bench<TIMER,prefetcht1_bench  ## kib>(maker, kib, "parallel-prefetcht1"); \
     make_load_bench<TIMER,prefetcht2_bench  ## kib>(maker, kib, "parallel-prefetcht2"); \
     make_load_bench<TIMER,prefetchnta_bench ## kib>(maker, kib, "parallel-prefetchnta");
 
-#define MAKE_SERIAL(kib) \
-        maker.template make<serial_load_bench>(                   \
-        std::string("serial-loads-") + std::to_string(kib),       \
-        std::to_string(kib) + std::string("-KiB serial loads") ,  \
-        1,                                                        \
-        []{ return shuffled_region(kib * 1024); });
+
+template <bench2_f F, typename M>
+static void make_load_bench2(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops) {
+    maker.template make<F>(
+            string_format("%s-%d", id_prefix, kib),
+            string_format("%d-KiB %s", kib, desc_suffix),
+            ops,
+            [kib]{ return &shuffled_region(kib * 1024); }
+//            [kib]{ return new region{ kib * 1024u, aligned_ptr(4096, 2048 * 1024) }; }
+    );
+}
+
+#define MAKE_SERIAL(kib) make_load_bench2<  serial_load_bench>   (maker, kib, "serial-loads",   "serial loads", 1);
+#define MAKEP_1(l,kib)   make_load_bench2<parallel_mem_bench_##l>(maker, kib, "parallel-" #l, "parallel " #l, LOAD_LOOP_UNROLL);
+#define MAKE_PARALLEL2(kib) LOADTYPE_X(MAKEP_1,kib)
 
 template <typename TIMER>
 void register_mem(GroupList& list) {
@@ -167,6 +211,21 @@ void register_mem(GroupList& list) {
         MAKE_PARALLEL(512)
         MAKE_PARALLEL(2048)
     }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-parallel2", "Parallel load/prefetches from fixed-size regions");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 100000).setTags({"default"});
+
+        MAKE_PARALLEL2(16)
+        MAKE_PARALLEL2(32)
+        MAKE_PARALLEL2(64)
+        MAKE_PARALLEL2(128)
+        MAKE_PARALLEL2(256)
+        MAKE_PARALLEL2(512)
+        MAKE_PARALLEL2(2048)
+    }
+
 
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-serial", "Serial loads from fixed-size regions");

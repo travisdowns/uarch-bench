@@ -4,6 +4,9 @@ default rel
 %include "nasm-utils/nasm-utils-inc.asm"
 %include "x86_helpers.asm"
 
+nasm_util_assert_boilerplate
+thunk_boilerplate
+
 ; segregate some particular benchamrk here if you want to repeatedly compile different versions of it quickly
 
 %ifnnum NOPCOUNT

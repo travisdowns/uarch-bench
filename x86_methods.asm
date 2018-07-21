@@ -630,7 +630,6 @@ bmi_bench popcnt
 ; parallel loads with large stride (across pages, defeating prefetcher)
 define_bench %3%1
 %define SIZE   (%1 * 1024)
-%define MASK   (SIZE - 1)
 xor     ecx, ecx
 mov     rdx, rsi
 .top:
@@ -675,23 +674,33 @@ all_parallel_benches prefetcht1,prefetcht1_bench
 all_parallel_benches prefetcht2,prefetcht2_bench
 all_parallel_benches prefetchnta,prefetchnta_bench
 
-; %1 - bench size in KiB
-; %2 - bench name
-%macro serial_load_bench_tmpl 1
-; parallel loads with large stride (across pages, defeating prefetcher)
-define_bench serial_load_bench%1
-%define SIZE   (%1 * 1024)
-%define MASK   (SIZE - 1)
-xor     eax, eax
-xor     ecx, ecx
-mov     rdx, rsi
-.top:
+
+; mirror of mem-benches.cpp::region
+struc region
+    .size  : resq 1
+    .start : resq 1
+endstruc
 
 %define UF 8
 
+; all loads happen in parallel, so maximum MLP can be achieved
+%macro parallel_mem_bench 2
+define_bench parallel_mem_bench_%2
+
+mov     rax, [rsi + region.size]
+mov     rsi, [rsi + region.start]
+neg     rax
+
+lea     r9, [STRIDE * (2*UF-1) + eax]
+
+xor     ecx, ecx  ; index
+mov     rdx, rsi  ; offset into region
+
+.top:
+
 %assign s 0
 %rep UF
-mov     rax, [rax + rdx + STRIDE * s]
+%1      [rdx + STRIDE * s]
 %assign s s+1
 %endrep
 
@@ -700,10 +709,11 @@ mov     rax, [rax + rdx + STRIDE * s]
 ; few loads might be skipped, making the effective footprint somewhat smaler than
 ; requested by something like UF * 0.5 * STRIDE on average (mostly relevant for buffer
 ; sizes just above a cache size boundary)
-lea     edx, [ecx + STRIDE * (UF*2-1) - SIZE]
+lea     edx, [rcx + r9]
 add     ecx, STRIDE * UF
 test    edx, edx
 cmovns  ecx, edx
+
 lea     rdx, [rsi + rcx]
 
 dec rdi
@@ -711,14 +721,24 @@ jnz .top
 ret
 %endmacro
 
+parallel_mem_bench {movzx   eax, BYTE},load
+parallel_mem_bench prefetcht0,prefetcht0
+parallel_mem_bench prefetcht1,prefetcht1
+parallel_mem_bench prefetcht2,prefetcht2
+parallel_mem_bench prefetchnta,prefetchnta
+
+
+
 ; classic pointer chasing benchmark
 define_bench serial_load_bench
 
+mov     rsi, [rsi + region.start]
+
 .top:
 mov rsi, [rsi]
-
 dec rdi
 jnz .top
+
 ret
 
 ; retpoline stuff
