@@ -34,8 +34,10 @@ bench2_f misc_macro_fusion_addjo;
 
 bench2_f adc_0_lat;
 bench2_f adc_1_lat;
+bench2_f adc_rcx_lat;
 bench2_f adc_0_tput;
 bench2_f adc_1_tput;
+bench2_f adc_rcx_tput;
 
 bench2_f retpoline_dense_call_lfence;
 bench2_f retpoline_dense_call_pause;
@@ -77,9 +79,13 @@ void register_misc(GroupList& list) {
                 null_provider, iters),
         default_maker::template make_bench<adc_1_lat >(misc_group.get(), "adc-1-lat", "adc reg, 1 latency", 128,
                 null_provider, iters),
+        default_maker::template make_bench<adc_rcx_lat >(misc_group.get(), "adc-reg-lat", "adc reg,zero-reg latency", 128,
+                null_provider, iters),
         default_maker::template make_bench<adc_0_tput>(misc_group.get(), "adc-0-tput", "adc reg, 0 throughput", 128,
                 null_provider, iters),
         default_maker::template make_bench<adc_1_tput>(misc_group.get(), "adc-1-tput", "adc reg, 1 throughput", 128,
+                null_provider, iters),
+        default_maker::template make_bench<adc_rcx_tput>(misc_group.get(), "adc-rcx-tput", "adc reg,zero-reg throughput", 128,
                 null_provider, iters),
         default_maker::template make_bench<misc_flag_merge_1>(misc_group.get(), "flag-merge-1", "Flag merge 1", 128,
                 null_provider, iters),

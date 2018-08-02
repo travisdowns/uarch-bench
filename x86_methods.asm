@@ -438,6 +438,7 @@ ud2
 %macro adc_lat_bench 1
 define_bench adc_%1_lat
 xor eax, eax
+xor ecx, ecx
 .top:
 times 128 adc rax, %1
 dec rdi
@@ -448,11 +449,13 @@ ud2
 
 adc_lat_bench 0
 adc_lat_bench 1
+adc_lat_bench rcx
 
 ; is adc, 0 treated specially compared to other immediates?
 %macro adc_tput_bench 1
 define_bench adc_%1_tput
 xor eax, eax
+xor ecx, ecx
 .top:
 %rep 128
 xor eax, eax
@@ -466,6 +469,7 @@ ud2
 
 adc_tput_bench 0
 adc_tput_bench 1
+adc_tput_bench rcx
 
 define_bench misc_flag_merge_1
 xor eax, eax
