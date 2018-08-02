@@ -79,16 +79,16 @@ void register_mem_oneshot(GroupList& list) {
         maker.template make<fwd_lat_delay_oneshot_ ## delay>("oneshot-latency-" #delay, \
                     "StFwd oneshot lat (delay " #delay ")", 1, buf_provider)
 
-        //LAT_DELAY_ONESHOT(5);
-        //LAT_DELAY_ONESHOT(4);
-        //LAT_DELAY_ONESHOT(3);
+        LAT_DELAY_ONESHOT(5);
+        LAT_DELAY_ONESHOT(4);
+        LAT_DELAY_ONESHOT(3);
         LAT_DELAY_ONESHOT(2);
         LAT_DELAY_ONESHOT(1);
         LAT_DELAY_ONESHOT(0);
     }
 
     {
-        std::shared_ptr<BenchmarkGroup> stfwd = std::make_shared<OneshotGroup>("memory/store-fwd-try", "Store forward attempts");
+        std::shared_ptr<BenchmarkGroup> stfwd = std::make_shared<OneshotGroup>("studies/store-fwd-try", "Store forward attempts");
         list.push_back(stfwd);
 
         auto maker = OneshotMaker<TIMER, 20>(stfwd.get());

@@ -20,6 +20,9 @@
 #define IF_PFC(x)
 #endif
 
+// returns the argument followed by a comma, often useful to pass to x-macros
+#define APPEND_COMMA(x) x,
+
 template <typename T>
 static inline bool is_pow2(T x) {
     static_assert(std::is_unsigned<T>::value, "must use unsigned integral types");

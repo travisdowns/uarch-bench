@@ -16,7 +16,7 @@ void BenchmarkGroup::runIf(Context &c, const TimerInfo &ti, const predicate_t& p
     for (auto& b : benches_) {
         if (predicate(b)) {
             if (!header) {
-                c.out() << std::endl << "** Running benchmark group " << getDescription() << " **" << std::endl;
+                c.out() << std::endl << "** Running group " << getId() << " : " << getDescription() << " **" << std::endl;
                 printGroupHeader(c);
                 header = true;
             }

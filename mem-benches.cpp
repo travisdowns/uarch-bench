@@ -11,40 +11,22 @@
 
 #define LOAD_LOOP_UNROLL    8
 
-#define BENCH_SIZES_X(f)    \
-    f(16)    \
-    f(32)    \
-    f(64)    \
-    f(128)   \
-    f(256)   \
-    f(512)   \
-    f(2048)  \
-
-
-#define BENCH_DECL_X(name)  \
-    bench2_f name ## 16;    \
-    bench2_f name ## 32;    \
-    bench2_f name ## 64;    \
-    bench2_f name ## 128;   \
-    bench2_f name ## 256;   \
-    bench2_f name ## 512;   \
-    bench2_f name ## 2048;  \
-
-#define LOADTYPE_X(f,arg)  \
-    f(       load, arg) \
+#define PFTYPE_X(f,arg) \
     f( prefetcht0, arg) \
     f( prefetcht1, arg) \
     f( prefetcht2, arg) \
     f(prefetchnta, arg) \
 
-
+#define LOADTYPE_X(f,arg)  \
+    f(       load, arg)    \
+    PFTYPE_X(f,arg)        \
 
 #define FWD_BENCH_DECL(delay) \
         bench2_f fwd_lat_delay_ ## delay ; \
         bench2_f fwd_tput_conc_ ## delay ;
 
 #define MAX_KIB         2048
-#define MAX_SIZE        (MAX_KIB * 1024)
+#define MAX_SIZE        (400 * 1024 * 1024)
 
 #define ALL_SIZES_X(func)  ALL_SIZES_X1(func,MAX_KIB)
 // we need one level of indirection to expand MAX_KIB properly. See:
@@ -75,16 +57,13 @@
             func(1024)     \
             func(max)
 
+#define ALL_SIZES_ARRAY { ALL_SIZES_X(APPEND_COMMA) }
+
 #define SERIAL_DECL(size) bench2_f serial_load_bench ## size ;
 //#define SERIAL_DECL1(size) bench2_f serial_load_bench ## size ;
 
 extern "C" {
 /* misc benches */
-BENCH_DECL_X(load_loop)
-BENCH_DECL_X(prefetcht0_bench)
-BENCH_DECL_X(prefetcht1_bench)
-BENCH_DECL_X(prefetcht2_bench)
-BENCH_DECL_X(prefetchnta_bench)
 
 bench2_f   serial_load_bench;
 
@@ -141,7 +120,6 @@ struct region {
  * this function is called.
  */
 region& shuffled_region(const size_t size) {
-    assert(is_pow2(size));  // some of the asm benchmarks require a pow2 size
     assert(size <= MAX_SIZE);
     assert(size % UB_CACHE_LINE_SIZE == 0);
     size_t size_lines = size / UB_CACHE_LINE_SIZE;
@@ -166,21 +144,6 @@ region& shuffled_region(const size_t size) {
     return *(new region{ size, storage }); // leak
 }
 
-template <typename TIMER, bench2_f FUNC>
-static void make_load_bench(DeltaMaker<TIMER>& maker, size_t kib, const std::string &suffix) {
-    std::string id = suffix + "-" + std::to_string(kib);
-    std::string name = std::to_string(kib) +  "-KiB " + suffix;
-    maker.template make<FUNC>(id, name, LOAD_LOOP_UNROLL, []{ return aligned_ptr(4096, 2048 * 1024); } );
-}
-
-#define MAKE_PARALLEL(kib) \
-    make_load_bench<TIMER,load_loop         ## kib>(maker, kib,      "parallel-loads"); \
-    make_load_bench<TIMER,prefetcht0_bench  ## kib>(maker, kib, "parallel-prefetcht0"); \
-    make_load_bench<TIMER,prefetcht1_bench  ## kib>(maker, kib, "parallel-prefetcht1"); \
-    make_load_bench<TIMER,prefetcht2_bench  ## kib>(maker, kib, "parallel-prefetcht2"); \
-    make_load_bench<TIMER,prefetchnta_bench ## kib>(maker, kib, "parallel-prefetchnta");
-
-
 template <bench2_f F, typename M>
 static void make_load_bench2(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops) {
     maker.template make<F>(
@@ -188,42 +151,42 @@ static void make_load_bench2(M& maker, int kib, const char* id_prefix, const cha
             string_format("%d-KiB %s", kib, desc_suffix),
             ops,
             [kib]{ return &shuffled_region(kib * 1024); }
-//            [kib]{ return new region{ kib * 1024u, aligned_ptr(4096, 2048 * 1024) }; }
     );
 }
 
-#define MAKE_SERIAL(kib) make_load_bench2<  serial_load_bench>   (maker, kib, "serial-loads",   "serial loads", 1);
-#define MAKEP_1(l,kib)   make_load_bench2<parallel_mem_bench_##l>(maker, kib, "parallel-" #l, "parallel " #l, LOAD_LOOP_UNROLL);
-#define MAKE_PARALLEL2(kib) LOADTYPE_X(MAKEP_1,kib)
+#define MAKE_SERIAL(kib)  make_load_bench2<  serial_load_bench>   (maker, kib, "serial-loads",   "serial loads", 1);
+#define MAKEP_LOAD(l,kib) make_load_bench2<parallel_mem_bench_##l>(maker, kib, "parallel-" #l, "parallel " #l, LOAD_LOOP_UNROLL);
+#define MAKEP_ALL(kib) LOADTYPE_X(MAKEP_LOAD,kib)
 
 template <typename TIMER>
 void register_mem(GroupList& list) {
     {
-        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-parallel", "Parallel load/prefetches from fixed-size regions");
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-parallel", "Parallel loads from fixed-size regions");
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 100000).setTags({"default"});
 
-        MAKE_PARALLEL(16)
-        MAKE_PARALLEL(32)
-        MAKE_PARALLEL(64)
-        MAKE_PARALLEL(128)
-        MAKE_PARALLEL(256)
-        MAKE_PARALLEL(512)
-        MAKE_PARALLEL(2048)
+        for (auto kib : ALL_SIZES_ARRAY) {
+            MAKEP_LOAD(load, kib);
+        }
+
+        for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
+            MAKEP_LOAD(load, kib);
+        }
     }
 
     {
-        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-parallel2", "Parallel load/prefetches from fixed-size regions");
+        // this group of tests is flawed for prefetch1 and prefetch2 and probably prefetchnta in that is highly dependent on the initial cache state.
+        // If the accessed region is in L1 at the start of the test, loads like prefetch1 which would normally leave the only line in L2,
+        // will find it in L1 and be much faster. If the line isn't in L1, it won't get in there and the test will be slower. Each line can be in
+        // either state, so you'll get a range of results somewhere between slow and fast, depending on random factors preceeding the test.
+        // To fix, we could put the region in a consistent state.
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/prefetch-parallel", "Parallel prefetches from fixed-size regions");
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 100000).setTags({"default"});
 
-        MAKE_PARALLEL2(16)
-        MAKE_PARALLEL2(32)
-        MAKE_PARALLEL2(64)
-        MAKE_PARALLEL2(128)
-        MAKE_PARALLEL2(256)
-        MAKE_PARALLEL2(512)
-        MAKE_PARALLEL2(2048)
+        for (auto kib : {16, 32, 64, 128, 256, 512, 2048}) {
+            PFTYPE_X(MAKEP_LOAD,kib)
+        }
     }
 
 
@@ -233,6 +196,10 @@ void register_mem(GroupList& list) {
         auto maker = DeltaMaker<TIMER>(group.get(), 1024 * 1024).setTags({"default"});
 
         ALL_SIZES_X(MAKE_SERIAL)
+
+        for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
+            MAKE_SERIAL(kib);
+        }
     }
 
     {
