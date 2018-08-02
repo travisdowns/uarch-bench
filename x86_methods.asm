@@ -434,6 +434,39 @@ ret
 .never:
 ud2
 
+; is adc, 0 treated specially compared to other immediates?
+%macro adc_lat_bench 1
+define_bench adc_%1_lat
+xor eax, eax
+.top:
+times 128 adc rax, %1
+dec rdi
+jnz .top
+ret
+ud2
+%endmacro
+
+adc_lat_bench 0
+adc_lat_bench 1
+
+; is adc, 0 treated specially compared to other immediates?
+%macro adc_tput_bench 1
+define_bench adc_%1_tput
+xor eax, eax
+.top:
+%rep 128
+xor eax, eax
+adc rax, %1
+%endrep
+dec rdi
+jnz .top
+ret
+ud2
+%endmacro
+
+adc_tput_bench 0
+adc_tput_bench 1
+
 define_bench misc_flag_merge_1
 xor eax, eax
 .top:

@@ -32,6 +32,11 @@ bench2_f fusion_better_fused;
 bench2_f fusion_better_unfused;
 bench2_f misc_macro_fusion_addjo;
 
+bench2_f adc_0_lat;
+bench2_f adc_1_lat;
+bench2_f adc_0_tput;
+bench2_f adc_1_tput;
+
 bench2_f retpoline_dense_call_lfence;
 bench2_f retpoline_dense_call_pause;
 bench2_f retpoline_sparse_call_base;
@@ -67,6 +72,14 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<misc_fusion_add>(misc_group.get(), "fusion-add", "Test micro-fused add", 128,
                 null_provider, iters),
         default_maker::template make_bench<misc_macro_fusion_addjo>(misc_group.get(), "add-jo-fusion", "Add-JO fusion", 128,
+                null_provider, iters),
+        default_maker::template make_bench<adc_0_lat >(misc_group.get(), "adc-0-lat", "adc reg, 0 latency", 128,
+                null_provider, iters),
+        default_maker::template make_bench<adc_1_lat >(misc_group.get(), "adc-1-lat", "adc reg, 1 latency", 128,
+                null_provider, iters),
+        default_maker::template make_bench<adc_0_tput>(misc_group.get(), "adc-0-tput", "adc reg, 0 throughput", 128,
+                null_provider, iters),
+        default_maker::template make_bench<adc_1_tput>(misc_group.get(), "adc-1-tput", "adc reg, 1 throughput", 128,
                 null_provider, iters),
         default_maker::template make_bench<misc_flag_merge_1>(misc_group.get(), "flag-merge-1", "Flag merge 1", 128,
                 null_provider, iters),
