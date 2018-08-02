@@ -43,9 +43,9 @@ You need some C++ compiler like `g++` or `clang++`, but if you are interested in
 
 ## Building
 
-This project has submodules, so clone it with:
+This project has submodules, so it is best cloned with the `--recursive` flag to pull all the submodules as well:
 
-    git clone --recurisve https://github.com/travisdowns/uarch-bench
+    git clone --recursive https://github.com/travisdowns/uarch-bench
     
 If you've already cloned it without `--recursive`, this should pull in the submodules:
 
