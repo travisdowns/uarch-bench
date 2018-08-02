@@ -226,6 +226,23 @@ void register_mem(GroupList& list) {
     }
 
     {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/super-load-serial", "Finer-grained serial loads from fixed-size regions");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 100 * 1000);
+
+        for (int kib = 16; kib <= MAX_SIZE / 1024; kib *= 2) {
+            size_t last = 0;
+            for (double fudge = 0.90; fudge <= 1.10; fudge += 0.02) {
+                size_t fudgedkib = fudge * kib;
+                if (fudgedkib != last) {  // avoid duplicate tests for small kib values
+                    MAKE_SERIAL(fudge * kib,serial_load_bench);
+                }
+                last = fudgedkib;
+            }
+        }
+    }
+
+    {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/memory/crit-word", "Serial loads at differnet cache line offsets");
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 1024 * 1024);
@@ -239,6 +256,7 @@ void register_mem(GroupList& list) {
     }
 
     {
+        // see https://www.realworldtech.com/forum/?threadid=178902&curpostid=178902
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/memory/l2-doubleload", "Serial loads at differnet cache line offsets");
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 1024 * 1024);
