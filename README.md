@@ -36,11 +36,23 @@ and one could even imagine a world with [OSX support](https://github.com/travisd
 
 ## Prerequisites
 
-On Intel platforms install `msr-tools` which is needed to read and write msrs to disable TurboBoost. On a Debian-like distribution that's usually accomplished with `sudo apt-get install msr-tools`.
+You need some C++ compiler like `g++` or `clang++`, but if you are interested in this project, you probably already have that. Beyond that, you need `nasm` and perhaps `msr-tools` on Intel platforms (used to as a backup method to disable turbo-boost if you aren't using `intel_pstate` driver). On Debian-like systems, this should do it: 
+
+    sudo apt-get install nasm
+    sudo apt-get install msr-tools
 
 ## Building
 
-Just run `make` in the project directory. If you want to modify any of the make settings, you can do it directly in `config.mk` or in a newly create local file `local.mk` (the latter having the advantage that this file is ignored by git so you won't have any merge conflicts on later pulls and won't automatically commit your local build settings).
+This project has submodules, so clone it with:
+
+    git clone --recurisve https://github.com/travisdowns/uarch-bench
+    
+If you've already cloned it without `--recursive`, this should pull in the submodules:
+
+   git submodule update --init
+
+
+Then just run `make` in the project directory. If you want to modify any of the make settings, you can do it directly in `config.mk` or in a newly created local file `local.mk` (the latter having the advantage that this file is ignored by git so you won't have any merge conflicts on later pulls and won't automatically commit your local build settings).
 
 ## Running
 
