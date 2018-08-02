@@ -358,9 +358,17 @@ protected:
     }
 
 public:
+    /* returns a COPY of this object with the given tags */
     DERIVED setTags(taglist_t tags) {
         DERIVED ret(*static_cast<DERIVED*>(this));
         ret.tags = std::move(tags);
+        return ret;
+    }
+
+    /* returns a COPY of this object with the given loop count */
+    DERIVED setLoopCount(uint32_t loop_count) {
+        DERIVED ret(*static_cast<DERIVED*>(this));
+        ret.loop_count = loop_count;
         return ret;
     }
 };

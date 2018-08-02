@@ -741,6 +741,46 @@ jnz .top
 
 ret
 
+; classic pointer chasing benchmark
+define_bench serial_load_bench2
+
+xor     eax, eax
+mov     rsi, [rsi + region.start]
+
+.top:
+mov rax, [rsi]
+mov rcx, [rsi]
+mov rsi, rcx
+
+dec rdi
+jnz .top
+
+ret
+
+; testing latency of 2nd hit on the same L2 line
+; dummy load FIRST
+define_bench serial_double_load1
+mov     rsi, [rsi + region.start]
+.top:
+mov rax, [rsi]
+mov rcx, [rsi]
+mov rsi, rcx
+dec rdi
+jnz .top
+ret
+
+; testing latency of 2nd hit on the same L2 line
+; dummy load SECOND
+define_bench serial_double_load2
+mov     rsi, [rsi + region.start]
+.top:
+mov rcx, [rsi]
+mov rax, [rsi]
+mov rsi, rcx
+dec rdi
+jnz .top
+ret
+
 ; retpoline stuff
 
 ; the generic retpoline thunk, parameterized on the loop instruction

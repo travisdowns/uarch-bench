@@ -28,36 +28,40 @@
 #define MAX_KIB         2048
 #define MAX_SIZE        (400 * 1024 * 1024)
 
-#define ALL_SIZES_X(func)  ALL_SIZES_X1(func,MAX_KIB)
+#define ALL_SIZES_X(func)  ALL_SIZES_X1(func,dummy,MAX_KIB)
+#define ALL_SIZES_X_ARG(func,arg)  ALL_SIZES_X1(func,arg,MAX_KIB)
+
 // we need one level of indirection to expand MAX_KIB properly. See:
 // https://stackoverflow.com/questions/50403741/using-a-macro-as-an-argument-in-an-x-macro-definition
-#define ALL_SIZES_X1(func, max)  \
-            func(  16)     \
-            func(  24)     \
-            func(  30)     \
-            func(  31)     \
-            func(  32)     \
-            func(  33)     \
-            func(  34)     \
-            func(  35)     \
-            func(  40)     \
-            func(  48)     \
-            func(  56)     \
-            func(  64)     \
-            func(  80)     \
-            func(  96)     \
-            func( 112)     \
-            func( 128)     \
-            func( 196)     \
-            func( 252)     \
-            func( 256)     \
-            func( 260)     \
-            func( 384)     \
-            func( 512)     \
-            func(1024)     \
-            func(max)
+#define ALL_SIZES_X1(func, arg, max)  \
+            func(  16, arg)     \
+            func(  24, arg)     \
+            func(  30, arg)     \
+            func(  31, arg)     \
+            func(  32, arg)     \
+            func(  33, arg)     \
+            func(  34, arg)     \
+            func(  35, arg)     \
+            func(  40, arg)     \
+            func(  48, arg)     \
+            func(  56, arg)     \
+            func(  64, arg)     \
+            func(  80, arg)     \
+            func(  96, arg)     \
+            func( 112, arg)     \
+            func( 128, arg)     \
+            func( 196, arg)     \
+            func( 252, arg)     \
+            func( 256, arg)     \
+            func( 260, arg)     \
+            func( 384, arg)     \
+            func( 512, arg)     \
+            func(1024, arg)     \
+            func(max, arg)
 
-#define ALL_SIZES_ARRAY { ALL_SIZES_X(APPEND_COMMA) }
+#define APPEND_COMMA2(x,dummy) x,
+
+#define ALL_SIZES_ARRAY { ALL_SIZES_X(APPEND_COMMA2) }
 
 #define SERIAL_DECL(size) bench2_f serial_load_bench ## size ;
 //#define SERIAL_DECL1(size) bench2_f serial_load_bench ## size ;
@@ -66,6 +70,10 @@ extern "C" {
 /* misc benches */
 
 bench2_f   serial_load_bench;
+bench2_f   serial_load_bench2;
+
+bench2_f serial_double_load1;
+bench2_f serial_double_load2;
 
 #define PARALLEL_MEM_DECL(loadtype,arg) bench2_f parallel_mem_bench_ ## loadtype;
 LOADTYPE_X(PARALLEL_MEM_DECL,dummy);
@@ -89,10 +97,17 @@ bench2_f fwd_tput_conc_10;
 template <typename TIMER>
 void register_mem_oneshot(GroupList& list);
 
+/** the whole cache line object is filled with pointers to the next chunk */
 struct CacheLine {
-    CacheLine *next;
-    char padding[UB_CACHE_LINE_SIZE - sizeof(CacheLine*)];
+    static_assert(UB_CACHE_LINE_SIZE % sizeof(CacheLine *) == 0, "cache line size not a multiple of pointer size");
+    CacheLine* nexts[UB_CACHE_LINE_SIZE / sizeof(CacheLine *)];
+
+    void setNexts(CacheLine* next) {
+        std::fill(std::begin(nexts), std::end(nexts), next);
+    }
 };
+
+static_assert(UB_CACHE_LINE_SIZE == sizeof(CacheLine), "sizeof(CacheLine) not equal to actual cache line size, huh?");
 
 // I don't think this going to fail on any platform in common use today, but who knows?
 static_assert(sizeof(CacheLine) == UB_CACHE_LINE_SIZE, "really weird layout on this platform");
@@ -101,7 +116,7 @@ size_t count(CacheLine* first) {
     CacheLine* p = first;
     size_t count = 0;
     do {
-        p = p->next;
+        p = p->nexts[0];
         count++;
     } while (p != first);
     return count;
@@ -135,9 +150,11 @@ region& shuffled_region(const size_t size) {
 
     CacheLine* p = storage + indexes[0];
     for (size_t i = 1; i < size_lines; i++) {
-        p = p->next = storage + indexes[i];
+        CacheLine* next = storage + indexes[i];
+        p->setNexts(next);
+        p = next;
     }
-    p->next = storage + indexes[0];
+    p->setNexts(storage + indexes[0]);
 
     assert(count(storage) == size_lines);
 
@@ -154,7 +171,7 @@ static void make_load_bench2(M& maker, int kib, const char* id_prefix, const cha
     );
 }
 
-#define MAKE_SERIAL(kib)  make_load_bench2<  serial_load_bench>   (maker, kib, "serial-loads",   "serial loads", 1);
+#define MAKE_SERIAL(kib,test)  make_load_bench2<test>             (maker, kib, "serial-loads",   "serial loads", 1);
 #define MAKEP_LOAD(l,kib) make_load_bench2<parallel_mem_bench_##l>(maker, kib, "parallel-" #l, "parallel " #l, LOAD_LOOP_UNROLL);
 #define MAKEP_ALL(kib) LOADTYPE_X(MAKEP_LOAD,kib)
 
@@ -184,22 +201,50 @@ void register_mem(GroupList& list) {
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 100000).setTags({"default"});
 
-        for (auto kib : {16, 32, 64, 128, 256, 512, 2048}) {
+        for (auto kib : {16, 32, 64, 128, 256, 512, 2048, 4096, 8192, 8192 * 4}) {
             PFTYPE_X(MAKEP_LOAD,kib)
         }
     }
 
 
     {
+        // this group of tests isn't directly comparable to the parallel tests since the access pattern is "more random" than the
+        // parallel test, which is strided albeit with a large stride.. In particular it's probably worse for the TLB. The result is
+        // that the implied "max MLP" derived by dividing the serial access time by the parallel one is larger than 10 (about 12.5),
+        // which I think is impossible on current Intel. We should make comparable parallel/serial tests that have identical access
+        // patterns.
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-serial", "Serial loads from fixed-size regions");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 1024 * 1024).setTags({"default"});
+        auto maker = DeltaMaker<TIMER>(group.get(), 1000 * 1000).setTags({"default"});
 
-        ALL_SIZES_X(MAKE_SERIAL)
+        ALL_SIZES_X_ARG(MAKE_SERIAL,serial_load_bench)
 
+        maker = maker.setLoopCount(100 * 1000); // speed things up for the bigger tests
         for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
-            MAKE_SERIAL(kib);
+            MAKE_SERIAL(kib,serial_load_bench);
         }
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/memory/crit-word", "Serial loads at differnet cache line offsets");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 1024 * 1024);
+
+        ALL_SIZES_X_ARG(MAKE_SERIAL,serial_load_bench2)
+
+        maker = maker.setLoopCount(100 * 1000); // speed things up for the bigger tests
+        for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
+            MAKE_SERIAL(kib,serial_load_bench2);
+        }
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/memory/l2-doubleload", "Serial loads at differnet cache line offsets");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 1024 * 1024);
+
+        maker.template make<serial_double_load1>("dummy-first", "Dummy load first",  1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_load2>("dummy-second","Dummy load second", 1, []{ return &shuffled_region(128 * 1024); });
     }
 
     {
