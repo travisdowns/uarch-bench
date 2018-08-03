@@ -64,14 +64,6 @@ void register_oneshot(GroupList& list) {
 
     maker.template withTouch<dummy_bench_oneshot2_touch>().template make<dummy_bench_oneshot2>("oneshot-dummy-touch", "Empty touched oneshot bench", 1);
 
-//    maker.template make<dep_imul128_rax>  ("dep-mul128", "Dependent imul 64->128",    128);
-//    maker.template make<dep_imul64_rax>   ("dep-mul64",  "Dependent imul 64->64",     128);
-//    maker.template make<indep_imul128_rax>("indep-mul128", "Independent imul 64->128",  128);
-//    maker.template make<store_same_loc>   ("same-stores", "Same location stores",      128);
-//    maker.template make<store64_disjoint> ("disjoint-stores", "Disjoint location stores",  128);
-//    maker.template make<dep_pushpop>      ("dep-push-pop", "Dependent push/pop chain",  128);
-//    maker.template make<indep_pushpop>    ("indep-push-pop", "Inependent push/pop chain",  128);
-
     register_specific<TIMER>(oneshot.get());
 }
 

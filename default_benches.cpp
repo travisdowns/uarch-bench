@@ -33,7 +33,7 @@ void register_default(GroupList& list) {
     maker.template make<store_same_loc>   ("same-stores", "Same location stores",      128);
     maker.template make<store64_disjoint> ("disjoint-stores", "Disjoint location stores",  128);
     maker.template make<dep_pushpop>      ("dep-push-pop", "Dependent push/pop chain",  128);
-    maker.template make<indep_pushpop>    ("indep-push-pop", "Inependent push/pop chain",  128);
+    maker.template make<indep_pushpop>    ("indep-push-pop", "Independent push/pop chain",  128);
 }
 
 #define REG_DEFAULT(CLOCK) template void register_default<CLOCK>(GroupList& list);
