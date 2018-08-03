@@ -105,4 +105,32 @@ std::string escape_for_regex(const std::string& input);
  * that match any number of characters.
  */
 bool wildcard_match(const std::string& target, const std::string& pattern);
+
+constexpr size_t MAX_SHUFFLED_REGION_SIZE = 400 * 1024 * 1024;
+
+/** the whole cache line object is filled with pointers to the next chunk */
+struct CacheLine {
+    static_assert(UB_CACHE_LINE_SIZE % sizeof(CacheLine *) == 0, "cache line size not a multiple of pointer size");
+    CacheLine* nexts[UB_CACHE_LINE_SIZE / sizeof(CacheLine *)];
+
+    void setNexts(CacheLine* next) {
+        std::fill(std::begin(nexts), std::end(nexts), next);
+    }
+};
+
+struct region {
+    size_t size;
+    void *start;  // actually a CacheLine object
+};
+
+/**
+ * Return a region of memory of size bytes, where each cache line sized chunk points to another random chunk
+ * within the region. The pointers cover all chunks in a cycle of maximum size.
+ *
+ * The region_struct is returned by reference and points to a static variable that is overwritten every time
+ * this function is called.
+ */
+region& shuffled_region(const size_t size);
+
+
 #endif /* UTIL_HPP_ */

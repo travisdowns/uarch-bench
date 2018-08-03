@@ -6,12 +6,14 @@
  */
 
 #include "cpp-benches.hpp"
+#include "util.hpp"
 
 #include <limits>
 #include <cinttypes>
 #include <vector>
 #include <random>
 #include <cstddef>
+
 
 using std::size_t;
 using std::uint64_t;
@@ -142,15 +144,21 @@ long linkedlist_sentinel(uint64_t iters, void *arg) {
     return linkedlist_sum<sum_sentinel>(iters);
 }
 
-long linkedlist_sum(uint64_t iters, void *arg) {
+long sumlist(list_node *first) {
+    long sum = 0;
+    list_node *p = first;
+    do {
+        sum += p->value;
+        p = p->next;
+    } while (p != first);
+    return sum;
+}
+
+long shuffled_list_sum(uint64_t iters, void *arg) {
     int sum = 0;
+    region* r = (region*)arg;
     while (iters-- > 0) {
-        list_node *first = (list_node*)arg;
-        list_node *p = first;
-        do {
-            sum += p->value;
-            p = p->next;
-        } while (p != first);
+        sum += sumlist((list_node*)r->start);
     }
     return sum;
 }

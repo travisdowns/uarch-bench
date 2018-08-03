@@ -821,11 +821,12 @@ ret
 ; dummy load SECOND
 ; %1 test name suffix
 ; %2 offset for prefetch
-%macro make_serial_double_loadpf 2
+; %3 pf hint
+%macro make_serial_double_loadpf 3
 define_bench serial_double_load%1
 mov     rsi, [rsi + region.start]
 .top:
-prefetcht0 [rsi + %2]
+prefetch%3 [rsi + %2]
 mov rcx, [rsi + 56]
 mov rsi, rcx
 dec rdi
@@ -833,8 +834,9 @@ jnz .top
 ret
 %endmacro
 
-make_serial_double_loadpf pf_diff,  0
-make_serial_double_loadpf pf_same, 56
+make_serial_double_loadpf pf_diff,    0, t0
+make_serial_double_loadpf pf_same,   56, t0
+make_serial_double_loadpf pft1_diff,  0, t1
 
 ; retpoline stuff
 

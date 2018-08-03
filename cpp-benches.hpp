@@ -13,6 +13,7 @@ bench2_f div64_tput_inline;
 bench2_f div64_tput_noinline;
 bench2_f linkedlist_sentinel;
 bench2_f linkedlist_counter;
+bench2_f shuffled_list_sum;
 
 constexpr int LIST_COUNT = 4000;
 

@@ -96,3 +96,52 @@ void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misali
     char *p = static_cast<char *>(aligned_ptr(base_alignment, required_size));
     return p + misalignment;
 }
+
+static_assert(UB_CACHE_LINE_SIZE == sizeof(CacheLine), "sizeof(CacheLine) not equal to actual cache line size, huh?");
+
+// I don't think this going to fail on any platform in common use today, but who knows?
+static_assert(sizeof(CacheLine) == UB_CACHE_LINE_SIZE, "really weird layout on this platform");
+
+size_t count(CacheLine* first) {
+    CacheLine* p = first;
+    size_t count = 0;
+    do {
+        p = p->nexts[0];
+        count++;
+    } while (p != first);
+    return count;
+}
+
+/**
+ * Return a region of memory of size bytes, where each cache line sized chunk points to another random chunk
+ * within the region. The pointers cover all chunks in a cycle of maximum size.
+ *
+ * The region_struct is returned by reference and points to a static variable that is overwritten every time
+ * this function is called.
+ */
+region& shuffled_region(const size_t size) {
+    assert(size <= MAX_SHUFFLED_REGION_SIZE);
+    assert(size % UB_CACHE_LINE_SIZE == 0);
+    size_t size_lines = size / UB_CACHE_LINE_SIZE;
+    assert(size_lines > 0);
+
+    // only get the storage once and keep re-using it, to minimize variance (e.g., some benchmarks getting huge pages
+    // and others not, etc)
+    static CacheLine* storage = (CacheLine*)new_huge_ptr(MAX_SHUFFLED_REGION_SIZE);
+
+    std::vector<size_t> indexes(size_lines);
+    std::iota(indexes.begin(), indexes.end(), 0);
+    std::shuffle(indexes.begin(), indexes.end(), std::mt19937_64{123});
+
+    CacheLine* p = storage + indexes[0];
+    for (size_t i = 1; i < size_lines; i++) {
+        CacheLine* next = storage + indexes[i];
+        p->setNexts(next);
+        p = next;
+    }
+    p->setNexts(storage + indexes[0]);
+
+    assert(count(storage) == size_lines);
+
+    return *(new region{ size, storage }); // leak
+}

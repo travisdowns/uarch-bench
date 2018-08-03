@@ -4,6 +4,7 @@
  * Various "default" benchmarks.
  */
 
+#include "cpp-benches.hpp"
 #include "benches.hpp"
 #include "util.hpp"
 
@@ -27,6 +28,8 @@
 
 #define MAX_KIB         2048
 #define MAX_SIZE        (400 * 1024 * 1024)
+
+static_assert(MAX_SIZE <= MAX_SHUFFLED_REGION_SIZE, "MAX_SHUFFLED_REGION_SIZE too small");
 
 #define ALL_SIZES_X(func)  ALL_SIZES_X1(func,dummy,MAX_KIB)
 #define ALL_SIZES_X_ARG(func,arg)  ALL_SIZES_X1(func,arg,MAX_KIB)
@@ -76,7 +79,7 @@ bench2_f serial_double_load1;
 bench2_f serial_double_load2;
 bench2_f serial_double_loadpf_same;
 bench2_f serial_double_loadpf_diff;
-bench2_f linkedlist_sum;
+bench2_f serial_double_loadpft1_diff;
 
 #define PARALLEL_MEM_DECL(loadtype,arg) bench2_f parallel_mem_bench_ ## loadtype;
 LOADTYPE_X(PARALLEL_MEM_DECL,dummy);
@@ -99,70 +102,6 @@ bench2_f fwd_tput_conc_10;
 
 template <typename TIMER>
 void register_mem_oneshot(GroupList& list);
-
-/** the whole cache line object is filled with pointers to the next chunk */
-struct CacheLine {
-    static_assert(UB_CACHE_LINE_SIZE % sizeof(CacheLine *) == 0, "cache line size not a multiple of pointer size");
-    CacheLine* nexts[UB_CACHE_LINE_SIZE / sizeof(CacheLine *)];
-
-    void setNexts(CacheLine* next) {
-        std::fill(std::begin(nexts), std::end(nexts), next);
-    }
-};
-
-static_assert(UB_CACHE_LINE_SIZE == sizeof(CacheLine), "sizeof(CacheLine) not equal to actual cache line size, huh?");
-
-// I don't think this going to fail on any platform in common use today, but who knows?
-static_assert(sizeof(CacheLine) == UB_CACHE_LINE_SIZE, "really weird layout on this platform");
-
-size_t count(CacheLine* first) {
-    CacheLine* p = first;
-    size_t count = 0;
-    do {
-        p = p->nexts[0];
-        count++;
-    } while (p != first);
-    return count;
-}
-
-struct region {
-    size_t size;
-    void *start;
-};
-
-/**
- * Return a region of memory of size bytes, where each cache line sized chunk points to another random chunk
- * within the region. The pointers cover all chunks in a cycle of maximum size.
- *
- * The region_struct is returned by reference and points to a static variable that is overwritten every time
- * this function is called.
- */
-region& shuffled_region(const size_t size) {
-    assert(size <= MAX_SIZE);
-    assert(size % UB_CACHE_LINE_SIZE == 0);
-    size_t size_lines = size / UB_CACHE_LINE_SIZE;
-    assert(size_lines > 0);
-
-    // only get the storage once and keep re-using it, to minimize variance (e.g., some benchmarks getting huge pages
-    // and others not, etc)
-    static CacheLine* storage = (CacheLine*)new_huge_ptr(MAX_SIZE);
-
-    std::vector<size_t> indexes(size_lines);
-    std::iota(indexes.begin(), indexes.end(), 0);
-    std::shuffle(indexes.begin(), indexes.end(), std::mt19937_64{123});
-
-    CacheLine* p = storage + indexes[0];
-    for (size_t i = 1; i < size_lines; i++) {
-        CacheLine* next = storage + indexes[i];
-        p->setNexts(next);
-        p = next;
-    }
-    p->setNexts(storage + indexes[0]);
-
-    assert(count(storage) == size_lines);
-
-    return *(new region{ size, storage }); // leak
-}
 
 template <bench2_f F, typename M>
 static void make_load_bench2(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops) {
@@ -266,11 +205,12 @@ void register_mem(GroupList& list) {
 
         maker.template make<serial_double_load1>("dummy-first", "Dummy load first",  1, []{ return &shuffled_region(128 * 1024); });
         maker.template make<serial_double_load2>("dummy-second","Dummy load second", 1, []{ return &shuffled_region(128 * 1024); });
-        maker.template make<serial_double_loadpf_same>("pf-first-same",    "Same loc prefetch first", 1, []{ return &shuffled_region(128 * 1024); });
-        maker.template make<serial_double_loadpf_diff>("pf-first-diff",    "Diff loc prefetch first", 1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_loadpf_same>  ("pf-first-same",    "Same loc prefetcht0 first", 1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_loadpf_diff>  ("pf-first-diff",    "Diff loc prefetcht0 first", 1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_loadpft1_diff>("pf-first-diff-t1",    "Diff loc prefetcht1 first", 1, []{ return &shuffled_region(128 * 1024); });
 
         // these tests are written in C++ and do a linked list traversal
-        maker.template make<serial_double_load1>("list-traversal", "Linked list traversal + sum",  1, []{ return &shuffled_region(128 * 1024); });
+        maker.setLoopCount(1000).template make<shuffled_list_sum>("list-traversal", "Linked list traversal + sum",  128 * 1024 / UB_CACHE_LINE_SIZE, []{ return &shuffled_region(128 * 1024); });
     }
 
     {
