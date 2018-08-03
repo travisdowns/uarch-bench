@@ -6,6 +6,7 @@
 
 #include <regex>
 #include <cassert>
+#include <numeric>
 
 #include <sys/mman.h>
 
