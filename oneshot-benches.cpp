@@ -53,6 +53,8 @@ void register_oneshot(GroupList& list) {
 
     auto maker = OneshotMaker<TIMER,20>(oneshot.get());
 
+    maker.template make<dummy_bench>("oneshot-dummy", "Empty oneshot bench", 1);
+
     maker.template make<dep_add_rax_rax>  ("dep-add-oneshot", "Oneshot dep add chain",       128);
     maker.template make<indep_add>        ("indep-add-oneshot", "Oneshot indep add chain",  50 * 8);
     maker.template make<dep_add_noloop_128>("dep-add128", "128 dependent add instructions", 128);

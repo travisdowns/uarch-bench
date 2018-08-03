@@ -68,12 +68,10 @@ template <typename TIMER>
 void register_mem_oneshot(GroupList& list) {
 
     {
-        std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("memory/store-fwd", "Store forwaring latency and throughput");
+        std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("memory/store-fwd-oneshot", "Store forwaring latency and throughput");
         list.push_back(oneshot);
 
         auto maker = OneshotMaker<TIMER, 20>(oneshot.get());
-
-        maker.template make<dummy_bench>("oneshot-dummy", "Empty oneshot bench", 1);
 
 #define LAT_DELAY_ONESHOT(delay) \
         maker.template make<fwd_lat_delay_oneshot_ ## delay>("oneshot-latency-" #delay, \
