@@ -231,6 +231,29 @@ dec rdi
 jnz .top
 ret
 
+; pointer chasing loads from a singgle stack location on the stack
+; %1 name suffix
+; %2 load expression (don't include [])
+; %3 offset if any to apply to pointer and load expression
+%macro make_spc 3
+define_bench sameloc_pointer_chase%1
+xor ecx, ecx
+lea rax, [rsp - 8 - %3]
+push rax
+.top:
+times 128 mov rax, [%2 + %3]
+dec rdi
+jnz .top
+pop rax
+ret
+%endmacro
+
+make_spc ,rax,0
+make_spc _complex,rax + rcx * 8,4096
+
+
+
+
 ; a series of stores to the same location
 define_bench store_same_loc
 xor eax, eax

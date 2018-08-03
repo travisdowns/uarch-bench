@@ -30,6 +30,9 @@
 
 typedef std::function<void *()> arg_provider_t;
 
+/** always provides the given value */
+arg_provider_t constant(void *value);
+
 extern const arg_provider_t null_provider;
 
 /**
@@ -71,7 +74,7 @@ struct BenchArgs {
 };
 
 /** the max width for the description for any benchmark - longer will cause jagged tables */
-constexpr int  DESC_WIDTH =  30;
+constexpr int  DESC_WIDTH =  40;
 /** the max width for the id for any benchmark - longer will cause jagged tables */
 constexpr int  COLUMN_PAD =  3;
 

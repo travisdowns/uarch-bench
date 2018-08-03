@@ -7,11 +7,11 @@
 
 using namespace std;
 
-void *null() {
-    return nullptr;
+arg_provider_t constant(void *value) {
+    return [=]{ return value; };
 }
 
-const arg_provider_t null_provider = null;
+const arg_provider_t null_provider = constant(nullptr);
 
 void printBenchName(Context& c, const std::string& name) {
     c.out() << setprecision(c.getPrecision()) << fixed << setw(DESC_WIDTH) << name;

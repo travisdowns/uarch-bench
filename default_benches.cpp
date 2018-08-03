@@ -16,6 +16,8 @@ bench2_f store_same_loc;
 bench2_f store64_disjoint;
 bench2_f dep_pushpop;
 bench2_f indep_pushpop;
+bench2_f sameloc_pointer_chase;
+bench2_f sameloc_pointer_chase_complex;
 }
 
 template <typename TIMER>
@@ -34,6 +36,8 @@ void register_default(GroupList& list) {
     maker.template make<store64_disjoint> ("disjoint-stores", "Disjoint location stores",  128);
     maker.template make<dep_pushpop>      ("dep-push-pop", "Dependent push/pop chain",  128);
     maker.template make<indep_pushpop>    ("indep-push-pop", "Independent push/pop chain",  128);
+    maker.template make<sameloc_pointer_chase>    ("pointer-chase1", "Simple addressing pointer chase",  128);
+    maker.template make<sameloc_pointer_chase_complex>    ("pointer-chase2", "Complex addressing pointer chase",  128);
 }
 
 #define REG_DEFAULT(CLOCK) template void register_default<CLOCK>(GroupList& list);
