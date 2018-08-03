@@ -74,6 +74,9 @@ bench2_f   serial_load_bench2;
 
 bench2_f serial_double_load1;
 bench2_f serial_double_load2;
+bench2_f serial_double_loadpf_same;
+bench2_f serial_double_loadpf_diff;
+bench2_f linkedlist_sum;
 
 #define PARALLEL_MEM_DECL(loadtype,arg) bench2_f parallel_mem_bench_ ## loadtype;
 LOADTYPE_X(PARALLEL_MEM_DECL,dummy);
@@ -209,7 +212,7 @@ void register_mem(GroupList& list) {
 
     {
         // this group of tests isn't directly comparable to the parallel tests since the access pattern is "more random" than the
-        // parallel test, which is strided albeit with a large stride.. In particular it's probably worse for the TLB. The result is
+        // parallel test, which is strided albeit with a large stride. In particular it's probably worse for the TLB. The result is
         // that the implied "max MLP" derived by dividing the serial access time by the parallel one is larger than 10 (about 12.5),
         // which I think is impossible on current Intel. We should make comparable parallel/serial tests that have identical access
         // patterns.
@@ -228,7 +231,7 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/super-load-serial", "Finer-grained serial loads from fixed-size regions");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 100 * 1000);
+        auto maker = DeltaMaker<TIMER>(group.get(), 5 * 1000 * 1000); // needs to be large enough to touch all the elements!
 
         for (int kib = 16; kib <= MAX_SIZE / 1024; kib *= 2) {
             size_t last = 0;
@@ -263,6 +266,11 @@ void register_mem(GroupList& list) {
 
         maker.template make<serial_double_load1>("dummy-first", "Dummy load first",  1, []{ return &shuffled_region(128 * 1024); });
         maker.template make<serial_double_load2>("dummy-second","Dummy load second", 1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_loadpf_same>("pf-first-same",    "Same loc prefetch first", 1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_loadpf_diff>("pf-first-diff",    "Diff loc prefetch first", 1, []{ return &shuffled_region(128 * 1024); });
+
+        // these tests are written in C++ and do a linked list traversal
+        maker.template make<serial_double_load1>("list-traversal", "Linked list traversal + sum",  1, []{ return &shuffled_region(128 * 1024); });
     }
 
     {

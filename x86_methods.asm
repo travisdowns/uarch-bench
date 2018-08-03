@@ -38,12 +38,6 @@ ret
 ; a benchmark that immediately returns, useful as the "base" method
 ; to cancel out some forms of overhead
 define_bench dummy_bench
-;rdrand      rax
-;and     rax, 0xFF
-;add     rax, 1
-;.top
-;dec     rax
-;jnz     .top
 ret
 
 define_bench dummy_bench_oneshot1
@@ -778,16 +772,21 @@ jnz .top
 
 ret
 
-; classic pointer chasing benchmark
+;
 define_bench serial_load_bench2
 
 xor     eax, eax
+add     eax, 0
 mov     rsi, [rsi + region.start]
 
 .top:
-mov rax, [rsi]
-mov rcx, [rsi]
-mov rsi, rcx
+mov rcx, [rsi + rax]
+;add rcx, rax
+;add rcx, rax
+;xor rsi, rcx ; dummy dependency of rsi on rcx
+;xor rsi, rcx
+mov rsi, [rcx]
+;mov rsi, rcx
 
 dec rdi
 jnz .top
@@ -800,7 +799,7 @@ define_bench serial_double_load1
 mov     rsi, [rsi + region.start]
 .top:
 mov rax, [rsi]
-mov rcx, [rsi]
+mov rcx, [rsi + 56]
 mov rsi, rcx
 dec rdi
 jnz .top
@@ -811,12 +810,31 @@ ret
 define_bench serial_double_load2
 mov     rsi, [rsi + region.start]
 .top:
-mov rcx, [rsi]
+mov rcx, [rsi + 56]
 mov rax, [rsi]
 mov rsi, rcx
 dec rdi
 jnz .top
 ret
+
+; testing latency of demand hit on the same L2 line after PF
+; dummy load SECOND
+; %1 test name suffix
+; %2 offset for prefetch
+%macro make_serial_double_loadpf 2
+define_bench serial_double_load%1
+mov     rsi, [rsi + region.start]
+.top:
+prefetcht0 [rsi + %2]
+mov rcx, [rsi + 56]
+mov rsi, rcx
+dec rdi
+jnz .top
+ret
+%endmacro
+
+make_serial_double_loadpf pf_diff,  0
+make_serial_double_loadpf pf_same, 56
 
 ; retpoline stuff
 

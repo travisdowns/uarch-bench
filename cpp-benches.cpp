@@ -11,6 +11,7 @@
 #include <cinttypes>
 #include <vector>
 #include <random>
+#include <cstddef>
 
 using std::size_t;
 using std::uint64_t;
@@ -64,6 +65,8 @@ struct list_node {
     int value;
     list_node* next;
 };
+
+static_assert(offsetof(list_node, next) == 8, "double_load tests expect next to be a multiple of 8 offset");
 
 struct list_head {
     int size;
@@ -137,6 +140,19 @@ long linkedlist_counter(uint64_t iters, void *arg) {
 
 long linkedlist_sentinel(uint64_t iters, void *arg) {
     return linkedlist_sum<sum_sentinel>(iters);
+}
+
+long linkedlist_sum(uint64_t iters, void *arg) {
+    int sum = 0;
+    while (iters-- > 0) {
+        list_node *first = (list_node*)arg;
+        list_node *p = first;
+        do {
+            sum += p->value;
+            p = p->next;
+        } while (p != first);
+    }
+    return sum;
 }
 
 
