@@ -7,6 +7,7 @@
 #include <regex>
 #include <cassert>
 #include <numeric>
+#include <random>
 
 #include <sys/mman.h>
 
