@@ -31,8 +31,8 @@ ret
 GLOBAL add_calibration:function
 ALIGN 32
 add_calibration:
-sub rdi, 1
-jnz add_calibration
+times 4 sub  rdi, 1
+jge add_calibration
 ret
 
 ; a benchmark that immediately returns, useful as the "base" method
