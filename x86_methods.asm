@@ -31,7 +31,7 @@ ret
 GLOBAL add_calibration:function
 ALIGN 32
 add_calibration:
-times 4 sub  rdi, 1
+times 2 sub  rdi, 1
 jge add_calibration
 ret
 
