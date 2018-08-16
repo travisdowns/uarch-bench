@@ -17,6 +17,10 @@ LIBPFC_TARGET ?= all
 PFM_DIR ?= libpfm4
 PFM_LIBDIR ?= $(PFM_DIR)/lib
 
+PSNIP_DIR ?= portable-snippets
+# all the psnip source files we want to compile into uarch-bench
+PSNIP_SRC := cpu.c
+
 GIT_VERSION := $(shell git describe --dirty --always)
 
 ifneq ($(CPU_ARCH),)
@@ -25,13 +29,13 @@ endif
 O_LEVEL ?= -O2
 
 COMMON_FLAGS := -MMD -Wall $(ARCH_FLAGS) -g $(O_LEVEL) -DGIT_VERSION=\"$(GIT_VERSION)\" -DUSE_LIBPFC=$(USE_LIBPFC) \
--DUSE_BACKWARD_CPP=$(USE_BACKWARD_CPP) -DBACKWARD_HAS_BFD=$(BACKWARD_HAS_BFD) -DBACKWARD_HAS_DW=$(BACKWARD_HAS_DW)
+-DUSE_BACKWARD_CPP=$(USE_BACKWARD_CPP) -DBACKWARD_HAS_BFD=$(BACKWARD_HAS_BFD) -DBACKWARD_HAS_DW=$(BACKWARD_HAS_DW) -I$(PSNIP_DIR)
 CPPFLAGS := $(COMMON_FLAGS)
 CFLAGS := $(COMMON_FLAGS)
 
 # files that should only be compiled if USE_LIBPFC is enabled
 PFC_SRC := libpfc-timer.cpp libpfm4-support.cpp
-SRC_FILES := $(wildcard *.cpp) $(wildcard *.c) nasm-utils/nasm-utils-helper.c
+SRC_FILES := $(wildcard *.cpp) $(wildcard *.c) nasm-utils/nasm-utils-helper.c $(PSNIP_SRC)
 SRC_FILES := $(filter-out $(PFC_SRC), $(SRC_FILES))
 
 # on most compilers we should use no-pie since the nasm stuff isn't position independent
@@ -62,7 +66,7 @@ DEPFILES = $(OBJECTS:.o=.d)
 
 $(info USE_LIBPFC=${USE_LIBPFC})
 
-VPATH = test
+VPATH = test:$(PSNIP_DIR)/cpu
 
 ###########
 # Targets #

@@ -29,6 +29,7 @@
 #include "context.hpp"
 #include "util.hpp"
 #include "timers.hpp"
+#include "isa-support.hpp"
 
 using namespace std;
 using namespace std::chrono;
@@ -303,6 +304,7 @@ backward::SignalHandling sh;
 
 int main(int argc, char **argv) {
     cout << "Welcome to uarch-bench (" << GIT_VERSION << ")" << endl;
+    cout << "Supported CPU features: " + support_string() << endl;
 
     try {
         Context context(argc, argv, &std::cout);

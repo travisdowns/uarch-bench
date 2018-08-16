@@ -10,3 +10,6 @@
 [submodule "libpfm4"]
 	path = libpfm4
 	url = https://git.code.sf.net/p/perfmon2/libpfm4
+[submodule "portable-snippets"]
+	path = portable-snippets
+	url = https://github.com/nemequ/portable-snippets
