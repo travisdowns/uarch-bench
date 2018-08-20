@@ -5,10 +5,10 @@
  */
 
 #include "cpp-benches.hpp"
-#include "benches.hpp"
 #include "util.hpp"
 
 #include <random>
+#include "benchmark.hpp"
 
 #define LOAD_LOOP_UNROLL    8
 

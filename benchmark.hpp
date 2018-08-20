@@ -7,8 +7,8 @@
  * To have your benchmarks included, declare a register method here and call it in main.cpp.
  */
 
-#ifndef BENCHES_HPP_
-#define BENCHES_HPP_
+#ifndef BENCHMARK_HPP_
+#define BENCHMARK_HPP_
 
 #include <vector>
 #include <memory>
@@ -143,7 +143,11 @@ public:
     virtual TimingResult run() = 0;
 
     /* Print the results to context - every benchmark should implement this */
-    virtual void runAndPrint(Context& c) = 0;
+    virtual void runAndPrintInner(Context& c) = 0;
+
+    /* Print the results to context - does some generic logic such as checking if the ISA is supported
+     * and then defers to runAndPrintInner which is implemented by the Benchmark class */
+    void runAndPrint(Context& c);
 
     /* the full "path" of the benchmark, which is the group id and the benchmark id, like group-name/bench-name */
     std::string getPath() const;
@@ -259,7 +263,6 @@ protected:
 
     TimingResult handle_raw(const raw_result& raw) {
         TimingResult result = TIMER::to_result(ALGO::aggregate(raw));
-        // normalize to time per op
         return normalize(result, BenchmarkBase::args, loop_count);
     }
 
@@ -274,7 +277,7 @@ public:
         return handle_raw(raw);
     }
 
-    virtual void runAndPrint(Context& c) override {
+    virtual void runAndPrintInner(Context& c) override {
         TimingResult result = run();
         printResultLine(c, this, result);
     }
@@ -508,4 +511,4 @@ void printResultHeader(Context& c, const TimerInfo& ti);
 
 
 
-#endif /* BENCHES_HPP_ */
+#endif /* BENCHMARK_HPP_ */

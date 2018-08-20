@@ -34,6 +34,19 @@ const char* to_name(x86Feature feature) {
     return lookup(feature).name;
 }
 
+bool supports(std::vector<x86Feature> features) {
+    for (auto& f : features) {
+        if (!lookup(f).supported()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::string to_string(x86Feature f) {
+    return lookup(f).name;
+}
+
 std::string support_string() {
     std::string result;
     for (const Entry& e : FEATURES_ARRAY) {
@@ -42,5 +55,10 @@ std::string support_string() {
         }
     }
     return result;
+}
+
+std::ostream& operator<<(std::ostream& os, const x86Feature& f) {
+    os << to_string(f);
+    return os;
 }
 

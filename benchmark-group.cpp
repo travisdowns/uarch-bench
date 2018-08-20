@@ -3,7 +3,7 @@
  */
 #include <cassert>
 
-#include "benches.hpp"
+#include "benchmark.hpp"
 #include "table.hpp"
 
 using namespace std;

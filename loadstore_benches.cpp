@@ -7,9 +7,9 @@
 #include <sstream>
 #include <iomanip>
 
+#include "benchmark.hpp"
 #include "hedley.h"
 #include "util.hpp"
-#include "benches.hpp"
 #include "context.hpp"
 #include "timers.hpp"
 #include "table.hpp"

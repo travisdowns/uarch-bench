@@ -4,7 +4,7 @@
  * Various "default" benchmarks.
  */
 
-#include "benches.hpp"
+#include "benchmark.hpp"
 #include "util.hpp"
 
 extern "C" {
@@ -166,11 +166,14 @@ void register_misc(GroupList& list) {
     using default_maker = StaticMaker<TIMER>;
 
     const uint32_t iters = 10*1000;
+
+    auto maker = DeltaMaker<TIMER>(misc_group.get(), iters);
+    auto makerbmi1 = maker.setFeatures({BMI1});
+
+    makerbmi1.template make<misc_add_loop32>("add-32", "32-bit add-loop", 1);
+    makerbmi1.template make<misc_add_loop64>("add-64", "64-bit add-loop", 1);
+
     auto benches = std::vector<Benchmark> {
-        default_maker::template make_bench<misc_add_loop32>(misc_group.get(), "add-32", "32-bit add-loop", 1,
-                null_provider, iters),
-        default_maker::template make_bench<misc_add_loop64>(misc_group.get(), "add-64", "64-bit add-loop", 1,
-                null_provider, iters),
         default_maker::template make_bench<misc_port7>(misc_group.get(), "port7", "Can port7 be used by loads", 1,
                 null_provider, iters),
         default_maker::template make_bench<misc_fusion_add>(misc_group.get(), "fusion-add", "Test micro-fused add", 128,

@@ -24,7 +24,7 @@
 #include "stats.hpp"
 #include "version.hpp"
 #include "args.hxx"
-#include "benches.hpp"
+#include "benchmark.hpp"
 #include "timer-info.hpp"
 #include "context.hpp"
 #include "util.hpp"

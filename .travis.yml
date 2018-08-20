@@ -16,6 +16,11 @@ env:
   global:
     - GLOBAL=value
 
+# the anchors element doesn't do anything but itself except define some anchors to be used later as aliases
+anchors:
+  - &unit_command ./unit-test
+  - &uarch_command ./uarch-bench --test-tag=~slow
+
 matrix:
   include:
       # clang-5.0 is the default installed on travis VMs
@@ -86,7 +91,8 @@ matrix:
           - sudo apt-get install -y linux-headers-$(uname -r)
           - set -e && echo "CC is ${CC}, CXX is ${CXX}" && ${CC} --version && ${CXX} --version && uname -r
           - make
-          - ./uarch-bench --test-name=default/*
+          - *unit_command
+          - *uarch_command
 
 before_install:
 # Travis will set CC and CXX after the env commands specified in the matrix are run, overwriting whatever
@@ -94,10 +100,9 @@ before_install:
   - CC=${TRUE_CC:-$CC}
   - CXX=${TRUE_CXX:-$CXX}
 
+
 script:
 - set -e && echo "CC is ${CC}, CXX is ${CXX}" && ${CC} --version && ${CXX} --version
 - make LIBPFC_TARGET=libpfc.so
-- ./unit-test
-- ./uarch-bench --test-tag=~slow
-#- ./uarch-bench --test-name=basic/*
-#- ./uarch-bench --test-name=misc/adc*
+- *unit_command
+- *uarch_command

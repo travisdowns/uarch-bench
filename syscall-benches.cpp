@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <sys/syscall.h>
 
-#include "benches.hpp"
+#include "benchmark.hpp"
 #include "util.hpp"
 
 extern "C" {

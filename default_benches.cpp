@@ -4,7 +4,7 @@
  * Various "default" benchmarks.
  */
 
-#include "benches.hpp"
+#include "benchmark.hpp"
 
 extern "C" {
 bench2_f dep_add_rax_rax;

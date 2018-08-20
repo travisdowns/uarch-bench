@@ -1,9 +1,11 @@
 /*
  * benchmark.cpp
  */
+#include "benchmark.hpp"
+#include "isa-support.hpp"
+
 #include <cassert>
 
-#include "benches.hpp"
 
 using namespace std;
 
@@ -21,14 +23,12 @@ void printBenchName(Context& c, const Benchmark& b) {
     printBenchName(c, b->getDescription());
 }
 
-
 void printResultLine(Context& c, const Benchmark& b, const TimingResult& result) {
     std::ostream& os = c.out();
     printBenchName(c, b);
     printAlignedMetrics(c, result.getResults());
     os << endl;
 }
-
 
 void printNameHeader(Context& c) {
     c.out() << setw(DESC_WIDTH) << "Benchmark";
@@ -43,6 +43,17 @@ void printResultHeader(Context& c) {
 
 BenchmarkBase::BenchmarkBase(BenchArgs args) : args{std::move(args)} {}
 
+void BenchmarkBase::runAndPrint(Context& c) {
+    if (!supports(args.features)) {
+        // can't run this test on this hardware
+        printBenchName(c, this);
+        printAlignedMetrics(c,
+                std::vector<std::string>{std::string("Skipped because hardware doesn't support required features: ")
+                + container_to_string(args.features)});
+    } else {
+        runAndPrintInner(c);
+    }
+}
 
 std::string BenchmarkBase::getPath() const {
     return getGroup().getId() + "/" + getId();

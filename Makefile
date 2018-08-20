@@ -86,10 +86,10 @@ dist-clean: clean $(CLEAN_TARGETS)
 # link all object files except main.o into unit-test
 UNIT_OBJECTS := $(filter-out main.o, $(OBJECTS)) 
 unit-test: unit-test.o unit-test-main.o $(UNIT_OBJECTS) 
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 $^ -o $@
+	$(CXX) $^         $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o $@
 
 uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
-	$(CXX) $(OBJECTS) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o uarch-bench
+	$(CXX) $(OBJECTS) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o $@
 # the next two lines are only to print out the size of the binary for diagnostic purposes, feel free to omit them
 	@wc -c uarch-bench | awk '{print "binary size: " $$1/1000 "KB"}'
 	@size uarch-bench --format=SysV | egrep '\.text|\.eh_frame|\.rodata|^section'

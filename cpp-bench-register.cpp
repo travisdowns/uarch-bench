@@ -8,7 +8,7 @@
  * method which will prevent the function calculation itself from being optimized away.
  */
 
-#include "benches.hpp"
+#include "benchmark.hpp"
 #include "cpp-benches.hpp"
 
 template <typename TIMER>

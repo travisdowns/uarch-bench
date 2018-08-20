@@ -4,7 +4,7 @@
  * Various "default" benchmarks.
  */
 
-#include "benches.hpp"
+#include "benchmark.hpp"
 
 extern "C" {
 

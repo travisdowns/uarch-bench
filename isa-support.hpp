@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <string>
+#include <ostream>
 
 #define FEATURES_X(f)   \
           f(SSE3      ) \
@@ -67,8 +68,12 @@ enum x86Feature {
 /** does the current CPU support all of the given features */
 bool supports(std::vector<x86Feature> features);
 
+std::string to_string(x86Feature);
+
 /** return a space-delimited string of all the features in x86Features the current CPU supports */
 std::string support_string();
+
+std::ostream& operator<<(std::ostream& os, const x86Feature& f);
 
 
 #endif /* ISA_SUPPORT_HPP_ */

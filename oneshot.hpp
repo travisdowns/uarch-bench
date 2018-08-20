@@ -21,7 +21,7 @@
 #ifndef ONESHOT_HPP_
 #define ONESHOT_HPP_
 
-#include "benches.hpp"
+#include "benchmark.hpp"
 
 class OneshotGroup : public BenchmarkGroup {
 public:
@@ -145,7 +145,7 @@ public:
         c.out() << std::endl;
     }
 
-    virtual void runAndPrint(Context& c) override {
+    virtual void runAndPrintInner(Context& c) override {
         void *arg = arg_provider();
         raw_result raw = raw_func(loop_count, arg);
         removeOverhead(c, raw);
