@@ -83,6 +83,7 @@ TEST_CASE( "tag-matcher", "[matchers]" ) {
         CHECK( matcher({"fo"})     == false );
     }
 
+    // pos only matches
     {
         TagMatcher matcher("foo,bar");
 
@@ -95,6 +96,38 @@ TEST_CASE( "tag-matcher", "[matchers]" ) {
         CHECK( matcher({})                    == false );
         CHECK( matcher({"xxx", "barz"})       == false );
     }
+
+    // pos + neg matches
+    {
+        TagMatcher matcher("foo,~bar,fob,~baz");
+
+        CHECK( matcher({"foo"})               == true );
+        CHECK( matcher({"bar"})               == false );
+        CHECK( matcher({"foo", "bar"})        == false );
+        CHECK( matcher({"foo", "fob"})        == true );
+        CHECK( matcher({"foo", "baz", "fob"}) == false );
+
+        CHECK( matcher({})                    == false );
+        CHECK( matcher({"xxx", "barz"})       == false );
+    }
+
+    // neg only matches
+    // the rules here are different: if there are zero positive tags in the pattern, we
+    // accept any tag list that doesn't match any negative tag (normally we need to match
+    // at least one positive tag as well)
+    {
+        TagMatcher matcher("~bar,~baz");
+
+        CHECK( matcher({"foo"})               == true );
+        CHECK( matcher({"bar"})               == false );
+        CHECK( matcher({"foo", "bar"})        == false );
+        CHECK( matcher({"foo", "fob"})        == true );
+        CHECK( matcher({"foo", "baz", "fob"}) == false );
+
+        CHECK( matcher({})                    == true );
+        CHECK( matcher({"xxx", "barz"})       == true );
+    }
+
 
 }
 
