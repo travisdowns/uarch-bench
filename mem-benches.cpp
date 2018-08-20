@@ -170,7 +170,8 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/super-load-serial", "Finer-grained serial loads from fixed-size regions");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 5 * 1000 * 1000); // needs to be large enough to touch all the elements!
+        // loop_count needs to be large enough to touch all the elements!
+        auto maker = DeltaMaker<TIMER>(group.get(), 5 * 1000 * 1000).setTags({"slow"});
 
         for (int kib = 16; kib <= MAX_SIZE / 1024; kib *= 2) {
             size_t last = 0;
