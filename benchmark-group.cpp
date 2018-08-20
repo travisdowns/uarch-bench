@@ -28,12 +28,13 @@ void BenchmarkGroup::runIf(Context &c, const TimerInfo &ti, const predicate_t& p
 void BenchmarkGroup::printBenches(std::ostream& out) const {
     Table t;
     t.colInfo(0).justify = ColInfo::LEFT;
-    t.newRow().add("ID").add("Description").add("Tags");
+    t.newRow().add("ID").add("Description").add("Tags").add("ISA Features");
     for (auto& bench : getBenches()) {
         t.newRow()
                 .add(bench->getPath())
                 .add(bench->getDescription())
-                .add(container_to_string(bench->getTags()));
+                .add(container_to_string(bench->getTags()))
+                .add(container_to_string(bench->getFeatures()));
     }
     out << t.str();
 }

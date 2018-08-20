@@ -71,7 +71,6 @@ private:
     char **argv_;
 
     args::ArgumentParser parser{"uarch-bench: A CPU micro-architecture benchmark"};
-//    args::Group with_help{parser};
     args::HelpFlag help{parser, "help", "Display this help menu", {'h', "help"}};
     args::Flag arg_clockoverhead{parser, "clock-overhead", "Dislay clock overhead, then quit", {"clock-overhead"}};
     args::Flag arg_listbenches{parser, "list-benches", "Dislay the available benchmarks", {"list"}};

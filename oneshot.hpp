@@ -248,7 +248,7 @@ public:
             const arg_provider_t& arg_provider = null_provider)
     {
         typename ALGO::raw_f *f = ALGO::template bench<METHOD, WARM_ONCE, WARM_EVERY>;
-        make2(BenchArgs{this->parent, id, description, /*tags*/ {}, ops_per_invocation}, f, (void *)METHOD, arg_provider);
+        make2(this->make_args(id, description, ops_per_invocation), f, (void *)METHOD, arg_provider);
     }
 
     /**
@@ -268,7 +268,7 @@ public:
             uint32_t ops_per_invocation,
             const arg_provider_t& arg_provider = null_provider)
     {
-        make2(BenchArgs{this->parent, id, description, /*tags*/ {}, ops_per_invocation}, METHOD, (void *)METHOD, arg_provider);
+        make2(this->make_args(id, description, ops_per_invocation), METHOD, (void *)METHOD, arg_provider);
     }
 
 

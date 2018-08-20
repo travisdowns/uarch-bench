@@ -20,6 +20,7 @@
 #include "timer-info.hpp"
 #include "timers.hpp"
 #include "context.hpp"
+#include "isa-support.hpp"
 
 #if defined(__GNUC__) && !defined(__clang__)
 #define NO_STACK_PROTECTOR __attribute__((optimize("no-stack-protector")))
@@ -48,13 +49,15 @@ inline long inlined_empty(uint64_t iters, void *arg) {
 class BenchmarkGroup;
 
 typedef std::string tag_t;
-typedef std::vector<tag_t> taglist_t;
+typedef std::vector<tag_t>      taglist_t;
+typedef std::vector<x86Feature> featurelist_t;
 
 struct BenchArgs {
     const BenchmarkGroup* parent;
     std::string id;
     std::string description;
     taglist_t tags;
+    featurelist_t features;
     /* how many operations are involved in one iteration of the benchmark loop */
     uint32_t ops_per_loop;
 
@@ -63,12 +66,14 @@ struct BenchArgs {
             const std::string& id,
             const std::string& description,
             taglist_t tags,
+            featurelist_t features,
             uint32_t ops_per_loop
             ) :
     parent{parent},
     id{id},
     description{description},
     tags{tags},
+    features{features},
     ops_per_loop{ops_per_loop}
     {}
 };
@@ -123,6 +128,9 @@ public:
 
     /** return the list of zero or more tags associated with the benchmark */
     taglist_t getTags() const { return args.tags; }
+
+    /** return the list of zero or more required ISA features associated with the benchmark */
+    featurelist_t getFeatures() const { return args.features; }
 
     /** the unique group to which this */
     const BenchmarkGroup& getGroup() const { return *args.parent; }
@@ -344,6 +352,7 @@ protected:
     BenchmarkGroup* parent;
     uint32_t loop_count;
     taglist_t tags;
+    featurelist_t features;
 
     MakerBase(BenchmarkGroup* parent, uint32_t loop_count) : parent{parent}, loop_count{loop_count}, tags{} {}
 
@@ -356,8 +365,11 @@ protected:
             typename ALGO::raw_f raw_func,
             const arg_provider_t& arg_provider)
     {
-        BenchArgs args(parent, id, description, tags, ops_per_loop);
-        return new BenchTemplate<TIMER, ALGO>(args, loop_count, raw_func, arg_provider);
+        return new BenchTemplate<TIMER, ALGO>(make_args(id, description, ops_per_loop), loop_count, raw_func, arg_provider);
+    }
+
+    BenchArgs make_args(const std::string& id, const std::string& description, uint32_t ops_per_loop) {
+        return {parent, id, description, tags, features, ops_per_loop};
     }
 
 public:
@@ -368,10 +380,18 @@ public:
         return ret;
     }
 
+
     /* returns a COPY of this object with the given loop count */
     DERIVED setLoopCount(uint32_t loop_count) {
         DERIVED ret(*static_cast<DERIVED*>(this));
         ret.loop_count = loop_count;
+        return ret;
+    }
+
+    /* returns a COPY of this object has the given requires features list */
+    DERIVED setFeatures(featurelist_t features) {
+        DERIVED ret(*static_cast<DERIVED*>(this));
+        ret.features = std::move(features);
         return ret;
     }
 };
