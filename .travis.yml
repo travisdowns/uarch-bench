@@ -98,5 +98,6 @@ script:
 - set -e && echo "CC is ${CC}, CXX is ${CXX}" && ${CC} --version && ${CXX} --version
 - make LIBPFC_TARGET=libpfc.so
 - ./unit-test
+- ./uarch-bench --test-name=*
 - ./uarch-bench --test-name=basic/*
 - ./uarch-bench --test-name=misc/adc*
