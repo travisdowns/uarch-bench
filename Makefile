@@ -81,7 +81,11 @@ clean:	libpfc-clean
 
 dist-clean: clean $(CLEAN_TARGETS)
 
-unit-test: unit-test.o unit-test-main.o
+# $(filter-out $(OBJECTS), main.o)
+
+# link all object files except main.o into unit-test
+UNIT_OBJECTS := $(filter-out main.o, $(OBJECTS)) 
+unit-test: unit-test.o unit-test-main.o $(UNIT_OBJECTS) 
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 $^ -o $@
 
 uarch-bench: $(OBJECTS) $(LIBPFC_DEP)

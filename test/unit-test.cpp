@@ -5,12 +5,10 @@
 
 #include "../util.hpp"
 #include "../table.hpp"
+#include "../matchers.hpp"
 
 #include "catch.hpp"
 
-unsigned int Factorial( unsigned int number ) {
-    return number <= 1 ? number : Factorial(number-1)*number;
-}
 
 TEST_CASE( "string_format", "[util]" ) {
     REQUIRE( string_format("foo") == "foo" );
@@ -36,7 +34,7 @@ TEST_CASE( "table", "[util]" ) {
     REQUIRE( t.str() ==
             "a  b \n"
             "aa bb\n"
-            );
+    );
 
     t = {};
     t.newRow().add("a");
@@ -46,7 +44,7 @@ TEST_CASE( "table", "[util]" ) {
             "a\n"
             "a b\n"
             "a b c\n"
-            );
+    );
 
 
     t = {};
@@ -55,17 +53,48 @@ TEST_CASE( "table", "[util]" ) {
     REQUIRE( t.str() ==
             "a   b  \n"
             "xxx xxx\n"
-            );
+    );
     t.colInfo(0).justify = ColInfo::RIGHT;
     REQUIRE( t.str() ==
             "  a b  \n"
             "xxx xxx\n"
-            );
+    );
     t.colInfo(1).justify = ColInfo::RIGHT;
-        REQUIRE( t.str() ==
+    REQUIRE( t.str() ==
             "  a   b\n"
             "xxx xxx\n"
-            );
+    );
+}
+
+
+TEST_CASE( "split", "[util]") {
+    using sv = std::vector<std::string>;
+
+    CHECK(split("a,b,c", ",")  == sv{"a", "b", "c"});
+    CHECK(split("a,b,c", ',')  == sv{"a", "b", "c"});
+    CHECK(split("a,b,c,", ',') == sv{"a", "b", "c", ""});
+}
+
+TEST_CASE( "tag-matcher", "[matchers]" ) {
+    {
+        TagMatcher matcher("foo*");
+        CHECK( matcher({"foo"})    == true );
+        CHECK( matcher({"fooxxx"}) == true );
+        CHECK( matcher({"fo"})     == false );
+    }
+
+    {
+        TagMatcher matcher("foo,bar");
+
+        CHECK( matcher({"foo"})               == true );
+        CHECK( matcher({"bar"})               == true );
+        CHECK( matcher({"xxx", "foo"})        == true );
+        CHECK( matcher({"xxx", "bar"})        == true );
+        CHECK( matcher({"xxx", "bar", "zzz"}) == true );
+
+        CHECK( matcher({})                    == false );
+        CHECK( matcher({"xxx", "barz"})       == false );
+    }
 
 }
 
