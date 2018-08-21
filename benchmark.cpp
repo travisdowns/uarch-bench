@@ -47,9 +47,8 @@ void BenchmarkBase::runAndPrint(Context& c) {
     if (!supports(args.features)) {
         // can't run this test on this hardware
         printBenchName(c, this);
-        printAlignedMetrics(c,
-                std::vector<std::string>{std::string("Skipped because hardware doesn't support required features: ")
-                + container_to_string(args.features)});
+        printOneMetric(c, std::string("Skipped because hardware doesn't support required features: ") +
+                container_to_string(args.features));
     } else {
         runAndPrintInner(c);
     }
