@@ -49,6 +49,7 @@ void BenchmarkBase::runAndPrint(Context& c) {
         printBenchName(c, this);
         printOneMetric(c, std::string("Skipped because hardware doesn't support required features: ") +
                 container_to_string(args.features));
+        c.out() << endl;
     } else {
         runAndPrintInner(c);
     }
