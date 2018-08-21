@@ -47,21 +47,6 @@ define_bench dummy_bench_oneshot2
 ret
 make_touch
 
-%macro make_nehalem_sub 1
-define_bench nehalem_sub%1
-.top:
-times %1 sub  rdi, 1
-jge .top
-ret
-%endmacro
-
-%define i 1
-%rep 100
-make_nehalem_sub i
-%assign i (i+1)
-%endrep
-
-
 define_bench dep_add_noloop_128
 xor eax, eax
 times 128 add rax, rax
