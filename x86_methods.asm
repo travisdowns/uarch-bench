@@ -661,6 +661,7 @@ ret
 
 define_bench vz_diffreg16
 xor ecx, ecx
+vpxorq zmm16, zmm16, zmm16
 vzeroall
 .top:
 times 100 vpaddq zmm0, zmm16, zmm0
