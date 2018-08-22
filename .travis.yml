@@ -15,6 +15,7 @@ addons:
 env:
   global:
     - GLOBAL=value
+    - NASM_DEFINES=-DNASM_NO_AVX512
 
 # the anchors element doesn't do anything but itself except define some anchors to be used later as aliases
 anchors:
