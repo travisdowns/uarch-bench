@@ -56,108 +56,19 @@ bench2_f tight_loop3;
 
 bench2_f dep_add_noloop_128;
 
-bench2_f nehalem_sub1;
-bench2_f nehalem_sub2;
-bench2_f nehalem_sub3;
-bench2_f nehalem_sub4;
-bench2_f nehalem_sub5;
-bench2_f nehalem_sub6;
-bench2_f nehalem_sub7;
-bench2_f nehalem_sub8;
-bench2_f nehalem_sub9;
-bench2_f nehalem_sub10;
-bench2_f nehalem_sub11;
-bench2_f nehalem_sub12;
-bench2_f nehalem_sub13;
-bench2_f nehalem_sub14;
-bench2_f nehalem_sub15;
-bench2_f nehalem_sub16;
-bench2_f nehalem_sub17;
-bench2_f nehalem_sub18;
-bench2_f nehalem_sub19;
-bench2_f nehalem_sub20;
-bench2_f nehalem_sub21;
-bench2_f nehalem_sub22;
-bench2_f nehalem_sub23;
-bench2_f nehalem_sub24;
-bench2_f nehalem_sub25;
-bench2_f nehalem_sub26;
-bench2_f nehalem_sub27;
-bench2_f nehalem_sub28;
-bench2_f nehalem_sub29;
-bench2_f nehalem_sub30;
-bench2_f nehalem_sub31;
-bench2_f nehalem_sub32;
-bench2_f nehalem_sub33;
-bench2_f nehalem_sub34;
-bench2_f nehalem_sub35;
-bench2_f nehalem_sub36;
-bench2_f nehalem_sub37;
-bench2_f nehalem_sub38;
-bench2_f nehalem_sub39;
-bench2_f nehalem_sub40;
-bench2_f nehalem_sub41;
-bench2_f nehalem_sub42;
-bench2_f nehalem_sub43;
-bench2_f nehalem_sub44;
-bench2_f nehalem_sub45;
-bench2_f nehalem_sub46;
-bench2_f nehalem_sub47;
-bench2_f nehalem_sub48;
-bench2_f nehalem_sub49;
-bench2_f nehalem_sub50;
-bench2_f nehalem_sub51;
-bench2_f nehalem_sub52;
-bench2_f nehalem_sub53;
-bench2_f nehalem_sub54;
-bench2_f nehalem_sub55;
-bench2_f nehalem_sub56;
-bench2_f nehalem_sub57;
-bench2_f nehalem_sub58;
-bench2_f nehalem_sub59;
-bench2_f nehalem_sub60;
-bench2_f nehalem_sub61;
-bench2_f nehalem_sub62;
-bench2_f nehalem_sub63;
-bench2_f nehalem_sub64;
-bench2_f nehalem_sub65;
-bench2_f nehalem_sub66;
-bench2_f nehalem_sub67;
-bench2_f nehalem_sub68;
-bench2_f nehalem_sub69;
-bench2_f nehalem_sub70;
-bench2_f nehalem_sub71;
-bench2_f nehalem_sub72;
-bench2_f nehalem_sub73;
-bench2_f nehalem_sub74;
-bench2_f nehalem_sub75;
-bench2_f nehalem_sub76;
-bench2_f nehalem_sub77;
-bench2_f nehalem_sub78;
-bench2_f nehalem_sub79;
-bench2_f nehalem_sub80;
-bench2_f nehalem_sub81;
-bench2_f nehalem_sub82;
-bench2_f nehalem_sub83;
-bench2_f nehalem_sub84;
-bench2_f nehalem_sub85;
-bench2_f nehalem_sub86;
-bench2_f nehalem_sub87;
-bench2_f nehalem_sub88;
-bench2_f nehalem_sub89;
-bench2_f nehalem_sub90;
-bench2_f nehalem_sub91;
-bench2_f nehalem_sub92;
-bench2_f nehalem_sub93;
-bench2_f nehalem_sub94;
-bench2_f nehalem_sub95;
-bench2_f nehalem_sub96;
-bench2_f nehalem_sub97;
-bench2_f nehalem_sub98;
-bench2_f nehalem_sub99;
-bench2_f nehalem_sub100;
-
+bench2_f vz_samereg;
+bench2_f vz_diffreg;
+bench2_f vz_diffreg16;
+bench2_f vz_diffreg16xor;
+bench2_f vz_diffregu;
+bench2_f vz256_samereg;
+bench2_f vz256_diffreg;
+bench2_f vz128_samereg;
+bench2_f vz128_diffreg;
+bench2_f vzsse_samereg;
+bench2_f vzsse_diffreg;
 }
+
 
 template <typename TIMER>
 void register_misc(GroupList& list) {
@@ -260,6 +171,26 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<retpoline_sparse_dep_call_lfence,retpoline_sparse_call_base>(retpoline_group.get(),   "retp-sparse-dep-call-lfence", "Sparse retpo dep call lfence", 8)
     });
     list.push_back(retpoline_group);
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/vzeroall", "VZEROALL weirdness");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get()).setTags({"default"});
+        auto maker256 = maker.setFeatures({AVX2});
+        auto maker512 = maker.setFeatures({AVX512F});
+
+        maker512.template make<vz_samereg>("vz512-samereg", "vpaddq zmm0, zmm0, zmm0", 100);
+        maker512.template make<vz_diffreg>("vz512-diffreg", "vpaddq zmm0, zmm1, zmm0", 100);
+        maker512.template make<vz_diffreg16>("vz512-diff16", "vpaddq zmm0, zmm16, zmm0", 100);
+        maker512.template make<vz_diffreg16xor>("vz512-diff16xor", "vpxor zmm16; vpaddq zmm0, zmm16, zmm0", 100);
+        maker256.template make<vz256_samereg>("vz256-samereg", "vpaddq ymm0, ymm0, ymm0", 100);
+        maker256.template make<vz256_diffreg>("vz256-diffreg", "vpaddq ymm0, ymm1, ymm0", 100);
+        maker256.template make<vz128_samereg>("vz128-samereg", "vpaddq xmm0, xmm0, xmm0", 100);
+        maker256.template make<vz128_diffreg>("vz128-diffreg", "vpaddq xmm0, xmm1, xmm0", 100);
+        maker256.template make<vzsse_samereg>("vzsse-samereg", "paddq xmm0, xmm0", 100);
+        maker256.template make<vzsse_diffreg>("vzsse-diffreg", "paddq xmm0, xmm1", 100);
+        maker256.template make<vz_diffregu>("vzsse-diffregu", "vzu vpaddq zmm0, zmm1, zmm0", 100);
+    }
 
 }
 

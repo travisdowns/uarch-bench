@@ -603,6 +603,116 @@ jnz     .unfused_loop
 add     rsp, rax
 ret
 
+define_bench vz_samereg
+xor ecx, ecx
+vzeroall
+.top:
+times 100 vpaddq zmm0, zmm0, zmm0
+dec rdi
+jnz .top
+ret
+
+define_bench vz_diffreg
+xor ecx, ecx
+vzeroall
+.top:
+times 100 vpaddq zmm0, zmm1, zmm0
+dec rdi
+jnz .top
+ret
+
+define_bench vz_diffreg16
+xor ecx, ecx
+vzeroall
+.top:
+times 100 vpaddq zmm0, zmm16, zmm0
+dec rdi
+jnz .top
+ret
+
+define_bench vz_diffreg16xor
+xor ecx, ecx
+vzeroall
+vpxorq xmm16, xmm16, xmm16
+.top:
+times 100 vpaddq zmm0, zmm16, zmm0
+dec rdi
+jnz .top
+ret
+
+define_bench vz256_samereg
+xor ecx, ecx
+vzeroall
+.top:
+times 100 vpaddq ymm0, ymm0, ymm0
+dec rdi
+jnz .top
+ret
+
+define_bench vz256_diffreg
+xor ecx, ecx
+vzeroall
+.top:
+times 100 vpaddq ymm0, ymm1, ymm0
+dec rdi
+jnz .top
+ret
+
+define_bench vz128_samereg
+xor ecx, ecx
+vzeroall
+.top:
+times 100 vpaddq xmm0, xmm0, xmm0
+dec rdi
+jnz .top
+ret
+
+define_bench vz128_diffreg
+xor ecx, ecx
+vzeroall
+.top:
+times 100 vpaddq xmm0, xmm1, xmm0
+dec rdi
+jnz .top
+ret
+
+define_bench vzsse_samereg
+xor ecx, ecx
+vzeroall
+.top:
+times 100 paddq xmm0, xmm0
+dec rdi
+jnz .top
+ret
+
+define_bench vzsse_diffreg
+xor ecx, ecx
+vzeroall
+.top:
+times 100 paddq xmm0, xmm1
+dec rdi
+jnz .top
+ret
+
+define_bench vz_diffregu
+xor ecx, ecx
+vzeroall
+%assign i 31
+%rep 32
+;vpxorq xmm %+ i, xmm %+ i, xmm %+ i
+%assign i (i-1)
+%endrep
+.top:
+%rep 100
+vpaddq zmm0, zmm1, zmm0
+vpaddq zmm0, zmm0, zmm0
+;vpaddq zmm0, zmm0, zmm0
+;vpaddq zmm0, zmm0, zmm0
+%endrep
+dec rdi
+jnz .top
+ret
+
 %define fused_unroll_order 4
 %define fused_unroll (1 << fused_unroll_order)
 
