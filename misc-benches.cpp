@@ -60,7 +60,6 @@ bench2_f vz_samereg;
 bench2_f vz_diffreg;
 bench2_f vz_diffreg16;
 bench2_f vz_diffreg16xor;
-bench2_f vz_diffregu;
 bench2_f vz256_samereg;
 bench2_f vz256_diffreg;
 bench2_f vz128_samereg;
@@ -189,7 +188,6 @@ void register_misc(GroupList& list) {
         maker256.template make<vz128_diffreg>("vz128-diffreg", "vpaddq xmm0, xmm1, xmm0", 100);
         maker256.template make<vzsse_samereg>("vzsse-samereg", "paddq xmm0, xmm0", 100);
         maker256.template make<vzsse_diffreg>("vzsse-diffreg", "paddq xmm0, xmm1", 100);
-        maker256.template make<vz_diffregu>("vzsse-diffregu", "vzu vpaddq zmm0, zmm1, zmm0", 100);
     }
 
 }

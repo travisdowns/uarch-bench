@@ -603,43 +603,6 @@ jnz     .unfused_loop
 add     rsp, rax
 ret
 
-%ifdef NASM_NO_AVX512
-; temporary dirty hack for nasm versions that don't support AVX-512
-
-define_bench vz_samereg
-ret
-
-define_bench vz_diffreg
-ret
-
-define_bench vz_diffreg16
-ret
-
-define_bench vz_diffreg16xor
-ret
-
-define_bench vz256_samereg
-ret
-
-define_bench vz256_diffreg
-ret
-
-define_bench vz128_samereg
-ret
-
-define_bench vz128_diffreg
-ret
-
-define_bench vzsse_samereg
-ret
-
-define_bench vzsse_diffreg
-ret
-
-define_bench vz_diffregu
-ret
-
-%else
 
 define_bench vz_samereg
 xor ecx, ecx
@@ -733,26 +696,6 @@ dec rdi
 jnz .top
 ret
 
-define_bench vz_diffregu
-xor ecx, ecx
-vzeroall
-%assign i 31
-%rep 32
-;vpxorq xmm %+ i, xmm %+ i, xmm %+ i
-%assign i (i-1)
-%endrep
-.top:
-%rep 100
-vpaddq zmm0, zmm1, zmm0
-vpaddq zmm0, zmm0, zmm0
-;vpaddq zmm0, zmm0, zmm0
-;vpaddq zmm0, zmm0, zmm0
-%endrep
-dec rdi
-jnz .top
-ret
-
-%endif
 
 %define fused_unroll_order 4
 %define fused_unroll (1 << fused_unroll_order)
