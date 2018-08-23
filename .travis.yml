@@ -100,7 +100,7 @@ matrix:
 before_install:
 # Travis will set CC and CXX after the env commands specified in the matrix are run, overwriting whatever
 # we've specified there, so we need to reset them here. See also https://github.com/travis-ci/travis-ci/issues/6633 . 
-  - CC=${TRUE_CC:-$CC}
+  - CC="ccache ${TRUE_CC:-$CC}"
   - CXX="ccache ${TRUE_CXX:-$CXX}"
 
 
