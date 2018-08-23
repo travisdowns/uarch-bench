@@ -14,8 +14,10 @@ addons:
       
 env:
   global:
-    - GLOBAL=value
-    - NASM_DEFINES=-DNASM_NO_AVX512
+    - ASM=./nasm-2.13.03/nasm
+    
+
+cache: ccache
 
 # the anchors element doesn't do anything but itself except define some anchors to be used later as aliases
 anchors:
@@ -99,7 +101,7 @@ before_install:
 # Travis will set CC and CXX after the env commands specified in the matrix are run, overwriting whatever
 # we've specified there, so we need to reset them here. See also https://github.com/travis-ci/travis-ci/issues/6633 . 
   - CC=${TRUE_CC:-$CC}
-  - CXX=${TRUE_CXX:-$CXX}
+  - CXX="ccache ${TRUE_CXX:-$CXX}"
 
 
 script:
