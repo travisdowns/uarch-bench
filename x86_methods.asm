@@ -908,13 +908,6 @@ all_parallel_benches prefetcht1,prefetcht1_bench
 all_parallel_benches prefetcht2,prefetcht2_bench
 all_parallel_benches prefetchnta,prefetchnta_bench
 
-
-; mirror of mem-benches.cpp::region
-struc region
-    .size  : resq 1
-    .start : resq 1
-endstruc
-
 %define UF 8
 
 ; all loads happen in parallel, so maximum MLP can be achieved
@@ -973,6 +966,121 @@ mov rsi, [rsi]
 dec rdi
 jnz .top
 
+ret
+
+%ifndef UNROLLB
+%define UNROLLB 20
+%endif
+
+; version that doesn't interleave the loads in a "clever way"
+define_bench bandwidth_test256
+mov     rdx, [rsi + region.size]
+mov     rsi, [rsi + region.start]
+
+.top:
+mov     rax, rdx
+mov     rcx, rsi
+lfence
+
+.inner:
+
+%assign offset 0
+%rep UNROLLB
+vmovdqa ymm0, [rcx + offset]
+vmovdqa ymm0, [rcx + offset + 32]
+%assign offset (offset + 64)
+%endrep
+
+add     rcx, UNROLLB * 64
+sub     rax, UNROLLB * 64
+jge      .inner
+
+dec rdi
+jnz .top
+ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+define_bench bandwidth_test256i_unroll
+mov     rdx, [rsi + region.size]
+mov     rsi, [rsi + region.start]
+
+.top:
+mov     rax, rdx
+mov     rcx, rsi
+lfence
+
+vpxor ymm0, ymm0, ymm0
+vpxor ymm1, ymm1, ymm1
+vpxor ymm2, ymm2, ymm2
+vpxor ymm3, ymm3, ymm3
+
+.inner:
+
+%assign offset 0
+%rep UNROLLB/2
+vpaddb ymm0, ymm0, [rcx + offset]
+vpaddb ymm1, ymm1, [rcx + offset + 64]
+%assign offset (offset + 128)
+%endrep
+.tail1:
+%if (UNROLLB % 2 == 1)
+vpaddb ymm0, ymm0, [rcx + offset]
+%endif
+
+.second:
+%assign offset 32
+%rep UNROLLB/2
+vpaddb ymm2, ymm2, [rcx + offset]
+vpaddb ymm3, ymm3, [rcx + offset + 64]
+%assign offset (offset + 128)
+%endrep
+.tail2:
+%if (UNROLLB % 2 == 1)
+vpaddb ymm2, ymm2, [rcx + offset]
+%endif
+
+add     rcx, UNROLLB * 64
+sub     rax, UNROLLB * 64
+jge      .inner
+
+dec rdi
+jnz .top
+ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+define_bench bandwidth_test256i_orig
+mov     rdx, [rsi + region.size]
+mov     rsi, [rsi + region.start]
+
+.top:
+mov     rax, rdx
+mov     rcx, rsi
+lfence
+
+vpxor ymm0, ymm0, ymm0
+vpxor ymm1, ymm1, ymm1
+
+.inner:
+
+%assign offset 0
+%rep UNROLLB
+vpaddb ymm0, ymm0, [rcx + offset]
+%assign offset (offset + 64)
+%endrep
+
+%assign offset 32
+%rep UNROLLB
+vpaddb ymm1, ymm1, [rcx + offset]
+%assign offset (offset + 64)
+%endrep
+
+add     rcx, UNROLLB * 64
+sub     rax, UNROLLB * 64
+jge      .inner
+
+dec rdi
+jnz .top
 ret
 
 ;

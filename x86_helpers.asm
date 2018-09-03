@@ -109,3 +109,10 @@ pextrq  [%1 + PFCNOW_UBASE +  8], xmm3, 1
 pextrq  [%1 + PFCNOW_UBASE + 16], xmm4, 0
 pextrq  [%1 + PFCNOW_UBASE + 24], xmm4, 1
 %endmacro
+
+
+; mirror of mem-benches.cpp::region
+struc region
+    .size  : resq 1
+    .start : resq 1
+endstruc

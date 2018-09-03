@@ -98,13 +98,18 @@ bench2_f fwd_tput_conc_8;
 bench2_f fwd_tput_conc_9;
 bench2_f fwd_tput_conc_10;
 
+bench2_f bandwidth_test256;
+bench2_f bandwidth_test256i;
+bench2_f bandwidth_test256i_orig;
+bench2_f bandwidth_test256i_double;
+
 }
 
 template <typename TIMER>
 void register_mem_oneshot(GroupList& list);
 
 template <bench2_f F, typename M>
-static void make_load_bench2(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops) {
+static void make_load_bench(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops) {
     maker.template make<F>(
             string_format("%s-%d", id_prefix, kib),
             string_format("%d-KiB %s", kib, desc_suffix),
@@ -113,8 +118,8 @@ static void make_load_bench2(M& maker, int kib, const char* id_prefix, const cha
     );
 }
 
-#define MAKE_SERIAL(kib,test)  make_load_bench2<test>             (maker, kib, "serial-loads",   "serial loads", 1);
-#define MAKEP_LOAD(l,kib) make_load_bench2<parallel_mem_bench_##l>(maker, kib, "parallel-" #l, "parallel " #l, LOAD_LOOP_UNROLL);
+#define MAKE_SERIAL(kib,test)  make_load_bench<test>             (maker, kib, "serial-loads",   "serial loads", 1);
+#define MAKEP_LOAD(l,kib) make_load_bench<parallel_mem_bench_##l>(maker, kib, "parallel-" #l, "parallel " #l, LOAD_LOOP_UNROLL);
 #define MAKEP_ALL(kib) LOADTYPE_X(MAKEP_LOAD,kib)
 
 template <typename TIMER>
@@ -182,6 +187,19 @@ void register_mem(GroupList& list) {
                 }
                 last = fudgedkib;
             }
+        }
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/bandwidth", "Linear AVX2 loads");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 1024);
+
+        for (int kib : {8, 16, 32, 54, 64, 128, 256, 512}) {
+            make_load_bench<bandwidth_test256>(maker, kib, "bandwidth-normal", "linear bandwidth", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<bandwidth_test256i>(maker, kib, "bandwidth-tricky", "interleaved bandwidth", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<bandwidth_test256i_orig>(maker, kib, "bandwidth-orig", "original bandwidth", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<bandwidth_test256i_double>(maker, kib, "bandwidth-oneloop-u2", "oneloop 2-wide", kib * 1024 / 64); // timings are per cache line
         }
     }
 

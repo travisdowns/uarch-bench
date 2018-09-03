@@ -9,6 +9,123 @@ thunk_boilerplate
 
 ; segregate some particular benchamrk here if you want to repeatedly compile different versions of it quickly
 
+%ifndef UNROLLB
+%warning 'UNROLLB' defined to default of 1
+%define UNROLLB 1
+%endif
+
+%ifndef UNROLLX
+;%warning UNROLLX defined to default of 1
+%define UNROLLX 1
+%else
+;%warning 'UNROLLX' defined externally to UNROLLX
+%endif
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+define_bench bandwidth_test256i
+mov     rdx, [rsi + region.size]
+mov     rsi, [rsi + region.start]
+
+.top:
+mov     rax, rdx
+sub     rax, UNROLLB * 64 ; reduce main loop iterations since the intro/outro parts handle this
+mov     rcx, rsi
+lfence
+
+vpxor ymm0, ymm0, ymm0
+vpxor ymm1, ymm1, ymm1
+vpxor ymm2, ymm1, ymm1
+
+; lead-in loop which reads the first half of the first UNROLLB cache lines
+%assign offset 0
+%rep UNROLLB
+vpaddb ymm0, ymm0, [rcx + offset]
+%assign offset (offset + 64)
+%endrep
+
+.inner:
+
+%assign offset 0
+%rep UNROLLX
+vpaddb ymm0, ymm0, [rcx + offset + UNROLLB * 64]
+%assign offset (offset + 64)
+%endrep
+
+%assign offset 0
+%rep UNROLLX
+vpaddb ymm1, ymm1, [rcx + offset + 32]
+%assign offset (offset + 64)
+%endrep
+
+
+add     rcx, UNROLLX * 64
+sub     rax, UNROLLX * 64
+jge      .inner
+
+; lead out loop to read the remaining lines
+%assign offset 0
+%rep UNROLLB
+vpaddb ymm0, ymm0, [rcx + offset]
+%assign offset (offset + 64)
+%endrep
+
+dec rdi
+jnz .top
+ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+define_bench bandwidth_test256i_double
+mov     rdx, [rsi + region.size]
+mov     rsi, [rsi + region.start]
+
+.top:
+mov     rax, rdx
+sub     rax, UNROLLB * 64 ; reduce main loop iterations since the intro/outro parts handle this
+mov     rcx, rsi
+lfence
+
+vpxor ymm0, ymm0, ymm0
+vpxor ymm1, ymm1, ymm1
+vpxor ymm2, ymm1, ymm1
+
+; lead-in loop which reads the first half of the first UNROLLB cache lines
+%assign offset 0
+%rep UNROLLB
+;vpaddb ymm0, ymm0, [rcx + offset]
+%assign offset (offset + 64)
+%endrep
+
+.inner:
+
+%assign offset 0
+%rep UNROLLX
+vpaddb ymm0, ymm0, [rcx + offset + UNROLLB * 64]
+vpaddb ymm0, ymm0, [rcx + offset + UNROLLB * 64 + 64]
+vpaddb ymm1, ymm1, [rcx + offset + 32]
+vpaddb ymm1, ymm1, [rcx + offset + 96]
+%assign offset (offset + 128)
+%endrep
+
+
+
+add     rcx, 2 * UNROLLX * 64
+sub     rax, 2 * UNROLLX * 64
+jge      .inner
+
+; lead out loop to read the remaining lines
+%assign offset 0
+%rep UNROLLB
+;vpaddb ymm0, ymm0, [rcx + offset]
+%assign offset (offset + 64)
+%endrep
+
+dec rdi
+jnz .top
+ret
+
+
+
 %ifnnum NOPCOUNT
 %define NOPCOUNT 0
 %endif
