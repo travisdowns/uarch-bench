@@ -10,7 +10,7 @@ thunk_boilerplate
 ; segregate some particular benchamrk here if you want to repeatedly compile different versions of it quickly
 
 %ifndef UNROLLB
-%warning 'UNROLLB' defined to default of 1
+;%warning 'UNROLLB' defined to default of 1
 %define UNROLLB 1
 %endif
 
