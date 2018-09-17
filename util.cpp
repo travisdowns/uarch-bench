@@ -8,6 +8,7 @@
 #include <cassert>
 #include <numeric>
 #include <random>
+#include <cstring>
 
 #include <sys/mman.h>
 

@@ -250,6 +250,35 @@ ret
 make_spc ,rax,0
 make_spc _complex,rax + rcx * 8,4096
 
+; https://stackoverflow.com/q/52351397
+define_bench sameloc_pointer_chase_diffpage
+push rbp
+mov  rbp, rsp
+sub  rsp,  4096
+and  rsp, -4096 ; align rsp to page boundary
+lea rax, [rsp - 8]
+mov [rax + 16], rax
+.top:
+times 128 mov rax, [rax + 16]
+dec rdi
+jnz .top
+mov rsp, rbp
+pop rbp
+ret
+
+; put an ALU op in the pointer chase path
+define_bench sameloc_pointer_chase_alu
+lea rax, [rsp - 8]
+push rax
+.top:
+%rep 128
+mov rax, [rax]
+add rax, 0
+%endrep
+dec rdi
+jnz .top
+pop rax
+ret
 
 ; a series of stores to the same location
 define_bench store_same_loc
