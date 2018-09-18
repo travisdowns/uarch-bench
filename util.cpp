@@ -9,9 +9,36 @@
 #include <numeric>
 #include <random>
 #include <cstring>
+#include <exception>
 
 #include <sys/mman.h>
 
+#if defined(__GNUC__) && !defined(__clang__)
+#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
+
+#if defined(GCC_VERSION) && (GCC_VERSION < 40900)
+#warning "Your gcc is too old to support regex, wildcard matches will be disabled - use gcc 4.9 or higher if you need them"
+#define NO_CXX11_REGEX
+#endif
+
+#ifdef NO_CXX11_REGEX
+
+// support only a basic form of wildcard matches with works with literal patterns (no wildcards)
+// or a single trailing wildcard
+bool wildcard_match(const std::string& target, const std::string& pattern) {
+    auto first_star = pattern.find('*');
+    if (first_star == std::string::npos) {
+        return target == pattern;
+    } else if (first_star == pattern.length() - 1) {
+        std::string prefix = pattern.substr(0, pattern.length() - 1);
+        return target.find(prefix) == 0;
+    } else {
+        throw std::runtime_error("You tried to use a non-trailing wildcard match, but this feature that requires C++ regex support");
+    }
+}
+
+#else
 
 std::string escape_for_regex(const std::string& input) {
     // see https://stackoverflow.com/a/40195721/149138
@@ -25,6 +52,8 @@ bool wildcard_match(const std::string& target, const std::string& pattern) {
     std::string regex   = std::regex_replace(escaped, std::regex(R"(\\\*)"), R"(.*)");
     return std::regex_match(target, std::regex(regex));
 }
+
+#endif
 
 const size_t TWO_MB = 2 * 1024 * 1024;
 const int STORAGE_SIZE = 100 * 1024 * 1024;  // 100 MB
