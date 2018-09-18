@@ -280,6 +280,52 @@ jnz .top
 pop rax
 ret
 
+; do 8 parallel pointer chases to see if fast path (4-cycle) loads
+; have a throughput restriction (e.g., only 1 per cycle)
+define_bench sameloc_pointer_chase_8way
+push rbp
+mov  rbp, rsp
+
+and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
+
+push r12
+push r13
+push r14
+push r15
+
+%assign regn 8
+%rep 8
+%define reg r %+ regn
+lea reg, [rsp - 8]
+push reg
+%assign regn (regn + 1)
+%endrep
+
+.top:
+%rep 16
+%assign regn 8
+%rep 8
+%define reg r %+ regn
+mov reg, [reg]
+%assign regn (regn + 1)
+%endrep
+%endrep
+dec rdi
+jnz .top
+
+add rsp, 8 * 8
+
+pop r15
+pop r14
+pop r13
+pop r12
+
+mov rsp, rbp
+pop rbp
+
+ret
+
+
 ; a series of stores to the same location
 define_bench store_same_loc
 xor eax, eax
