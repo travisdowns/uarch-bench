@@ -4,8 +4,6 @@ default rel
 %include "nasm-utils/nasm-utils-inc.asm"
 %include "x86_helpers.asm"
 
-%use altreg
-
 nasm_util_assert_boilerplate
 thunk_boilerplate
 
@@ -326,6 +324,10 @@ mov rsp, rbp
 pop rbp
 
 ret
+
+; so we can treat r6 to r15 as a contiguous range
+%define r6 rsi
+%define r7 rdi
 
 ; do 10 parallel pointer chases to see if slow path (5-cycle) loads
 ; have a throughput restriction (e.g., only 1 per cycle)
