@@ -280,6 +280,61 @@ jnz .top
 pop rax
 ret
 
+; put an ALU op in the pointer chase path
+define_bench sameloc_pointer_chase_alu2
+push rbp
+mov  rbp, rsp
+
+and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
+sub  rsp, 2048 + 4096
+
+and rcx, 0 ; avoid zero idiom detection
+lea rax, [rsp - 8]
+push rax
+mov [rax + 2048], rax
+
+.top:
+%rep 128
+mov rax, [rax + 2048]
+mov rax, [rax]
+add rax, 0
+%endrep
+dec rdi
+jnz .top
+
+mov rsp, rbp
+pop rbp
+
+ret
+
+; put an ALU op in the pointer chase path
+define_bench sameloc_pointer_chase_alu3
+push rbp
+mov  rbp, rsp
+
+and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
+sub  rsp, 2048 + 4096
+
+and rcx, 0 ; avoid zero idiom detection
+lea rax, [rsp - 8]
+push rax
+mov [rax + 2048], rax
+
+.top:
+%rep 128
+mov rax, [rax + 2048]
+add rax, 0
+mov rax, [rax]
+%endrep
+dec rdi
+jnz .top
+
+mov rsp, rbp
+pop rbp
+
+ret
+
+
 ; do 8 parallel pointer chases to see if fast path (4-cycle) loads
 ; have a throughput restriction (e.g., only 1 per cycle)
 define_bench sameloc_pointer_chase_8way
@@ -335,6 +390,7 @@ define_bench sameloc_pointer_chase_8way5
 push rbp
 mov  rbp, rsp
 
+sub  rsp,  8192
 and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
 
 push r12
@@ -385,6 +441,7 @@ define_bench sameloc_pointer_chase_8way45
 push rbp
 mov  rbp, rsp
 
+sub  rsp,  8192
 and  rsp, -8192  ; page align rsp to avoid inadvertent page crossing
 
 push r12

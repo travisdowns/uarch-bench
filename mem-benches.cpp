@@ -105,6 +105,8 @@ bench2_f bandwidth_test256i_double;
 
 bench2_f sameloc_pointer_chase_diffpage;
 bench2_f sameloc_pointer_chase_alu;
+bench2_f sameloc_pointer_chase_alu2;
+bench2_f sameloc_pointer_chase_alu3;
 bench2_f sameloc_pointer_chase_8way;
 bench2_f sameloc_pointer_chase_8way5;
 bench2_f sameloc_pointer_chase_8way45;
@@ -166,6 +168,8 @@ void register_mem(GroupList& list) {
         auto maker = DeltaMaker<TIMER>(group.get()).setTags({"default"});
         maker.template make<sameloc_pointer_chase_diffpage>("pointer-chase-dpage",  "Simple addressing chase, different pages",  128);
         maker.template make<sameloc_pointer_chase_alu>     ("pointer-chase-alu",    "Simple addressing chase with ALU op",  128);
+        maker.template make<sameloc_pointer_chase_alu2>    ("pointer-chase-alu2",   "load5 -> load4 -> alu",  128);
+        maker.template make<sameloc_pointer_chase_alu3>    ("pointer-chase-alu3",   "load4 -> load5 -> alu",  128);
         maker.template make<sameloc_pointer_chase_8way>    ("pointer-chase-8way",   "8 parallel simple pointer chases",  16);
         maker.template make<sameloc_pointer_chase_8way5>   ("pointer-chase-8way5",  "10 parallel complex pointer chases",  16);
         maker.template make<sameloc_pointer_chase_8way45>  ("pointer-chase-8way45", "10 parallel mixed pointer chases",  10);
