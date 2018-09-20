@@ -4,6 +4,8 @@ default rel
 %include "nasm-utils/nasm-utils-inc.asm"
 %include "x86_helpers.asm"
 
+%use altreg
+
 nasm_util_assert_boilerplate
 thunk_boilerplate
 
@@ -324,6 +326,114 @@ mov rsp, rbp
 pop rbp
 
 ret
+
+; do 10 parallel pointer chases to see if slow path (5-cycle) loads
+; have a throughput restriction (e.g., only 1 per cycle)
+define_bench sameloc_pointer_chase_8way5
+push rbp
+mov  rbp, rsp
+
+and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
+
+push r12
+push r13
+push r14
+push r15
+
+mov rcx, rdi ; because we need rdi and rsi as r6 and r7 with altreg
+
+%define offset 4096
+
+%assign regn 6
+%rep 10
+%define reg r %+ regn
+lea reg, [rsp - 8 - offset]
+push reg
+%assign regn (regn + 1)
+%endrep
+
+.top:
+%rep 16
+%assign regn 6
+%rep 10
+%define reg r %+ regn
+mov reg, [reg + offset]
+%assign regn (regn + 1)
+%endrep
+%endrep
+dec rcx
+jnz .top
+
+add rsp, 10 * 8
+
+pop r15
+pop r14
+pop r13
+pop r12
+
+mov rsp, rbp
+pop rbp
+
+ret
+
+; do 10 parallel pointer chases, unrolled 10 times, where 9 out of the 10
+; accesses on each change are 5-cycle and one is 4-cycle, to see if mixing
+; 4 and 5-cycle operations slows things down
+define_bench sameloc_pointer_chase_8way45
+push rbp
+mov  rbp, rsp
+
+and  rsp, -8192  ; page align rsp to avoid inadvertent page crossing
+
+push r12
+push r13
+push r14
+push r15
+
+mov rcx, rdi
+
+%define offset 4096
+%define regcnt 10
+
+%assign regn (16 - regcnt)
+%rep regcnt
+%define reg r %+ regn
+lea reg, [rsp - 8]
+push reg
+mov [reg + offset], reg
+%assign regn (regn + 1)
+%endrep
+
+.top:
+%assign itr 0
+%rep 10
+%assign regn (16 - regcnt)
+%rep regcnt
+%define reg r %+ regn
+%if (itr == (regn - (16 - regcnt)))
+mov reg, [reg]
+%else
+mov reg, [reg + offset]
+%endif
+%assign regn (regn + 1)
+%endrep
+%assign itr (itr + 1)
+%endrep
+dec rcx
+jnz .top
+
+add rsp, regcnt * 8
+
+pop r15
+pop r14
+pop r13
+pop r12
+
+mov rsp, rbp
+pop rbp
+
+ret
+
 
 
 ; a series of stores to the same location

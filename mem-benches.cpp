@@ -103,6 +103,12 @@ bench2_f bandwidth_test256i;
 bench2_f bandwidth_test256i_orig;
 bench2_f bandwidth_test256i_double;
 
+bench2_f sameloc_pointer_chase_diffpage;
+bench2_f sameloc_pointer_chase_alu;
+bench2_f sameloc_pointer_chase_8way;
+bench2_f sameloc_pointer_chase_8way5;
+bench2_f sameloc_pointer_chase_8way45;
+
 }
 
 template <typename TIMER>
@@ -153,6 +159,17 @@ void register_mem(GroupList& list) {
         }
     }
 
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/pointer-chase", "Pointer-chasing");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get()).setTags({"default"});
+        maker.template make<sameloc_pointer_chase_diffpage>("pointer-chase-dpage",  "Simple addressing chase, different pages",  128);
+        maker.template make<sameloc_pointer_chase_alu>     ("pointer-chase-alu",    "Simple addressing chase with ALU op",  128);
+        maker.template make<sameloc_pointer_chase_8way>    ("pointer-chase-8way",   "8 parallel simple pointer chases",  16);
+        maker.template make<sameloc_pointer_chase_8way5>   ("pointer-chase-8way5",  "10 parallel complex pointer chases",  16);
+        maker.template make<sameloc_pointer_chase_8way45>  ("pointer-chase-8way45", "10 parallel mixed pointer chases",  10);
+    }
 
     {
         // this group of tests isn't directly comparable to the parallel tests since the access pattern is "more random" than the
