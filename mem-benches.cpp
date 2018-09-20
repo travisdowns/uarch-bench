@@ -210,7 +210,7 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/bandwidth", "Linear AVX2 loads");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 1024);
+        auto maker = DeltaMaker<TIMER>(group.get(), 1024).setFeatures({AVX2});
 
         for (int kib : {8, 16, 32, 54, 64, 128, 256, 512}) {
             make_load_bench<bandwidth_test256>(maker, kib, "bandwidth-normal", "linear bandwidth", kib * 1024 / 64); // timings are per cache line
