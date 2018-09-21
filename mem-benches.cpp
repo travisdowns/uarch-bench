@@ -75,8 +75,15 @@ extern "C" {
 bench2_f   serial_load_bench;
 bench2_f   serial_load_bench2;
 
+bench2_f serial_double_load_oneload;
 bench2_f serial_double_load1;
 bench2_f serial_double_load2;
+bench2_f serial_double_load_alu;
+bench2_f serial_double_load_lea;
+bench2_f serial_double_load_addd;
+bench2_f serial_double_load_indexed1;
+bench2_f serial_double_load_indexed2;
+bench2_f serial_double_load_indexed3;
 bench2_f serial_double_loadpf_same;
 bench2_f serial_double_loadpf_diff;
 bench2_f serial_double_loadpft1_diff;
@@ -262,8 +269,16 @@ void register_mem(GroupList& list) {
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 1024 * 1024);
 
-        maker.template make<serial_double_load1>("dummy-first", "Dummy load first",  1, []{ return &shuffled_region(128 * 1024); });
-        maker.template make<serial_double_load2>("dummy-second","Dummy load second", 1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_load_oneload> ("single-load-16k", "Just one load 16k region",  1, []{ return &shuffled_region(16 * 1024); });
+        maker.template make<serial_double_load_oneload> ("single-load",     "Just one load",  1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_load1>        ("dummy-first",     "Dummy load first",  1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_load2>        ("dummy-second",    "Dummy load second", 1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_load_alu>     ("dummy-first-alu", "Dummy load first, alu op before second",  1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_load_lea>     ("dummy-first-lea", "Dummy load first, lea in addr depchain",  1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_load_addd>    ("dummy-first-add", "Dummy load first, add dummy value",  1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_load_indexed1>("dummy-first-indexed1", "Dummy load first, indexed second",  1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_load_indexed2>("dummy-first-indexed2", "Dummy load first, both indexed",  1, []{ return &shuffled_region(128 * 1024); });
+        maker.template make<serial_double_load_indexed3>("dummy-first-indexed3", "Dummy load second, both indexed",  1, []{ return &shuffled_region(128 * 1024); });
         maker.template make<serial_double_loadpf_same>  ("pf-first-same",    "Same loc prefetcht0 first", 1, []{ return &shuffled_region(128 * 1024); });
         maker.template make<serial_double_loadpf_diff>  ("pf-first-diff",    "Diff loc prefetcht0 first", 1, []{ return &shuffled_region(128 * 1024); });
         maker.template make<serial_double_loadpft1_diff>("pf-first-diff-t1",    "Diff loc prefetcht1 first", 1, []{ return &shuffled_region(128 * 1024); });
