@@ -103,6 +103,7 @@ bench2_f bandwidth_test256i;
 bench2_f bandwidth_test256i_orig;
 bench2_f bandwidth_test256i_double;
 
+bench2_f sameloc_pointer_chase_alt;
 bench2_f sameloc_pointer_chase_diffpage;
 bench2_f sameloc_pointer_chase_alu;
 bench2_f sameloc_pointer_chase_alu2;
@@ -166,6 +167,7 @@ void register_mem(GroupList& list) {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/pointer-chase", "Pointer-chasing");
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get()).setTags({"default"});
+        maker.template make<sameloc_pointer_chase_alt>     ("pointer-chase-alt",    "Simple addressing chase, half diffpage",  128);
         maker.template make<sameloc_pointer_chase_diffpage>("pointer-chase-dpage",  "Simple addressing chase, different pages",  128);
         maker.template make<sameloc_pointer_chase_alu>     ("pointer-chase-alu",    "Simple addressing chase with ALU op",  128);
         maker.template make<sameloc_pointer_chase_alu2>    ("pointer-chase-alu2",   "load5 -> load4 -> alu",  128);

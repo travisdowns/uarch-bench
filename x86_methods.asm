@@ -266,6 +266,26 @@ mov rsp, rbp
 pop rbp
 ret
 
+; https://stackoverflow.com/q/52351397
+define_bench sameloc_pointer_chase_alt
+push rbp
+mov  rbp, rsp
+sub  rsp,  4096
+and  rsp, -4096 ; align rsp to page boundary
+lea rax, [rsp - 8]
+mov [rax], rax
+mov [rax + 16], rax
+.top:
+%rep 64
+mov rax, [rax]
+mov rax, [rax + 16]
+%endrep
+dec rdi
+jnz .top
+mov rsp, rbp
+pop rbp
+ret
+
 ; put an ALU op in the pointer chase path
 define_bench sameloc_pointer_chase_alu
 lea rax, [rsp - 8]
