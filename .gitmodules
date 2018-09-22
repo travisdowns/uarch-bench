@@ -13,3 +13,6 @@
 [submodule "portable-snippets"]
 	path = portable-snippets
 	url = https://github.com/nemequ/portable-snippets
+[submodule "pmu-tools"]
+	path = pmu-tools
+	url = https://github.com/travisdowns/pmu-tools
