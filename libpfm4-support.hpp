@@ -25,7 +25,4 @@ struct PmuEvent {
     static std::string make_short_name(const std::string& full);
 };
 
-std::vector<PmuEvent> parseExtraEvents(Context &c, const std::string& event_list);
-
-
-
+std::vector<PmuEvent> parseExtraEvents(Context &c, const std::vector<std::string>& event_list);

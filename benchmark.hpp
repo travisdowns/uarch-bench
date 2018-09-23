@@ -140,7 +140,7 @@ public:
      * Some flavors of benchmark may not implement this and will throw an exception, e.g., those
      * that don't have a meaningful aggregated single result.
      */
-    virtual TimingResult run() = 0;
+    virtual TimingResult run(const TimerInfo& ti) = 0;
 
     /* Print the results to context - every benchmark should implement this */
     virtual void runAndPrintInner(Context& c) = 0;
@@ -192,7 +192,7 @@ public:
     virtual ~BenchmarkGroup() {}
 
     /** run benchmarks matching the predicate, using the given timer info and context */
-    virtual void runIf(Context &context, const TimerInfo &ti, const predicate_t& predicate);
+    virtual void runIf(Context &context, const predicate_t& predicate);
 
     virtual void add(const std::vector<Benchmark> &more) {
         for (auto &b : more) {
@@ -261,8 +261,8 @@ protected:
         return raw_func(loop_count, arg);
     }
 
-    TimingResult handle_raw(const raw_result& raw) {
-        TimingResult result = TIMER::to_result(ALGO::aggregate(raw));
+    TimingResult handle_raw(const raw_result& raw, const TimerInfo& ti) {
+        TimingResult result = TIMER::to_result(static_cast<const TIMER &>(ti), ALGO::aggregate(raw));
         return normalize(result, BenchmarkBase::args, loop_count);
     }
 
@@ -272,13 +272,13 @@ public:
     loop_count{loop_count}, raw_func{raw_func}, arg_provider{arg_provider} {}
 
 
-    virtual TimingResult run() override {
+    virtual TimingResult run(const TimerInfo& ti) override {
         raw_result raw = get_raw();
-        return handle_raw(raw);
+        return handle_raw(raw, ti);
     }
 
     virtual void runAndPrintInner(Context& c) override {
-        TimingResult result = run();
+        TimingResult result = run(c.getTimerInfo());
         printResultLine(c, this, result);
     }
 };

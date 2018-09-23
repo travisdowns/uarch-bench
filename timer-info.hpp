@@ -51,8 +51,17 @@ public:
 
 typedef std::function<TimingResult (size_t)> full_bench_t;  // a full timing method
 
+/**
+ * Passed to init() with any "global" args that are meant for the individual timer
+ */
+struct TimerArgs {
+    // a list of requested "extra events" as parsed from the --extra-events string
+    std::vector<std::string> extra_events;
+};
+
+
 /*
- * Contains information about a particular TIMER implementation. Timer implementations inherit this class
+ * Contains information about a particular TIMER implementation. Timer implementations inherit from this class
  * and should also implement the duck-typing static TIMER methods now(), and so on. That is, an timer classes
  * both provide the virtual methods and state via instantiation at rutnime, as well as being used as a TIMER
  * template parameter to such that their static methods are compiled directly into the benchmark methods.
@@ -88,15 +97,19 @@ public:
 	 * Really this is just a poor design though and we should factor out the simple timer state, from the
 	 * "ready to measure" state which might require complicated init such as calibration. One day...
 	 */
-	virtual void init(Context &context) = 0;
+	virtual void init(Context &context, const TimerArgs& args) = 0;
 
 	virtual ~TimerInfo() = default;
 
 	// this static method can be overridden in subclasses to expose timer-specific command line arguments
 	static void addCustomArgs(args::ArgumentParser& parser) {}
 
-	// this static method can be overriden to implement custom behavior at the start of the benchmark run
+	// this static method can be overridden to implement custom behavior at the start of the benchmark run
 	static void customRunHandler(Context& c) {}
+
+	// if the --list-events command line argument is specified, this will be called on your timer (if your timer
+	// is selected), and you should ouutput any additional supported events to Context.out()
+	virtual void listEvents(Context& c) = 0;
 
 	/***************************
 	 * Implementations of this class should additionally
@@ -114,9 +127,10 @@ public:
         // core benchmarking code, so it should be as efficient and fast as possible
     }
 
-    static TimingResult to_result(delta_t now) {
+    static TimingResult to_result(TimerInfo& ti, delta_t now) {
         // generate and return a TimingResult from now
         // this method is called out of the core benchmark code, so doesn't have to be fast
+        // The ti object passes is the actual TimerInfo instance
     }
 
 
@@ -127,22 +141,6 @@ public:
 	**************************/
 };
 
-
-/**
- * Normally you implement a Timer by inheriting from this class, templatized on your implementation
- * class in the CRTP pattern. This class uses various static methods in your class to implement
- * the TimerInfo interface, and also to wrap bare benchmark methods in the static scaffolding turning
- * them into a full benchmark.
- */
-template <typename TIMER_INFO>
-class TimerBase : public TimerInfo {
-public:
-
-    // TODO: this whole class is probably just noise after a refactoring - delete?
-    TimerBase(const std::string& name, const std::string& description, const std::vector<std::string>& metric_names)
-            : TimerInfo(name, description, metric_names) {}
-
-};
 
 /**
  * Implements some useful method when instantiated on a timer.

@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <string>
+#include <iostream>
 #include <iomanip>
 
 #include "timer-info.hpp"
@@ -17,6 +18,21 @@
 #include "hedley.h"
 
 #include "libpfc-timer.hpp"
+#include "perf-timer.hpp"
+
+#if USE_LIBPFC
+#define IF_LIBPFC(x) x
+#else
+#define IF_LIBPFC(x)
+#endif
+
+#if USE_PERF_TIMER
+#define IF_PERF_TIMER(x) x
+#else
+#define IF_PERF_TIMER(x)
+#endif
+
+
 
 /**
  * Adapt any of the clocks offered by clock_gettime into a clock suitable for use by ClockTimerT
@@ -43,18 +59,21 @@ struct StdClockAdapt {
  * that to a cycle count based on a calibration loop performed once at startup.
  */
 template <typename CLOCK>
-class ClockTimerT : public TimerBase<ClockTimerT<CLOCK>> {
+class ClockTimerT : public TimerInfo {
 public:
 
     typedef int64_t now_t;
     typedef int64_t delta_t;
 
-    ClockTimerT(std::string clock_name) : TimerBase<ClockTimerT<CLOCK>>("clock",
+    ClockTimerT(std::string clock_name) : TimerInfo("clock",
             std::string("Use the system clock (" + clock_name +
             ") to measure wall-clock time, and convert to cycles using a calibration loop"),
             {"Cycles", "Nanos"}) {}
 
-    void init(Context &c) override {
+    void init(Context &c, const TimerArgs& args) override {
+        if (!args.extra_events.empty()) {
+            throw std::runtime_error("ClockTimer doesn't support extra args");
+        }
         c.out() << "Median CPU speed: " << std::fixed << std::setw(4) << std::setprecision(3)
         << getGHz() << " GHz" << std::endl;
     }
@@ -64,7 +83,7 @@ public:
         return CLOCK::nanos();
     }
 
-    static TimingResult to_result(int64_t nanos) {
+    static TimingResult to_result(const ClockTimerT<CLOCK>& ti, int64_t nanos) {
         return TimingResult({nanos * getGHz(), (double)nanos});
     }
 
@@ -81,22 +100,25 @@ public:
 
     /* return the statically calculated clock speed of the CPU in ghz for this clock */
     static double getGHz();
+
+    virtual void listEvents(Context& c) override {
+        c.out() << "The clock timer doesn't have any supported extra events";
+    }
 };
 
 // the default ClockTimer will use high_resolution_clock
 using DefaultClockTimer = ClockTimerT<StdClockAdapt<std::chrono::high_resolution_clock>>;
 
+// print a variety of information about system clock overheads to the given ostream
+void printClockOverheads(std::ostream& out);
+
 
 // this x macro lists all the timers in use, which can be useful for example to explicitly instantiate a benchmark
 // class for all possible timers
-#if USE_LIBPFC
 #define ALL_TIMERS_X(FN) \
-        FN(DefaultClockTimer) \
-        FN(LibpfcTimer)
-#else
-#define ALL_TIMERS_X(FN) \
-        FN(DefaultClockTimer)
-#endif
+                      FN(DefaultClockTimer)  \
+        IF_LIBPFC(    FN(LibpfcTimer      )) \
+        IF_PERF_TIMER(FN(PerfTimer        )) \
 
 
 #endif /* TIMERS_HPP_ */

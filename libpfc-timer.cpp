@@ -20,24 +20,12 @@ using namespace std;
 #define CALIBRATION_NANOS (1000L * 1000L * 1000L)
 #define CALIBRATION_ADDS (CALIBRATION_NANOS * 3) // estimate 3GHz
 
-bool LibpfcTimer::is_init = false;
 
-static args::Group pfc_args("libpfc timer specific arguments");
-static args::Flag arg_listevents{pfc_args, "list-events", "Dislay the available available PMU events", {"list-events"}};
-static args::ValueFlag<std::string> arg_extraevents{pfc_args, "extra-events", "A comma separated list of extra PMU events to track", {"extra-events"}};
-static args::ValueFlag<int> pinned_cpu{pfc_args, "pinned-cpu", "Pin CPU to run all the test on one CPU", {'c', "pinned-cpu"}, 0};
-
-static std::vector<PmuEvent> all_events{PmuEvent("Cycles", FIXED_COUNTER_ENABLE, PFC_FIXEDCNT_CPU_CLK_UNHALTED)};
-
-LibpfcTimer::LibpfcTimer(Context& c) : TimerBase<LibpfcTimer>(
+LibpfcTimer::LibpfcTimer(Context& c) : TimerInfo(
         "libpfc",
         "A timer which directly reads the CPU performance counters for accurate cycle measurements.",
         {})
-{
-    for (auto &event : all_events) {
-        metric_names_.push_back(event.short_name);
-    }
-}
+{}
 
 LibpfcNow LibpfcTimer::delta(const LibpfcNow& a, const LibpfcNow& b) {
     LibpfcNow ret;
@@ -49,29 +37,40 @@ LibpfcNow LibpfcTimer::delta(const LibpfcNow& a, const LibpfcNow& b) {
 
 
 
-TimingResult LibpfcTimer::to_result(LibpfcNow delta) {
+TimingResult LibpfcTimer::to_result(const LibpfcTimer& ti, LibpfcNow delta) {
     vector<double> results;
-    results.reserve(all_events.size());
-    for (auto& event : all_events) {
+    results.reserve(ti.all_events.size());
+    for (auto& event : ti.all_events) {
         unsigned slot = event.slot;
         results.push_back(delta.cnt[slot]);
     }
     return TimingResult(std::move(results));
 }
 
-static void inner_init(Context &context) {
+void LibpfcTimer::init(Context& c, const TimerArgs& args) {
     auto err = pfcInit();
     if (err) {
         const char* msg = pfcErrorString(err);
         throw std::runtime_error(std::string("pfcInit() failed (error ") + std::to_string(err) + ": " + msg + ")");
     }
 
-    err = pfcPinThread(pinned_cpu.Get());
-    if (err) {
-        // let's treat this as non-fatal, it could occur if, for example
-        context.err() << "WARNING: Pinning to CPU " << pinned_cpu.Get() << " failed, continuing without pinning" << endl;
-    } else {
-        context.log() << "Pinned to CPU " << pinned_cpu.Get() << endl;
+    all_events.push_back(PmuEvent{"Cycles", FIXED_COUNTER_ENABLE, PFC_FIXEDCNT_CPU_CLK_UNHALTED});
+
+    auto extra_events = parseExtraEvents(c, args.extra_events);
+    unsigned ecount = 0;
+    for (auto& event : extra_events) {
+        if (ecount >= GP_COUNTERS) {
+            c.err() << "Too many events requested, event " << event.full_name << " won't be recorded" << std::endl;
+        } else {
+            // assign slots consecutively starting after FIXED_COUNTERS slots
+            event.slot = FIXED_COUNTERS + ecount;
+            all_events.push_back(event);
+            ecount++;
+        }
+    }
+
+    for (auto& e : all_events) {
+        metric_names_.push_back(e.short_name);
     }
 
     PFC_CFG  cfg[7] = {};
@@ -87,7 +86,7 @@ static void inner_init(Context &context) {
         throw std::runtime_error(std::string("pfcWrCfgs() failed (error ") + std::to_string(err) + ": " + msg + ")");
     }
 
-    context.log() << "lipfc init OK" << std::endl;
+    c.out()   << "libpfc timer init OK" << endl;
 
     //    /* calculate CPU frequency using reference cycles */
     //    for (int i = 0; i < 100; i++) {
@@ -108,37 +107,10 @@ static void inner_init(Context &context) {
     //    }
 }
 
-void LibpfcTimer::init(Context &context) {
-    if (!is_init) {
-        inner_init(context);
-        is_init = true;
-    }
+void LibpfcTimer::listEvents(Context& c) {
+    c.out() << "Events supported by libpfc timer on this hardware:" << endl;
+    listPfm4Events(c);
 }
-
-void LibpfcTimer::addCustomArgs(args::ArgumentParser& parser) {
-    parser.Add(pfc_args);
-}
-
-void LibpfcTimer::customRunHandler(Context& c) {
-    if (arg_listevents) {
-        listPfm4Events(c);
-        throw SilentSuccess();
-    } else if (arg_extraevents) {
-        auto extra_events = parseExtraEvents(c, arg_extraevents.Get());
-        unsigned ecount = 0;
-        for (auto& event : extra_events) {
-            if (ecount >= GP_COUNTERS) {
-                c.err() << "Too many events requested, event " << event.full_name << " won't be recorded" << std::endl;
-            } else {
-                // assign slots consecutively starting after FIXED_COUNTERS slots
-                event.slot = FIXED_COUNTERS + ecount;
-                all_events.push_back(event);
-                ecount++;
-            }
-        }
-    }
-}
-
 
 
 

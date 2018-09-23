@@ -11,7 +11,7 @@ using namespace std;
 using namespace table;
 
 
-void BenchmarkGroup::runIf(Context &c, const TimerInfo &ti, const predicate_t& predicate) {
+void BenchmarkGroup::runIf(Context &c, const predicate_t& predicate) {
     bool header = false;
     for (auto& b : benches_) {
         if (predicate(b)) {

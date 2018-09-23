@@ -70,6 +70,8 @@ private:
     int argc_;
     char **argv_;
 
+    TimerArgs getArgs();
+
     args::ArgumentParser parser{"uarch-bench: A CPU micro-architecture benchmark"};
     args::HelpFlag help{parser, "help", "Display this help menu", {'h', "help"}};
     args::Flag arg_clockoverhead{parser, "clock-overhead", "Dislay clock overhead, then quit", {"clock-overhead"}};
@@ -80,6 +82,9 @@ private:
             " to report values from most benchmarks", {"precision"}, (unsigned int)DEFAULT_PRECISION};
     args::ValueFlag<std::string> arg_test_name{parser, "PATTERN", "Run only tests with name matching the given pattern", {"test-name"}};
     args::ValueFlag<std::string> arg_test_tag{parser, "PATTERN", "Run only the tests with a tag matching the given pattern", {"test-tag"}};
+    args::Flag arg_listevents{parser, "list-events", "Display the extra available events associated with the timer", {"list-events"}};
+    args::ValueFlag<std::string> arg_extraevents{parser, "extra-events", "A comma separated list of extra timer-specific events to track", {"extra-events"}};
+    args::ValueFlag<int> arg_pincpu{parser, "pinned-cpu", "All tests will be pinned this CPU to (defaults to first available CPU)", {'c', "pinned-cpu"}, 0};
 
 
     // internal flags: these aren't displayed to the user via help, but are used by some wrapper script to interact with the

@@ -135,5 +135,10 @@ struct region {
  */
 region& shuffled_region(const size_t size, const size_t offset = 0);
 
+/**
+ * Return the string description of the given system errno
+ */
+std::string errno_to_str(int e);
+
 
 #endif /* UTIL_HPP_ */

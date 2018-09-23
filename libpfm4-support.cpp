@@ -106,12 +106,12 @@ void listPfm4Events(Context& c) {
 }
 
 
-std::vector<PmuEvent> parseExtraEvents(Context& c, const std::string& event_list) {
+std::vector<PmuEvent> parseExtraEvents(Context& c, const std::vector<std::string>& event_list) {
     init();
 
     std::vector<PmuEvent> all_codes;
 
-    for (auto &event_str : split(event_list, ',')) {
+    for (auto &event_str : event_list) {
         // prepare the event info object
         pfm_pmu_encode_arg_t encode_info;
         char *name;

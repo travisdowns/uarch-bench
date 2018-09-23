@@ -64,7 +64,7 @@ public:
         return group;
     }
 
-    virtual void runIf(Context& c, const TimerInfo &ti, const predicate_t& predicate) override {
+    virtual void runIf(Context& c, const predicate_t& predicate) override {
         auto benches = getBenches();
         if (!supports(benches.front()->getFeatures())) {
             // skip tests if we don't have the supported features
@@ -95,7 +95,7 @@ public:
         vector<double> results(benches.size());
         for (size_t i = 0; i < benches.size(); i++) {
             Benchmark& b = benches[i];
-            results[i] = b->run().getCycles();
+            results[i] = b->run(c.getTimerInfo()).getCycles();
         }
 
         for (unsigned row = 0, i = 0; row < rows_; row++) {

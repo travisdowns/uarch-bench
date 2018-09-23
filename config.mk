@@ -6,6 +6,11 @@
 # Even when this is enabled, the default std::chrono based timing is still available.
 USE_LIBPFC ?= 1
 
+# Whether to compile support for using --timer=perf which is a timer that uses the perf
+# subsystem through Andi Kleen's jevent events library. It uses uses the Intel 01.org
+# downloaded event csvs to support use of perf_event_open and friends
+USE_PERF_TIMER ?= 1
+
 # Whether to compile support for using backwards-cpp, which gives stack traces
 # on crashes. By default, only binaries and addresses are given in the backtrace, but
 # for better stack traces you can enable either of the BACKWARD_HAS options below.

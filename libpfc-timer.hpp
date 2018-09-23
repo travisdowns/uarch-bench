@@ -20,7 +20,7 @@
 #define    GP_COUNTERS 4
 #define TOTAL_COUNTERS (FIXED_COUNTERS + GP_COUNTERS)
 
-/* this code is used in the appropriate fixed counter slow to enable the associated counter */
+/* this code is used in the appropriate fixed counter slot to enable the associated counter */
 #define FIXED_COUNTER_ENABLE 0x2
 
 struct LibpfcNow {
@@ -29,7 +29,7 @@ struct LibpfcNow {
     PFC_CNT getClk() const { return cnt[PFC_FIXEDCNT_CPU_CLK_UNHALTED]; }
 };
 
-class LibpfcTimer : public TimerBase<LibpfcTimer> {
+class LibpfcTimer : public TimerInfo {
 
 public:
 
@@ -38,7 +38,7 @@ public:
 
     LibpfcTimer(Context &c);
 
-    virtual void init(Context &) override;
+    virtual void init(Context&, const TimerArgs&) override;
 
     HEDLEY_ALWAYS_INLINE
     static now_t now() {
@@ -57,11 +57,7 @@ public:
         return now;
     }
 
-    static TimingResult to_result(LibpfcNow delta);
-
-    static void addCustomArgs(args::ArgumentParser& parser);
-
-    static void customRunHandler(Context& c);
+    static TimingResult to_result(const LibpfcTimer& ti, LibpfcNow delta);
 
     /*
      * Return the delta of a and b, that is a minus b.
@@ -74,9 +70,13 @@ public:
 
     static LibpfcNow aggregate(const LibpfcNow *begin, const LibpfcNow *end);
 
-private:
+    /////////////////////////
+    // TimerInfo overrides //
+    /////////////////////////
 
-    static bool is_init;
+    virtual void listEvents(Context& c) override;
+private:
+    std::vector<PmuEvent> all_events;
 };
 
 #endif

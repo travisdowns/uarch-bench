@@ -175,3 +175,15 @@ region& shuffled_region(const size_t size, const size_t offset) {
 
     return *(new region{ size, storage }); // leak
 }
+
+std::string errno_to_str(int e) {
+    char buf[128];
+#ifndef _GNU_SOURCE
+// We expect _GNU_SOURCE to be defined here since apparently g++ forces it, and we use it to know which
+// version of strerror_r we are going to get. If it isn't defined somewhere, we may have to support the POSIX
+// version of it too (returns an int)
+#error "_GNU_SOURCE not defined"
+#endif
+    return strerror_r(e, buf, sizeof(buf));
+}
+

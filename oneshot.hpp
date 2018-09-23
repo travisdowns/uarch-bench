@@ -50,7 +50,7 @@ constexpr static int ONESHOT_OVERHEAD_TOTAL = ONESHOT_OVERHEAD_WARMUP + ONESHOT_
 
 template <typename TIMER>
 static void printOne(Context& c, const std::string& name, const typename TIMER::delta_t& delta) {
-    TimingResult result = TIMER::to_result(delta);
+    TimingResult result = TIMER::to_result(static_cast<const TIMER &>(c.getTimerInfo()), delta);
     printBenchName(c, std::string("Oneshot overhead ") + name);
     printAlignedMetrics(c, result.getResults());
     c.out() << std::endl;
@@ -124,8 +124,8 @@ public:
                 {}
 
 
-    virtual TimingResult run() override {
-        throw new std::logic_error("oneshot doesn't do run()");
+    virtual TimingResult run(const TimerInfo& ti) override {
+        throw std::logic_error("oneshot doesn't do run()");
     }
 
     virtual void printHeader(Context& c) {
@@ -138,7 +138,8 @@ public:
 
     template <typename M>
     void printOneSample(Context& c, const typename TIMER::delta_t& raw, const M& sampleNum) {
-        const TimingResult& result = normalize(TIMER::to_result(raw), this->args, loop_count);
+        const TimingResult& result = normalize(TIMER::to_result(static_cast<const TIMER &>(c.getTimerInfo()), raw),
+                this->args, loop_count);
         printBenchName(c, this);
         printOneMetric(c, sampleNum);
         printAlignedMetrics(c, result.getResults());
