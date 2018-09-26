@@ -126,6 +126,13 @@ libpfc/libpfc.so libpfc/pfc.ko:
 libpfc-clean:
 	cd libpfc && make clean
 
+ifeq ($(USE_PERF_TIMER),1)
+# jevents handling - we don't put any dependencies for jevents so you'll have to rebuild it
+# yourself if you make some changes there
+$(JEVENTS_LIB):
+	$(MAKE) -C $(JEVENTS_DIR)
+endif
+
 insmod: libpfc
 	sudo sh -c "echo 2 > /sys/bus/event_source/devices/cpu/rdpmc"
 	! lsmod | grep -q pfc || sudo rmmod pfc
