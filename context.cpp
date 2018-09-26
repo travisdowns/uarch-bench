@@ -35,6 +35,8 @@ Context::Context(int argc, char **argv, std::ostream *out)
         err() << "ERROR: " << e.what() << std::endl;
         throw SilentFailure();
     }
+
+    verbose_ = arg_verbose;
 }
 
 template <typename TIMER>
@@ -221,7 +223,6 @@ void Context::run() {
         if (arg_listevents) {
             timer_info_->listEvents(*this);
         } else {
-
 
             predicate_t pred;
             if (!arg_test_tag && !arg_test_name) {

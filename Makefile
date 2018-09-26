@@ -17,6 +17,9 @@ LIBPFC_TARGET ?= all
 PFM_DIR ?= libpfm4
 PFM_LIBDIR ?= $(PFM_DIR)/lib
 
+JEVENTS_DIR ?= pmu-tools/jevents
+JEVENTS_LIB ?= $(JEVENTS_DIR)/libjevents.a
+
 PSNIP_DIR ?= portable-snippets
 # all the psnip source files we want to compile into uarch-bench
 PSNIP_SRC := cpu.c
@@ -44,12 +47,19 @@ SRC_FILES := $(filter-out $(PFC_SRC), $(SRC_FILES))
 PIE ?= -no-pie
 LDFLAGS += $(PIE)
 
+EXTRA_DEPS :=
+
 ifeq ($(USE_LIBPFC),1)
 LDFLAGS += -Llibpfc '-Wl,-rpath=$$ORIGIN/libpfc/' -L$(PFM_LIBDIR) '-Wl,-rpath=$$ORIGIN/$(PFM_LIBDIR)/'
 LDLIBS += -lpfc -lpfm
-LIBPFC_DEP += libpfc/libpfc.so libpfc/pfc.ko $(PFM_LIBDIR)/libpfm.so
+EXTRA_DEPS += libpfc/libpfc.so libpfc/pfc.ko $(PFM_LIBDIR)/libpfm.so
 CLEAN_TARGETS += libpfc-clean libpfm4-clean
 SRC_FILES += $(PFC_SRC)
+endif
+
+ifeq ($(USE_PERF_TIMER),1)
+EXTRA_DEPS += $(JEVENTS_LIB)
+LDLIBS += $(JEVENTS_LIB)
 endif
 
 ifeq ($(BACKWARD_HAS_BFD),1)
@@ -65,7 +75,7 @@ OBJECTS := $(OBJECTS:.c=.o)
 DEPFILES = $(OBJECTS:.o=.d)
 # $(info OBJECTS=$(OBJECTS))
 
-$(info USE_LIBPFC=${USE_LIBPFC})
+$(info USE_LIBPFC=${USE_LIBPFC} USE_PERF_TIMER=${USE_PERF_TIMER})
 
 VPATH = test:$(PSNIP_DIR)/cpu
 
@@ -73,7 +83,7 @@ VPATH = test:$(PSNIP_DIR)/cpu
 # Targets #
 ###########
 
-all: uarch-bench unit-test
+all: uarch-bench unit-test util/seqtest
 
 -include $(DEPFILES) unit-test.d
 
@@ -89,16 +99,18 @@ UNIT_OBJECTS := $(filter-out main.o, $(OBJECTS))
 unit-test: unit-test.o unit-test-main.o $(UNIT_OBJECTS) 
 	$(CXX) $^         $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o $@
 
-uarch-bench: $(OBJECTS) $(LIBPFC_DEP)
+uarch-bench: $(OBJECTS) $(EXTRA_DEPS)
 	$(CXX) $(OBJECTS) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o $@
 # the next two lines are only to print out the size of the binary for diagnostic purposes, feel free to omit them
 	@wc -c uarch-bench | awk '{print "binary size: " $$1/1000 "KB"}'
 	@size uarch-bench --format=SysV | egrep '\.text|\.eh_frame|\.rodata|^section'
 
-%.o : %.c $(LIBPFC_DEP)
+util/seqtest: util/seqtest.o
+
+%.o : %.c
 	$(CC) $(CFLAGS) -c -std=c11 -o $@ $<
 
-%.o : %.cpp $(LIBPFC_DEP)
+%.o : %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -std=c++11 -o $@ $<
 
 %.o: %.asm nasm-utils/nasm-utils-inc.asm

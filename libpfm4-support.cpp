@@ -161,7 +161,7 @@ std::string PmuEvent::make_short_name(const std::string& full)
 {
     std::vector<std::string> components = split(full, "::");
     const std::string& trimmed = components.size() > 1 ? components.at(1) : full;
-    return trimmed.substr(0, std::min(size_t{6}, full.length()));
+    return trimmed.substr(0, std::min((size_t)6, full.length()));
 }
 
 PmuEvent::PmuEvent(const std::string& full_name, uint64_t code, unsigned slot) : full_name{full_name},

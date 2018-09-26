@@ -6,7 +6,6 @@
 #include <assert.h>
 
 #include <sched.h>
-#include <x86intrin.h> // for rdtsc
 
 
 #include "args.hxx"

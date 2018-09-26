@@ -61,6 +61,9 @@ public:
         return *timer_info_;
     }
 
+    /* true if the user has selected verbose operation */
+    bool verbose() { return verbose_; }
+
     /* execute the benchmark or other behavior */
     void run();
 
@@ -69,6 +72,7 @@ private:
     TimerInfo *timer_info_;
     int argc_;
     char **argv_;
+    bool verbose_;
 
     TimerArgs getArgs();
 
@@ -77,6 +81,7 @@ private:
     args::Flag arg_clockoverhead{parser, "clock-overhead", "Dislay clock overhead, then quit", {"clock-overhead"}};
     args::Flag arg_listbenches{parser, "list-benches", "Dislay the available benchmarks", {"list"}};
     args::Flag arg_listtimers{parser, "list-timers", "Dislay the available timers", {"list-timers"}};
+    args::Flag arg_verbose{parser, "verbose", "Verbose output", {"verbose"}};
     args::ValueFlag<std::string> arg_timer{parser, "TIMER-NAME", "Use the specified timer", {"timer"}};
     args::ValueFlag<unsigned int> arg_default_precision{parser, "PRECISION", "Use the specified number of decimal places"
             " to report values from most benchmarks", {"precision"}, (unsigned int)DEFAULT_PRECISION};
