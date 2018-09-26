@@ -38,8 +38,8 @@ struct RunningEvent {
     std::string name;
     std::string header;
 
-    RunningEvent(const rdpmc_ctx& ctx, const std::string& name) :
-        ctx{ctx}, name{name}, header{make_header(name)}
+    RunningEvent(const rdpmc_ctx& ctxx, const std::string& name) :
+        ctx(ctxx), name{name}, header{make_header(name)}
     {}
 
     static std::string make_header(std::string name) {
