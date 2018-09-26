@@ -569,6 +569,15 @@ dec rdi
 jnz .top
 ret
 
+; a series of AVX512 512-bit stores to the same location, passed as the second parameter
+define_bench store512_any
+vpxorq zmm16, zmm16
+.top:
+times 128 vmovdqu64 [rsi], zmm16
+dec rdi
+jnz .top
+ret
+
 ; a series of independent 16-bit loads from the same location, with location passed as the second parameter
 ; note that the loads are not zero-extended, so they only write the lower 16 bits of eax, and so on some
 ; implementations each load is actually dependent on the previous load (to merge in the upper bits of eax)
@@ -610,6 +619,17 @@ define_bench load256_any
 %rep 64
 vmovdqu ymm0, [rsi]
 vmovdqu ymm1, [rsi]
+%endrep
+dec rdi
+jnz .top
+ret
+
+; a series of independent 256-bit loads from the same location, with location passed as the second parameter
+define_bench load512_any
+.top:
+%rep 64
+vmovdqu64 zmm16, [rsi]
+vmovdqu64 zmm16, [rsi]
 %endrep
 dec rdi
 jnz .top

@@ -13,19 +13,22 @@
 #include "context.hpp"
 #include "timers.hpp"
 #include "table.hpp"
+#include "isa-support.hpp"
 
 extern "C" {
 bench2_f  store16_any;
 bench2_f  store32_any;
 bench2_f  store64_any;
-bench2_f store128_any; // AVX2 128-bit store
-bench2_f store256_any; // AVX2 256-bit store
+bench2_f store128_any; // AVX2    128-bit store
+bench2_f store256_any; // AVX2    256-bit store
+bench2_f store512_any; // AVX512F 512-bit store
 
 bench2_f  load16_any;
 bench2_f  load32_any;
 bench2_f  load64_any;
-bench2_f load128_any; // AVX (REX-encoded) 128-bit store
-bench2_f load256_any; // AVX (REX-encoded) 256-bit store
+bench2_f load128_any; // AVX (REX-encoded) 128-bit load
+bench2_f load256_any; // AVX (REX-encoded) 256-bit load
+bench2_f load512_any; // AVX512F 512-bit load
 }
 
 using namespace std;
@@ -51,9 +54,9 @@ public:
     HEDLEY_NEVER_INLINE static shared_ptr<LoadStoreGroup> make_group(const string& id, const string& name, ssize_t op_size);
 
     template<typename TIMER, bench2_f METHOD>
-    static shared_ptr<LoadStoreGroup> make(const string& id, unsigned op_size) {
+    static shared_ptr<LoadStoreGroup> make(const string& id, unsigned op_size, featurelist_t features = {}) {
         shared_ptr<LoadStoreGroup> group = make_group(id, id, op_size);
-        auto maker = DeltaMaker<TIMER>(group.get(), 1000);
+        auto maker = DeltaMaker<TIMER>(group.get(), 1000).setFeatures(features);
         for (ssize_t misalign = 0; misalign < 64; misalign++) {
             maker.template make<METHOD>(group->make_id(misalign), group->make_name(misalign), 128,
                     [misalign]() { return misaligned_ptr(64, 64,  misalign); });
@@ -62,6 +65,11 @@ public:
     }
 
     virtual void runIf(Context& c, const TimerInfo &ti, const predicate_t& predicate) override {
+        auto benches = getBenches();
+        if (!supports(benches.front()->getFeatures())) {
+            // skip tests if we don't have the supported features
+            return;
+        }
 
         // because this BenchmarkGroup is really more like a single benchmark (i.e., the 64 actual Benchmark objects
         // don't their name printed but are show in a grid instead, we run the predicate on a fake Benchmark created
@@ -81,7 +89,6 @@ public:
         }
         os << endl;
 
-        auto benches = getBenches();
         assert(benches.size() == rows_ * cols_);
 
         // collect all the results up front, before any output
@@ -147,6 +154,7 @@ void register_loadstore(GroupList& list) {
     list.push_back(LoadStoreGroup::make<TIMER,  load64_any>("load/64-bit",  8));
     list.push_back(LoadStoreGroup::make<TIMER, load128_any>("load/128-bit", 16));
     list.push_back(LoadStoreGroup::make<TIMER, load256_any>("load/256-bit", 32));
+    list.push_back(LoadStoreGroup::make<TIMER, load512_any>("load/512-bit", 64, { x86Feature::AVX512F }));
 
     // store throughput
     list.push_back(LoadStoreGroup::make<TIMER,  store16_any>( "store/16-bit",  2));
@@ -154,6 +162,7 @@ void register_loadstore(GroupList& list) {
     list.push_back(LoadStoreGroup::make<TIMER,  store64_any>( "store/64-bit",  8));
     list.push_back(LoadStoreGroup::make<TIMER, store128_any>("store/128-bit", 16));
     list.push_back(LoadStoreGroup::make<TIMER, store256_any>("store/256-bit", 32));
+    list.push_back(LoadStoreGroup::make<TIMER, store512_any>("store/512-bit", 64, { x86Feature::AVX512F }));
 }
 
 #define REG_LOADSTORE(CLOCK) template void register_loadstore<CLOCK>(GroupList& list);
