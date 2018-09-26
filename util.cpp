@@ -145,15 +145,19 @@ size_t count(CacheLine* first) {
  * The region_struct is returned by reference and points to a static variable that is overwritten every time
  * this function is called.
  */
-region& shuffled_region(const size_t size) {
-    assert(size <= MAX_SHUFFLED_REGION_SIZE);
+region& shuffled_region(const size_t size, const size_t offset) {
+    assert(size + offset <= MAX_SHUFFLED_REGION_SIZE);
     assert(size % UB_CACHE_LINE_SIZE == 0);
     size_t size_lines = size / UB_CACHE_LINE_SIZE;
     assert(size_lines > 0);
 
     // only get the storage once and keep re-using it, to minimize variance (e.g., some benchmarks getting huge pages
     // and others not, etc)
-    static CacheLine* storage = (CacheLine*)new_huge_ptr(MAX_SHUFFLED_REGION_SIZE);
+    static char* storage_ = static_cast<char*>(new_huge_ptr(MAX_SHUFFLED_REGION_SIZE));
+
+    // NOTE: for non-zero offset this is technically UB since storage won't be aligned appropriately, currently not
+    // a problem on x86 with any compiler I'm aware of but perhaps we should use a final memmove to apply the offset
+    CacheLine* storage = reinterpret_cast<CacheLine*>(storage_ + offset);
 
     std::vector<size_t> indexes(size_lines);
     std::iota(indexes.begin(), indexes.end(), 0);

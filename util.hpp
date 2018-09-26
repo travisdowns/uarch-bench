@@ -129,8 +129,11 @@ struct region {
  *
  * The region_struct is returned by reference and points to a static variable that is overwritten every time
  * this function is called.
+ *
+ * Non-zero offset means that the returned region will be offset relative to the start of a cache line, e.g.,
+ * offset 60 could be used to ensure each load crosses a cache line.
  */
-region& shuffled_region(const size_t size);
+region& shuffled_region(const size_t size, const size_t offset = 0);
 
 
 #endif /* UTIL_HPP_ */

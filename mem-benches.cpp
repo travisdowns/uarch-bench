@@ -118,16 +118,17 @@ template <typename TIMER>
 void register_mem_oneshot(GroupList& list);
 
 template <bench2_f F, typename M>
-static void make_load_bench(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops) {
+static void make_load_bench(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops, size_t offset = 0) {
     maker.template make<F>(
             string_format("%s-%d", id_prefix, kib),
             string_format("%d-KiB %s", kib, desc_suffix),
             ops,
-            [kib]{ return &shuffled_region(kib * 1024); }
+            [=]{ return &shuffled_region(kib * 1024, offset); }
     );
 }
 
-#define MAKE_SERIAL(kib,test)  make_load_bench<test>             (maker, kib, "serial-loads",   "serial loads", 1);
+#define MAKE_SERIALO(kib, test, off)       make_load_bench<test>             (maker, kib, "serial-loads",   "serial loads", 1, off);
+#define MAKE_SERIAL(kib, test)  MAKE_SERIALO(kib, test, 0)
 #define MAKEP_LOAD(l,kib) make_load_bench<parallel_mem_bench_##l>(maker, kib, "parallel-" #l, "parallel " #l, LOAD_LOOP_UNROLL);
 #define MAKEP_ALL(kib) LOADTYPE_X(MAKEP_LOAD,kib)
 
@@ -191,7 +192,23 @@ void register_mem(GroupList& list) {
 
         maker = maker.setLoopCount(100 * 1000); // speed things up for the bigger tests
         for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
-            MAKE_SERIAL(kib,serial_load_bench);
+            MAKE_SERIAL(kib, serial_load_bench);
+        }
+    }
+
+    {
+        // this group of tests isn't directly comparable to the parallel tests since the access pattern is "more random" than the
+        // parallel test, which is strided albeit with a large stride. In particular it's probably worse for the TLB. The result is
+        // that the implied "max MLP" derived by dividing the serial access time by the parallel one is larger than 10 (about 12.5),
+        // which I think is impossible on current Intel. We should make comparable parallel/serial tests that have identical access
+        // patterns.
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-serial-crossing", "Cacheline crossing loads from fixed-size regions");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 1000 * 1000);
+
+        maker = maker.setLoopCount(100 * 1000); // speed things up for the bigger tests
+        for (int kib = 8; kib <= MAX_SIZE / 1024; kib *= 2) {
+            MAKE_SERIALO(kib, serial_load_bench, -1);
         }
     }
 
@@ -227,7 +244,7 @@ void register_mem(GroupList& list) {
     }
 
     {
-        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/memory/crit-word", "Serial loads at differnet cache line offsets");
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/memory/crit-word", "Serial loads at different cache line offsets");
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 1024 * 1024);
 
