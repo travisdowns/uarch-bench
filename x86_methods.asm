@@ -1,6 +1,10 @@
 BITS 64
 default rel
 
+%ifdef __YASM_MAJOR__
+%error "We don't support YASM compilation anymore, see issue #63"
+%endif
+
 %include "nasm-utils/nasm-utils-inc.asm"
 %include "x86_helpers.asm"
 
@@ -887,19 +891,6 @@ jnz     .unfused_loop
 add     rsp, rax
 ret
 
-%ifdef __YASM_MAJOR__
-; YASM doesn't yet support AVX-512
-; https://github.com/travisdowns/uarch-bench/issues/61
-define_bench vz_samereg
-ret
-define_bench vz_diffreg
-ret
-define_bench vz_diffreg16
-ret
-define_bench vz_diffreg16xor
-ret
-%else
-
 define_bench vz_samereg
 xor ecx, ecx
 vzeroall
@@ -938,7 +929,6 @@ dec rdi
 jnz .top
 ret
 
-%endif
 
 define_bench vz256_samereg
 xor ecx, ecx

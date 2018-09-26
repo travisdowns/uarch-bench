@@ -10,7 +10,6 @@ addons:
       - ubuntu-toolchain-r-test
     packages: &default_pacakges
       - nasm
-      - yasm
       
 env:
   global:
@@ -57,16 +56,6 @@ matrix:
           - g++-4.9
     - compiler: gcc-6
       env: TRUE_CC=gcc-6 TRUE_CXX=g++-6
-      addons:
-        apt:
-          sources:
-          - *default_sources
-          packages:
-          - *default_pacakges
-          - gcc-6
-          - g++-6
-    - compiler: gcc-6-yasm
-      env: TRUE_CC=gcc-6 TRUE_CXX=g++-6 ASM=yasm
       addons:
         apt:
           sources:

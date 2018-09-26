@@ -25,8 +25,7 @@ BACKWARD_HAS_DW ?= 0
 # set DEBUG to 1 to enable various debugging checks
 DEBUG ?= 0
 
-# The assembler to use. Defaults to nasm, but can also be set to yasm which has better
-# debug info handling.
+# The assembler to use, we used to support yasm also but as of issue #63 we only support nasm
 ASM ?= nasm
 
 ifeq ($(DEBUG),1)
