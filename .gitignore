@@ -57,3 +57,6 @@ dummy.rebuild
 
 # local make config file
 local.mk
+
+# event download indicator file
+/download_events.touch

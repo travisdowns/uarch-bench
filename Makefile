@@ -58,7 +58,7 @@ SRC_FILES += $(PFC_SRC)
 endif
 
 ifeq ($(USE_PERF_TIMER),1)
-EXTRA_DEPS += $(JEVENTS_LIB)
+EXTRA_DEPS += $(JEVENTS_LIB) download_events.touch
 LDLIBS += $(JEVENTS_LIB)
 endif
 
@@ -131,6 +131,12 @@ ifeq ($(USE_PERF_TIMER),1)
 # yourself if you make some changes there
 $(JEVENTS_LIB):
 	$(MAKE) -C $(JEVENTS_DIR)
+
+# this file just tracks whether you've downloaded the events file for this host
+download_events.touch:
+	pmu-tools/event_download.py
+	echo "This presence of this file is used to indicate to make that the PMU event json files have been downloaded" >> $@
+
 endif
 
 insmod: libpfc
