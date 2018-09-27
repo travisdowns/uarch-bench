@@ -1,5 +1,5 @@
 /*
- * libpfc-timer.hpp
+ * perf-timer.hpp
  */
 
 #ifndef PERF_TIMER_HPP_

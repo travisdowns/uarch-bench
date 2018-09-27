@@ -1110,8 +1110,55 @@ all_parallel_benches prefetchnta,prefetchnta_bench
 %define UF 8
 
 ; all loads happen in parallel, so maximum MLP can be achieved
-%macro parallel_mem_bench 2
+%macro parallel_mem_bench 3
 define_bench parallel_mem_bench_%2
+
+mov     rax, [rsi + region.size]
+mov     rsi, [rsi + region.start]
+neg     rax
+
+lea     r9, [STRIDE * (2*UF-1) + eax]
+
+xor     ecx, ecx  ; index
+mov     rdx, rsi  ; offset into region
+
+.top:
+
+%assign s 0
+%rep UF
+%1      [rdx + STRIDE * s] %3
+%assign s s+1
+%endrep
+
+; check if final read of the next unrolled iteration will exceed the requested size
+; and if so, wrap back to the start. Due to the runolling this means that the last
+; few loads might be skipped, making the effective footprint somewhat smaler than
+; requested by something like UF * 0.5 * STRIDE on average (mostly relevant for buffer
+; sizes just above a cache size boundary)
+lea     edx, [rcx + r9]
+add     ecx, STRIDE * UF
+test    edx, edx
+cmovns  ecx, edx
+
+lea     rdx, [rsi + rcx]
+
+dec rdi
+jnz .top
+ret
+%endmacro
+
+parallel_mem_bench {movzx   eax, BYTE},load,{}
+parallel_mem_bench prefetcht0,prefetcht0,{}
+parallel_mem_bench prefetcht1,prefetcht1,{}
+parallel_mem_bench prefetcht2,prefetcht2,{}
+parallel_mem_bench prefetchnta,prefetchnta,{}
+
+parallel_mem_bench mov DWORD,store,{, 42}
+
+%macro parallel_mem_benchEXT 2
+define_bench parallel_mem_bench_x%2
+
+xor     eax, eax
 
 mov     rax, [rsi + region.size]
 mov     rsi, [rsi + region.start]
@@ -1147,21 +1194,20 @@ jnz .top
 ret
 %endmacro
 
-parallel_mem_bench {movzx   eax, BYTE},load
-parallel_mem_bench prefetcht0,prefetcht0
-parallel_mem_bench prefetcht1,prefetcht1
-parallel_mem_bench prefetcht2,prefetcht2
-parallel_mem_bench prefetchnta,prefetchnta
+parallel_mem_benchEXT {mov     eax, DWORD},load
 
 
 
 ; classic pointer chasing benchmark
 define_bench serial_load_bench
 
+mov eax, 0
 mov     rsi, [rsi + region.start]
 
 .top:
 mov rsi, [rsi]
+mov rsi, rsi
+;mov rsi, rsi
 dec rdi
 jnz .top
 

@@ -13,6 +13,8 @@
 
 #include <sys/mman.h>
 
+#include <immintrin.h>
+
 #if defined(__GNUC__) && !defined(__clang__)
 #define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
@@ -159,6 +161,8 @@ region& shuffled_region(const size_t size, const size_t offset) {
     // a problem on x86 with any compiler I'm aware of but perhaps we should use a final memmove to apply the offset
     CacheLine* storage = reinterpret_cast<CacheLine*>(storage_ + offset);
 
+    std::memset(storage, -1, size);
+
     std::vector<size_t> indexes(size_lines);
     std::iota(indexes.begin(), indexes.end(), 0);
     std::shuffle(indexes.begin(), indexes.end(), std::mt19937_64{123});
@@ -172,6 +176,12 @@ region& shuffled_region(const size_t size, const size_t offset) {
     p->setNexts(storage + indexes[0]);
 
     assert(count(storage) == size_lines);
+
+    for (char *p = (char *)storage, *e = p + size; p < e; p += UB_CACHE_LINE_SIZE) {
+        _mm_clflush(p);
+    }
+
+    _mm_mfence();
 
     return *(new region{ size, storage }); // leak
 }

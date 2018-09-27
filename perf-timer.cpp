@@ -4,6 +4,8 @@
 
 #if USE_PERF_TIMER
 
+#include "perf-timer.hpp"
+
 #include <cassert>
 #include <stdexcept>
 #include <string>
@@ -21,7 +23,6 @@ extern "C" {
 
 #include "table.hpp"
 #include "timers.hpp"
-#include "perf-timer.hpp"
 #include "util.hpp"
 #include "context.hpp"
 
@@ -83,6 +84,10 @@ std::vector<PerfEvent> get_all_events() {
     return ret;
 }
 
+std::string to_hex_string(long l) {
+    return string_format("%lx", l);
+}
+
 /**
  * Take a perf_event_attr objects and return a string representation suitable
  * for use as an event for perf, or just for display.
@@ -93,10 +98,14 @@ std::string perf_attr_to_string(perf_event_attr* attr) {
     ret += std::string(pmu ? pmu : "???") + "/";
 
 #define APPEND_IF_NZ1(field) APPEND_IF_NZ2(field,field)
-#define APPEND_IF_NZ2(name, field) if (attr->field) ret += std::string(#name) + "=" + std::to_string(attr->field) + ","
+#define APPEND_IF_NZ2(name, field) if (attr->field) ret += std::string(#name) + "=0x" + to_hex_string(attr->field) + ","
 
     APPEND_IF_NZ1(config);
+    APPEND_IF_NZ1(config1);
+    APPEND_IF_NZ1(config2);
     APPEND_IF_NZ2(period, sample_period);
+    APPEND_IF_NZ1(sample_type);
+    APPEND_IF_NZ1(read_format);
 
 
     ret.at(ret.length() - 1) = '/';
@@ -175,6 +184,7 @@ void PerfTimer::init(Context &c, const TimerArgs& args) {
     for (auto&e : args.extra_events) {
         if (running_events.size() == PerfNow::READING_COUNT) {
             c.err() << "Event '" << e << "' - check the available events with --list-events" << endl;
+            continue;
         }
 
         perf_event_attr attr = {};
@@ -189,9 +199,15 @@ void PerfTimer::init(Context &c, const TimerArgs& args) {
                 c.out() << "Resolved and programmed event '" << e << "' to '" << perf_attr_to_string(&attr) << "', caps:" <<
                         " R:" << ctx.buf->cap_user_rdpmc <<
                         " UT:" << ctx.buf->cap_user_time <<
-                        " ZT:" << ctx.buf->cap_user_time_zero << endl;
+                        " ZT:" << ctx.buf->cap_user_time_zero <<
+                        " index:" << ctx.buf->index << endl;
 
-                running_events.emplace_back(ctx, e);
+                if (ctx.buf->index == 0) {
+                    c.err() << "Failed to program event '" << e << "' (index == 0, rdpmc not available)" << endl;
+                    rdpmc_close(&ctx);
+                } else {
+                    running_events.emplace_back(ctx, e);
+                }
             }
         }
     }

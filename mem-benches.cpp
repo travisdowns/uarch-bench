@@ -20,6 +20,8 @@
 
 #define LOADTYPE_X(f,arg)  \
     f(       load, arg)    \
+    f(      xload, arg)    \
+    f(      store, arg)    \
     PFTYPE_X(f,arg)        \
 
 #define FWD_BENCH_DECL(delay) \
@@ -144,14 +146,29 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-parallel", "Parallel loads from fixed-size regions");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 100000).setTags({"default"});
+        auto maker = DeltaMaker<TIMER>(group.get(), 10000).setTags({"default"});
 
         for (auto kib : ALL_SIZES_ARRAY) {
             MAKEP_LOAD(load, kib);
+            MAKEP_LOAD(xload, kib);
         }
 
         for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
             MAKEP_LOAD(load, kib);
+        }
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/store-parallel", "Parallel stores to fixed-size regions");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 100000).setTags({"default"});
+
+        for (auto kib : ALL_SIZES_ARRAY) {
+            MAKEP_LOAD(store, kib);
+        }
+
+        for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
+            MAKEP_LOAD(store, kib);
         }
     }
 
