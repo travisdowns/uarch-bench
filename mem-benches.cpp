@@ -20,7 +20,6 @@
 
 #define LOADTYPE_X(f,arg)  \
     f(       load, arg)    \
-    f(      xload, arg)    \
     f(      store, arg)    \
     PFTYPE_X(f,arg)        \
 
@@ -160,10 +159,10 @@ void register_mem(GroupList& list) {
 
         for (auto kib : ALL_SIZES_ARRAY) {
             MAKEP_LOAD(load, kib);
-            MAKEP_LOAD(xload, kib);
         }
 
         for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
+            maker = maker.setTags({"slow"});
             MAKEP_LOAD(load, kib);
         }
     }
@@ -178,6 +177,7 @@ void register_mem(GroupList& list) {
         }
 
         for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
+            maker = maker.setTags({"slow"});
             MAKEP_LOAD(store, kib);
         }
     }
@@ -220,12 +220,17 @@ void register_mem(GroupList& list) {
         // patterns.
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-serial", "Serial loads from fixed-size regions");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 5 * 1000 * 1000).setTags({"default"});
 
-        ALL_SIZES_X_ARG(MAKE_SERIAL, serial_load_bench)
+        {
+            auto maker = DeltaMaker<TIMER>(group.get(), 100 * 1000).setTags({"default"});
+            ALL_SIZES_X_ARG(MAKE_SERIAL, serial_load_bench)
+        }
 
-        for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
-            MAKE_SERIAL(kib, serial_load_bench);
+        {
+            auto maker = DeltaMaker<TIMER>(group.get(), 7 * 1000 * 1000).setTags({"slow"});
+            for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
+                MAKE_SERIAL(kib, serial_load_bench);
+            }
         }
     }
 
@@ -237,9 +242,11 @@ void register_mem(GroupList& list) {
         // patterns.
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-serial-crossing", "Cacheline crossing loads from fixed-size regions");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 5 * 1000 * 1000);
+        auto maker_fast = DeltaMaker<TIMER>(group.get(), 100 * 1000);
+        auto maker_slow = DeltaMaker<TIMER>(group.get(), 7 * 1000 * 1000).setTags({"slow"});
 
         for (int kib = 8; kib <= MAX_SIZE / 1024; kib *= 2) {
+            auto& maker = kib > MAX_KIB ? maker_slow : maker_fast;
             MAKE_SERIALO(kib, serial_load_bench, -1);
         }
     }
@@ -280,7 +287,7 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/memory/crit-word", "Serial loads at different cache line offsets");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 4 * 1024 * 1024);
+        auto maker = DeltaMaker<TIMER>(group.get(), 4 * 1024 * 1024).setTags({"slow"});
 
         ALL_SIZES_X_ARG(MAKE_SERIAL,serial_load_bench2)
 

@@ -6,8 +6,11 @@
 #include "../util.hpp"
 #include "../table.hpp"
 #include "../matchers.hpp"
+#include "../simple-timer.hpp"
 
 #include "catch.hpp"
+
+#include <thread>
 
 
 TEST_CASE( "string_format", "[util]" ) {
@@ -140,9 +143,67 @@ TEST_CASE( "tag-matcher", "[matchers]" ) {
         CHECK( matcher({})                    == true );
         CHECK( matcher({"xxx", "barz"})       == true );
     }
+}
 
+TEST_CASE( "simple_timer", "[util]" ) {
+
+    {
+        SimpleTimer timer(false);
+        CHECK(timer.elapsedNanos() == 0);
+    }
+
+    {
+        SimpleTimer timer;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        CHECK(timer.elapsedNanos() >= 1000*1000);
+    }
+
+    {
+        SimpleTimer timer(false);
+        timer.start();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        timer.stop();
+        int64_t elapsed = timer.elapsedNanos();
+        CHECK(elapsed >= 1000*1000);
+        // check that time doesn't increment when stopped
+        CHECK(elapsed == timer.elapsedNanos());
+    }
+
+    {
+        // double stop
+        SimpleTimer timer;
+        timer.stop();
+        CHECK_THROWS_AS(timer.stop(), std::logic_error);
+    }
+
+    {
+        // double start
+        SimpleTimer timer;
+        CHECK_THROWS_AS(timer.start(), std::logic_error);
+    }
+
+    {
+        // double stop
+        SimpleTimer timer;
+        CHECK(timer.isStarted() == true);
+        timer.stop();
+        CHECK(timer.isStarted() == false);
+    }
+
+    {
+        // elapsed with other durations
+        SimpleTimer timer;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        timer.stop();
+        CHECK(timer.elapsedNanos() >= 1000 * 1000);
+        CHECK(timer.elapsedNanos()           == timer.elapsed<std::chrono::nanoseconds>());
+        CHECK(timer.elapsedNanos() / 1000    == timer.elapsed<std::chrono::microseconds>());
+        CHECK(timer.elapsedNanos() / 1000000 == timer.elapsed<std::chrono::milliseconds>());
+    }
 
 }
+
+
 
 
 

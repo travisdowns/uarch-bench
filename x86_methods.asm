@@ -1155,49 +1155,6 @@ parallel_mem_bench prefetchnta,prefetchnta,{}
 
 parallel_mem_bench mov DWORD,store,{, 42}
 
-%macro parallel_mem_benchEXT 2
-define_bench parallel_mem_bench_x%2
-
-xor     eax, eax
-
-mov     rax, [rsi + region.size]
-mov     rsi, [rsi + region.start]
-neg     rax
-
-lea     r9, [STRIDE * (2*UF-1) + eax]
-
-xor     ecx, ecx  ; index
-mov     rdx, rsi  ; offset into region
-
-.top:
-
-%assign s 0
-%rep UF
-%1      [rdx + STRIDE * s]
-%assign s s+1
-%endrep
-
-; check if final read of the next unrolled iteration will exceed the requested size
-; and if so, wrap back to the start. Due to the runolling this means that the last
-; few loads might be skipped, making the effective footprint somewhat smaler than
-; requested by something like UF * 0.5 * STRIDE on average (mostly relevant for buffer
-; sizes just above a cache size boundary)
-lea     edx, [rcx + r9]
-add     ecx, STRIDE * UF
-test    edx, edx
-cmovns  ecx, edx
-
-lea     rdx, [rsi + rcx]
-
-dec rdi
-jnz .top
-ret
-%endmacro
-
-parallel_mem_benchEXT {mov     eax, DWORD},load
-
-
-
 ; classic pointer chasing benchmark
 define_bench serial_load_bench
 

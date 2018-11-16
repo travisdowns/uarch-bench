@@ -71,7 +71,7 @@ void register_mem_oneshot(GroupList& list) {
         std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("memory/store-fwd-oneshot", "Store forwaring latency and throughput");
         list.push_back(oneshot);
 
-        auto maker = OneshotMaker<TIMER, 20>(oneshot.get());
+        auto maker = OneshotMaker<TIMER, 20>(oneshot.get()).setTags({"noisy"});
 
 #define LAT_DELAY_ONESHOT(delay) \
         maker.template make<fwd_lat_delay_oneshot_ ## delay>("oneshot-latency-" #delay, \
@@ -92,6 +92,7 @@ void register_mem_oneshot(GroupList& list) {
         auto maker = OneshotMaker<TIMER, 20>(stfwd.get());
 
         maker.template make<dummy_bench>("oneshot-dummy", "Empty oneshot bench", 1);
+        maker = maker.setTags({"noisy"});
         maker.template make<oneshot_try1>("stfwd-try1", "stfwd-try1", 1, buf_provider);
         maker.template make<oneshot_try2>("stfwd-try2", "stfwd-try2 100 loads", 1, buf_provider);
         maker.template make<oneshot_try2_4>("stfwd-try2-4", "stfwd-try2 4 loads", 1, buf_provider);

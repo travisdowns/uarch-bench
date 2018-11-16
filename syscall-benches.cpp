@@ -84,7 +84,7 @@ void register_syscall(GroupList& list) {
         maker.template make<lfence_only>              ("lfence-only",      "back-to-back lfence",           8, constant<0>);
 
         auto aligned_buf = [](){ return aligned_ptr(4096, BUFSIZE); };
-        maker = maker.setLoopCount(524288);
+        maker = maker.setLoopCount(524288).setTags({"slow"});
         maker.template make<parallel_misses>      ("parallel-misses",       "parallel-misses",           1, aligned_buf);
         maker.template make<mfenced_misses>       ("mfenced-misses",        "mfenced misses",            1, aligned_buf);
         maker.template make<sfenced_misses>       ("sfenced-misses",        "sfenced misses",            1, aligned_buf);

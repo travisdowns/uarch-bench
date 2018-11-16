@@ -5,6 +5,7 @@
 
 #include "benchmark.hpp"
 #include "table.hpp"
+#include "simple-timer.hpp"
 
 using namespace std;
 
@@ -12,6 +13,7 @@ using namespace table;
 
 
 void BenchmarkGroup::runIf(Context &c, const predicate_t& predicate) {
+    SimpleTimer timer;
     bool header = false;
     for (auto& b : benches_) {
         if (predicate(b)) {
@@ -22,6 +24,9 @@ void BenchmarkGroup::runIf(Context &c, const predicate_t& predicate) {
             }
             b->runAndPrint(c);
         }
+    }
+    if (header) {
+        c.out() << "Finished in " << timer.elapsed<std::chrono::milliseconds>() << " ms (" << getId() << ")" << endl;
     }
 }
 
