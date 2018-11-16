@@ -92,7 +92,7 @@ std::string to_hex_string(long l) {
  * Take a perf_event_attr objects and return a string representation suitable
  * for use as an event for perf, or just for display.
  */
-std::string perf_attr_to_string(perf_event_attr* attr) {
+std::string perf_attr_to_string(const perf_event_attr* attr) {
     std::string ret;
     char* pmu = resolve_pmu(attr->type);
     ret += std::string(pmu ? pmu : "???") + "/";
@@ -150,6 +150,14 @@ void fixup_event(perf_event_attr* attr, bool user_only) {
     }
 }
 
+void print_caps(ostream& os, const rdpmc_ctx& ctx) {
+    os << "caps:" <<
+            " R:" << ctx.buf->cap_user_rdpmc <<
+            " UT:" << ctx.buf->cap_user_time <<
+            " ZT:" << ctx.buf->cap_user_time_zero <<
+            " index: 0x" << to_hex_string(ctx.buf->index) << endl;
+}
+
 void PerfTimer::init(Context &c, const TimerArgs& args) {
     assert(init_count++ == 0);
 
@@ -178,10 +186,17 @@ void PerfTimer::init(Context &c, const TimerArgs& args) {
                 user_only = true;
             }
         }
+
+        c.out() << "Programmed cycles event, ";
+        print_caps(c.out(), ctx);
+
         running_events.emplace_back(ctx, "Cycles");
     }
 
-    for (auto&e : args.extra_events) {
+    for (auto&e : split_on_string(args.extra_events, "|")) {
+        if (e.empty()) {
+            continue;
+        }
         if (running_events.size() == PerfNow::READING_COUNT) {
             c.err() << "Event '" << e << "' - check the available events with --list-events" << endl;
             continue;
@@ -196,11 +211,8 @@ void PerfTimer::init(Context &c, const TimerArgs& args) {
             if (rdpmc_open_attr(&attr, &ctx, nullptr)) {
                 c.err() << "Failed to program event '" << e << "' (resolved to '" << perf_attr_to_string(&attr) << "')\n";
             } else {
-                c.out() << "Resolved and programmed event '" << e << "' to '" << perf_attr_to_string(&attr) << "', caps:" <<
-                        " R:" << ctx.buf->cap_user_rdpmc <<
-                        " UT:" << ctx.buf->cap_user_time <<
-                        " ZT:" << ctx.buf->cap_user_time_zero <<
-                        " index:" << ctx.buf->index << endl;
+                c.out() << "Resolved and programmed event '" << e << "' to '" << perf_attr_to_string(&attr) << "', ";
+                print_caps(c.out(), ctx);
 
                 if (ctx.buf->index == 0) {
                     c.err() << "Failed to program event '" << e << "' (index == 0, rdpmc not available)" << endl;

@@ -110,6 +110,7 @@ bench2_f fwd_tput_conc_10;
 bench2_f bandwidth_test256;
 bench2_f bandwidth_test256i;
 bench2_f bandwidth_test256i_orig;
+bench2_f bandwidth_test256i_single;
 bench2_f bandwidth_test256i_double;
 
 bench2_f sameloc_pointer_chase_alt;
@@ -126,8 +127,17 @@ bench2_f sameloc_pointer_chase_8way45;
 template <typename TIMER>
 void register_mem_oneshot(GroupList& list);
 
+
 template <bench2_f F, typename M>
 static void make_load_bench(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops, size_t offset = 0) {
+
+    size_t accessed_kib = (uint64_t)maker.getLoopCount() * UB_CACHE_LINE_SIZE / 1024 * ops;
+    if (accessed_kib < (size_t)kib) {
+        auto msg = string_format("make_load_bench: for bench %s/%s-%d accessed size kib is only %zu with kib %d",
+                maker.getGroup().getId().c_str(), id_prefix, kib, accessed_kib, kib);
+        throw std::logic_error(msg);
+    }
+
     maker.template make<F>(
             string_format("%s-%d", id_prefix, kib),
             string_format("%d-KiB %s", kib, desc_suffix),
@@ -146,7 +156,7 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-parallel", "Parallel loads from fixed-size regions");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 10000).setTags({"default"});
+        auto maker = DeltaMaker<TIMER>(group.get(), 1000 * 1000).setTags({"default"});
 
         for (auto kib : ALL_SIZES_ARRAY) {
             MAKEP_LOAD(load, kib);
@@ -161,7 +171,7 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/store-parallel", "Parallel stores to fixed-size regions");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 100000).setTags({"default"});
+        auto maker = DeltaMaker<TIMER>(group.get(), 1000 * 1000).setTags({"default"});
 
         for (auto kib : ALL_SIZES_ARRAY) {
             MAKEP_LOAD(store, kib);
@@ -210,11 +220,10 @@ void register_mem(GroupList& list) {
         // patterns.
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-serial", "Serial loads from fixed-size regions");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 1000 * 1000).setTags({"default"});
+        auto maker = DeltaMaker<TIMER>(group.get(), 5 * 1000 * 1000).setTags({"default"});
 
-        ALL_SIZES_X_ARG(MAKE_SERIAL,serial_load_bench)
+        ALL_SIZES_X_ARG(MAKE_SERIAL, serial_load_bench)
 
-        maker = maker.setLoopCount(100 * 1000); // speed things up for the bigger tests
         for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
             MAKE_SERIAL(kib, serial_load_bench);
         }
@@ -228,9 +237,8 @@ void register_mem(GroupList& list) {
         // patterns.
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-serial-crossing", "Cacheline crossing loads from fixed-size regions");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 1000 * 1000);
+        auto maker = DeltaMaker<TIMER>(group.get(), 5 * 1000 * 1000);
 
-        maker = maker.setLoopCount(100 * 1000); // speed things up for the bigger tests
         for (int kib = 8; kib <= MAX_SIZE / 1024; kib *= 2) {
             MAKE_SERIALO(kib, serial_load_bench, -1);
         }
@@ -247,7 +255,7 @@ void register_mem(GroupList& list) {
             for (double fudge = 0.90; fudge <= 1.10; fudge += 0.02) {
                 size_t fudgedkib = fudge * kib;
                 if (fudgedkib != last) {  // avoid duplicate tests for small kib values
-                    MAKE_SERIAL(fudge * kib,serial_load_bench);
+                    MAKE_SERIAL(fudge * kib, serial_load_bench);
                 }
                 last = fudgedkib;
             }
@@ -259,22 +267,23 @@ void register_mem(GroupList& list) {
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 1024).setFeatures({AVX2});
 
+        // test names need to have exactly two words and contain the word 'bandwidth' for scripts/tricky.sh to parse the output correctly
         for (int kib : {8, 16, 32, 54, 64, 128, 256, 512}) {
             make_load_bench<bandwidth_test256>(maker, kib, "bandwidth-normal", "linear bandwidth", kib * 1024 / 64); // timings are per cache line
             make_load_bench<bandwidth_test256i>(maker, kib, "bandwidth-tricky", "interleaved bandwidth", kib * 1024 / 64); // timings are per cache line
             make_load_bench<bandwidth_test256i_orig>(maker, kib, "bandwidth-orig", "original bandwidth", kib * 1024 / 64); // timings are per cache line
-            make_load_bench<bandwidth_test256i_double>(maker, kib, "bandwidth-oneloop-u2", "oneloop 2-wide", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<bandwidth_test256i_single>(maker, kib, "bandwidth-oneloop-u1", "oneloop-1-wide bandwidth", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<bandwidth_test256i_double>(maker, kib, "bandwidth-oneloop-u2", "oneloop-2-wide bandwidth", kib * 1024 / 64); // timings are per cache line
         }
     }
 
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/memory/crit-word", "Serial loads at different cache line offsets");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 1024 * 1024);
+        auto maker = DeltaMaker<TIMER>(group.get(), 4 * 1024 * 1024);
 
         ALL_SIZES_X_ARG(MAKE_SERIAL,serial_load_bench2)
 
-        maker = maker.setLoopCount(100 * 1000); // speed things up for the bigger tests
         for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
             MAKE_SERIAL(kib,serial_load_bench2);
         }

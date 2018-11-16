@@ -376,11 +376,21 @@ protected:
     }
 
 public:
+
+    const BenchmarkGroup& getGroup() const {
+        return *parent;
+    }
+
     /* returns a COPY of this object with the given tags */
     DERIVED setTags(taglist_t tags) {
         DERIVED ret(*static_cast<DERIVED*>(this));
         ret.tags = std::move(tags);
         return ret;
+    }
+
+    /* return the configured loop count for this maker object */
+    uint32_t getLoopCount() {
+        return loop_count;
     }
 
 
@@ -389,6 +399,11 @@ public:
         DERIVED ret(*static_cast<DERIVED*>(this));
         ret.loop_count = loop_count;
         return ret;
+    }
+
+    /* return the set of configured features for this maker */
+    featurelist_t getFeatures() {
+        return features;
     }
 
     /* returns a COPY of this object has the given requires features list */

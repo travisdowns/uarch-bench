@@ -55,8 +55,8 @@ typedef std::function<TimingResult (size_t)> full_bench_t;  // a full timing met
  * Passed to init() with any "global" args that are meant for the individual timer
  */
 struct TimerArgs {
-    // a list of requested "extra events" as parsed from the --extra-events string
-    std::vector<std::string> extra_events;
+    // a string of requested "extra events" passed via the --extra-events string
+    std::string extra_events;
 };
 
 

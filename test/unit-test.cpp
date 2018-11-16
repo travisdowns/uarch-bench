@@ -67,12 +67,25 @@ TEST_CASE( "table", "[util]" ) {
 }
 
 
-TEST_CASE( "split", "[util]") {
+TEST_CASE( "split_on_string", "[util]") {
     using sv = std::vector<std::string>;
 
-    CHECK(split("a,b,c", ",")  == sv{"a", "b", "c"});
-    CHECK(split("a,b,c", ',')  == sv{"a", "b", "c"});
-    CHECK(split("a,b,c,", ',') == sv{"a", "b", "c", ""});
+    CHECK(split_on_string("a,b,c", ",")  == sv{"a", "b", "c"});
+    CHECK(split_on_string("a,b,c", ",")  == sv{"a", "b", "c"});
+    CHECK(split_on_string("a,b,c,", ",") == sv{"a", "b", "c", ""});
+
+    CHECK(split_on_string("xxayyybzzzz", "ab") == sv{"xxayyybzzzz"});
+    CHECK(split_on_string("xxabyyyabzzzz", "ab") == sv{"xx", "yyy", "zzzz"});
+}
+
+TEST_CASE( "split_on_any", "[util]") {
+    using sv = std::vector<std::string>;
+
+    CHECK(split_on_any("a,b,c", ",")  == sv{"a", "b", "c"});
+    CHECK(split_on_any("a,b,c", ",")  == sv{"a", "b", "c"});
+    CHECK(split_on_any("a,b,c,", ",") == sv{"a", "b", "c", ""});
+
+    CHECK(split_on_any("xxayyybzzzz", "ab") == sv{"xx", "yyy", "zzzz"});
 }
 
 TEST_CASE( "tag-matcher", "[matchers]" ) {

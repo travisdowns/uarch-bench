@@ -18,7 +18,11 @@
 
 struct PerfNow {
     constexpr static unsigned READING_COUNT = MAX_EXTRA_EVENTS + 1;
-    uint64_t readings[READING_COUNT];
+    /* in principle the readings are unsigned values, but since we subtract two values to get a delta,
+     * there is a good chance of getting a small negative value (e.g., if the dummy run had more of a
+     * given event than the actual run) which if unsigned produces a large nonsense value.
+     */
+    int64_t readings[READING_COUNT];
     /* return the unhalted clock cycles value (PFC_FIXEDCNT_CPU_CLK_UNHALTED) */
     uint64_t getClk() const { return readings[0]; }
 };

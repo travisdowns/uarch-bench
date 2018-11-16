@@ -76,25 +76,35 @@ std::string container_to_string(const T& container) {
 
 
 
+
 /*
  * Split a string delimited by sep.
  *
  * See https://stackoverflow.com/a/7408245/149138
  */
-static inline std::vector<std::string> split(const std::string &text, const std::string &sep) {
+template <typename S>
+static inline std::vector<std::string> split_helper(const std::string &text, S splitfunc) {
+  using ptype = decltype(splitfunc(text,0));
   std::vector<std::string> tokens;
-  std::size_t start = 0, end = 0;
-  while ((end = text.find(sep, start)) != std::string::npos) {
-    tokens.push_back(text.substr(start, end - start));
-    start = end + sep.length();
+  std::size_t start = 0;
+  ptype result;
+  while ((result = splitfunc(text, start)).first != std::string::npos) {
+    tokens.push_back(text.substr(start, result.first - start));
+    start = result.first + result.second;
   }
   tokens.push_back(text.substr(start));
   return tokens;
 }
 
 
-static inline std::vector<std::string> split(const std::string &text, char sep) {
-    return split(text, std::string{sep});
+/** splits a string based on finding occurrences of the entire passed separator string */
+static inline std::vector<std::string> split_on_string(const std::string &text, const std::string& sep) {
+    return split_helper(text, [=](const std::string& s, size_t start) { return std::make_pair(s.find(sep, start), sep.length()); });
+}
+
+/** splits on any of the characters in sep_chars */
+static inline std::vector<std::string> split_on_any(const std::string &text, const std::string& sep_chars) {
+    return split_helper(text, [=](const std::string& s, size_t start) { return std::make_pair(s.find_first_of(sep_chars, start), 1); });
 }
 
 /** Take a string and escape it so that it will be treated as a literal string in a regex */

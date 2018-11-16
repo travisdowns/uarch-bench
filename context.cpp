@@ -167,11 +167,7 @@ void handleTimerSpecificRun(Context& c) {
 }
 
 TimerArgs Context::getArgs() {
-    TimerArgs ret;
-    if (arg_extraevents) {
-        ret.extra_events = split(arg_extraevents.Get(), ',');
-    }
-    return ret;
+    return { arg_extraevents.Get() };
 }
 
 /** get the first available CPU based on the affinity mask */

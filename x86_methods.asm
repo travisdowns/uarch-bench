@@ -1201,13 +1201,10 @@ parallel_mem_benchEXT {mov     eax, DWORD},load
 ; classic pointer chasing benchmark
 define_bench serial_load_bench
 
-mov eax, 0
 mov     rsi, [rsi + region.start]
 
 .top:
 mov rsi, [rsi]
-mov rsi, rsi
-;mov rsi, rsi
 dec rdi
 jnz .top
 
@@ -1338,6 +1335,54 @@ ret
 %endif
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+define_bench bandwidth_test256i_single
+mov     rdx, [rsi + region.size]
+mov     rsi, [rsi + region.start]
+
+.top:
+mov     rax, rdx
+sub     rax, UNROLLB * 64 ; reduce main loop iterations since the intro/outro parts handle this
+mov     rcx, rsi
+lfence
+
+vpxor ymm0, ymm0, ymm0
+vpxor ymm1, ymm1, ymm1
+vpxor ymm2, ymm1, ymm1
+
+; lead-in loop which reads the first half of the first UNROLLB cache lines
+%assign offset 0
+%rep UNROLLB
+vpaddb ymm0, ymm0, [rcx + offset]
+%assign offset (offset + 64)
+%endrep
+
+.inner:
+
+%assign offset 0
+%rep UNROLLX
+vpaddb ymm0, ymm0, [rcx + offset + UNROLLB * 64]
+vpaddb ymm1, ymm1, [rcx + offset + 32]
+%assign offset (offset + 64)
+%endrep
+
+
+
+add     rcx, UNROLLX * 64
+sub     rax, UNROLLX * 64
+jge      .inner
+
+; lead out loop to read the remaining lines
+%assign offset 0
+%rep UNROLLB
+vpaddb ymm0, ymm0, [rcx + offset]
+%assign offset (offset + 64)
+%endrep
+
+dec rdi
+jnz .top
+ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 define_bench bandwidth_test256i_double
 mov     rdx, [rsi + region.size]
 mov     rsi, [rsi + region.start]
@@ -1379,7 +1424,7 @@ jge      .inner
 ; lead out loop to read the remaining lines
 %assign offset 0
 %rep UNROLLB
-;vpaddb ymm0, ymm0, [rcx + offset]
+vpaddb ymm0, ymm0, [rcx + offset]
 %assign offset (offset + 64)
 %endrep
 

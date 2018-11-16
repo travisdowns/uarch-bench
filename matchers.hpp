@@ -14,7 +14,7 @@ class TagMatcher {
 public:
     TagMatcher(std::string pattern_list) {
         // filter the list like "foo,~bar" into positive patterns (foo) and negative (bar)
-        for (auto& p : split(pattern_list, ',')) {
+        for (auto& p : split_on_string(pattern_list, ",")) {
             if (!p.empty() && p[0] == '~') {
                 no_patterns.push_back(p.substr(1, p.size()));
             } else {
