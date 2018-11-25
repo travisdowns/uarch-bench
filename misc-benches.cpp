@@ -66,6 +66,9 @@ bench2_f vz128_samereg;
 bench2_f vz128_diffreg;
 bench2_f vzsse_samereg;
 bench2_f vzsse_diffreg;
+
+bench2_f adc_chain32;
+bench2_f adc_chain64;
 }
 
 
@@ -78,7 +81,7 @@ void register_misc(GroupList& list) {
     const uint32_t iters = 10*1000;
 
     auto maker = DeltaMaker<TIMER>(misc_group.get(), iters);
-    auto makerbmi1 = maker.setFeatures({BMI1});
+    auto makerbmi1 = maker.setFeatures({BMI1}).setLoopCount(3 * 1000 * 1000);
 
     makerbmi1.template make<misc_add_loop32>("add-32", "32-bit add-loop", 1);
     makerbmi1.template make<misc_add_loop64>("add-64", "64-bit add-loop", 1);
@@ -120,6 +123,11 @@ void register_misc(GroupList& list) {
         // https://news.ycombinator.com/item?id=15935283
         default_maker::template make_bench<loop_weirdness_fast>(misc_group.get(), "loop-weirdness-fast", "Loop weirdness fast", 1,
                 []{ return aligned_ptr(1024, 1024); }, 10000),
+
+        default_maker::template make_bench<adc_chain32>(misc_group.get(), "adc-chain32", "adc add chain 32-bit", 1000,
+                []{ return nullptr; }, 10000),
+        default_maker::template make_bench<adc_chain64>(misc_group.get(), "adc-chain64", "adc add chain 64-bit", 1000,
+                []{ return nullptr; }, 10000),
     };
 
     misc_group->add(benches);

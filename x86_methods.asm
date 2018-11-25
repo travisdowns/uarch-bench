@@ -655,6 +655,8 @@ jnz .top
 add rsp, 1024
 ret
 
+; Weird case where 32-bit add with memory source runs faster than 64-bit version
+; Search for "Totally bizarre" in https://www.agner.org/optimize/blog/read.php?i=423
 define_bench misc_add_loop32
 push rbp
 mov  rbp, rsp
@@ -688,12 +690,19 @@ sub rsp, 256
 and rsp, -64
 lea rax, [rsp + 64]
 lea rdi, [rsp + 128]
+
+; oddly, the slowdown goes away when you do a 256-bit AVX op, like
+; the ymm vpxor below, but not for xmm (at least with vzeroupper)
+;vpxor ymm0, ymm0, ymm0
+;vzeroupper
+;vpxor xmm0, xmm0, xmm0
+
 jmp .top
 ALIGN 32
 .top:
 add rdx, [rsp]
-mov [rax], edi
-blsi ebx, [rdi]
+mov [rax], rdi
+blsi rbx, [rdi]
 dec ecx
 jnz .top
 ; cleanup
@@ -1720,6 +1729,70 @@ dsb_body
 ALIGN 64
 dsb_alignment_nocross64:
 dsb_body
+
+
+%define ADC_INNER_ITERS 250
+
+; %1 name suffix
+; %2 reg to use as src/dest
+%macro define_adc_bench 2
+define_bench adc_chain%1
+push rbp
+mov  rbp, rsp
+
+mov  r9, rdi
+
+sub  rsp, ADC_INNER_ITERS * 3 * 32
+
+vzeroupper
+;vpor    ymm0, ymm0, ymm0
+
+.top:
+
+mov  rcx, ADC_INNER_ITERS
+
+lea  rsi, [rsp]
+lea  rdx, [rsp + ADC_INNER_ITERS * 32]
+lea  rdi, [rsp + ADC_INNER_ITERS * 32 * 2]
+
+;vpor    ymm0, ymm0, ymm0
+;vzeroupper
+;vpor    xmm0, xmm0, xmm0
+
+ALIGN 64
+.Loop:
+
+%assign offset 0
+%rep 4
+
+mov     %2, [rsi + offset]
+mov     %2, [rsi + offset]
+mov     [rdi + offset], %2
+
+%assign offset (offset + 0)
+%endrep
+
+
+;lea     rdi, [rdi+32]
+;lea     rsi, [rsi+32]
+;lea     rdx, [rdx+32]
+
+sub     rcx, 1
+jne     .Loop
+
+dec     r9
+jnz     .top
+
+mov     rsp, rbp
+pop     rbp
+
+ret
+%endmacro
+
+
+define_adc_bench 32, eax
+define_adc_bench 64, rax
+
 
 ; https://news.ycombinator.com/item?id=15935283
 ; https://eli.thegreenplace.net/2013/12/03/intel-i7-loop-performance-anomaly
