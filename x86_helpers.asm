@@ -25,9 +25,9 @@ or      rax, rdx
 
 ; The timings reported by pairs of rdpmc instructions are quite sensitive to the exact position
 ; that lfence appears. Two back to back lfences execute more quickly than expected compared to
-; and lfence separate by a single 1-cycle insruction: adding the 1 cycle instruction increases
+; two lfences separated by a single 1-cycle insruction; adding the 1 cycle instruction increases
 ; the measured time by about 4 cycles. The next few instrutions also generally measure "too high"
-; with this approach. So it is best to compare not against an totally empty function, but against
+; with this approach. So it is best to compare not against a totally empty function, but against
 ; one with a few instructions, with the method-under-test also having those few instructions.
 ;
 ; In the absence of a properly designed "delta" test, we hack around this issue by ensuring that even
