@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /usr/bin/env bash
 set -e
 
 # Recompiles and runs uarch-bench repeatedly, varying the value of a given nasm define (defaulting to NOPCOUNT)
