@@ -1,4 +1,4 @@
-# !/usr/bin/env bash
+#! /usr/bin/env bash
 # launches the uarch-bench process after trying to disable turbo
 # Some parts based on http://notepad2.blogspot.com/2014/11/a-script-to-turn-off-intel-cpu-turbo.html
 
