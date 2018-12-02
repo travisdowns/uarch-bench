@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /usr/bin/env bash
 
 # runs all the tests needed for the l2 max bandwidth investigation at
 # https://github.com/travisdowns/uarch-bench/wiki/Maxing-out-the-L2-cache

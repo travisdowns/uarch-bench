@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /usr/bin/env bash
 
 # Creates the plots used in https://github.com/travisdowns/uarch-bench/wiki/Getting-everything-the-L2-has-to-give
 
