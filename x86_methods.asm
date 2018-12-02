@@ -196,7 +196,7 @@ addrsp_calls 8
 
 
 ; because the 64x64=128 imul uses an implicit destination & first source
-; we need to clear out eax each iteration to make it idenpendent, although
+; we need to clear out eax each iteration to make it independent, although
 ; of course that may bias the measurement on some architectures
 define_bench indep_imul128_rax
 .top:
@@ -233,7 +233,7 @@ dec rdi
 jnz .top
 ret
 
-; pointer chasing loads from a singgle stack location on the stack
+; pointer chasing loads from a single stack location on the stack
 ; %1 name suffix
 ; %2 load expression (don't include [])
 ; %3 offset if any to apply to pointer and load expression

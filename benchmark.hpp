@@ -182,7 +182,7 @@ void printResultLine(Context& c, const Benchmark& b, const TimingResult& result)
 class BenchmarkGroup {
     /* the ID of this group, command-line friendly */
     std::string id;
-    /* human friendly plain text description, may may have spaces and other command-line unfriendly chars */
+    /* human friendly plain text description, may have spaces and other command-line unfriendly chars */
     std::string desc;
     std::vector<Benchmark> benches_;
 
