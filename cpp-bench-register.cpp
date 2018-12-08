@@ -11,6 +11,17 @@
 #include "benchmark.hpp"
 #include "cpp-benches.hpp"
 
+#define DIV_REG_X(f) \
+        f( 32_64, " 32b / 64b") \
+        f( 64_64, " 64b / 64b") \
+        f(128_64, "128b / 64b") \
+
+#define DIV_REG(suffix, text) \
+        maker.template make<div_lat_inline   ##suffix> ("div"#suffix"-lat",    "Dependent   " text "   inline divisions", 1); \
+        /*maker.template make<div_lat_noinline ##suffix >("div"#suffix"-lat-ni", "Dependent   " text " noinline divisions", 1); */\
+        maker.template make<div_tput_inline  ##suffix >("div"#suffix"-tput",   "Independent " text "   inline divisions", 1); \
+        /*maker.template make<div_tput_noinline##suffix> ("div"#suffix"-tput-ni","Independent " text " noinline divisions", 1); */\
+
 template <typename TIMER>
 void register_cpp(GroupList& list) {
 
@@ -20,10 +31,9 @@ void register_cpp(GroupList& list) {
     {
         auto maker = DeltaMaker<TIMER>(cpp_group.get());
 
-        maker.template make<div64_lat_inline>   ("div64-lat-inline",      "Dependent inline divisions", 1, []{ return (void *)100; });
-        maker.template make<div64_lat_noinline> ("div64-lat-noinline",    "Dependent 64-bit divisions", 1, []{ return (void *)100; });
-        maker.template make<div64_tput_inline>  ("div64-tput-inline",   "Independent inline divisions", 1);
-        maker.template make<div64_tput_noinline>("div64-tput-noinline", "Independent divisions",        1);
+        DIV_REG_X(DIV_REG)
+
+        maker.template make<gettimeofday_bench>   ("gettimeofday",    "gettimeofday() libc call", 1);
     }
 
     {

@@ -7,6 +7,7 @@
 
 #include "cpp-benches.hpp"
 #include "util.hpp"
+#include "hedley.h"
 
 #include <limits>
 #include <cinttypes>
@@ -14,25 +15,38 @@
 #include <random>
 #include <cstddef>
 
+#include <sys/time.h>
+
 
 using std::size_t;
 using std::uint64_t;
 
 typedef uint64_t (div_func)(uint64_t);
 
-static inline uint64_t somefunction_inline(uint64_t a) {
-    return 10000 / a;
+template <div_func F>
+HEDLEY_NEVER_INLINE
+uint64_t no_inline(uint64_t a) {
+    return F(a);
 }
 
-__attribute__ ((noinline))
-uint64_t somefunction_noinline(uint64_t a) {
-    return somefunction_inline(a);
+static inline uint64_t div32_64(uint64_t a) {
+    return 0x12345678u / a;
+}
+
+static inline uint64_t div64_64(uint64_t a) {
+    return 0x1234567812345678ull / a;
+}
+
+static inline uint64_t div128_64(uint64_t a) {
+    uint64_t high = 1, low = 2;
+    asm ("div %2" : "+d"(high), "+a"(low) : "r"(a) : );
+    return low;
 }
 
 template <div_func F>
 long div64_lat_templ(uint64_t iters, void *arg) {
-    uint64_t z = (uintptr_t)arg;
-    for(uint64_t k = 0; k < iters; k++)
+    uint64_t z = 1234;
+    for (uint64_t k = 0; k < iters; k++)
       z = F(z);
     return (long)z;
 }
@@ -40,27 +54,30 @@ long div64_lat_templ(uint64_t iters, void *arg) {
 template <div_func F>
 long div64_tput_templ(uint64_t iters, void *arg) {
     uint64_t z = 0;
-    for(uint64_t k = 0; k < iters; k++)
-      z += F(k + 1);
+    for (uint64_t k = 0; k < iters; k++)
+      z += F(k + 2);
     return (long)z;
 }
 
-long div64_lat_inline(uint64_t iters, void *arg) {
-    return div64_lat_templ<somefunction_inline>(iters, arg);
-}
+#define MAKE_DIV_BENCHES(suffix)                                            \
+        long div_lat_inline ## suffix (uint64_t iters, void *arg) {         \
+            return div64_lat_templ<div ## suffix>(iters, arg);              \
+        }                                                                   \
+                                                                            \
+        long div_tput_inline ## suffix(uint64_t iters, void *arg) {         \
+            return div64_tput_templ<div ## suffix>(iters, arg);             \
+        }                                                                   \
+                                                                            \
+        long div_lat_noinline ## suffix(uint64_t iters, void *arg) {        \
+            return div64_lat_templ<no_inline<div ## suffix>>(iters, arg);   \
+        }                                                                   \
+                                                                            \
+        long div_tput_noinline ## suffix(uint64_t iters, void *arg) {       \
+            return div64_tput_templ<no_inline<div ## suffix>>(iters, arg);  \
+        }                                                                   \
 
-long div64_tput_inline(uint64_t iters, void *arg) {
-    return div64_tput_templ<somefunction_inline>(iters, arg);
-}
 
-long div64_lat_noinline(uint64_t iters, void *arg) {
-    return div64_lat_templ<somefunction_noinline>(iters, arg);
-}
-
-long div64_tput_noinline(uint64_t iters, void *arg) {
-    return div64_tput_templ<somefunction_noinline>(iters, arg);
-}
-
+DIV_SPEC_X(MAKE_DIV_BENCHES)
 
 
 struct list_node {
@@ -163,6 +180,13 @@ long shuffled_list_sum(uint64_t iters, void *arg) {
     return sum;
 }
 
+long gettimeofday_bench(uint64_t iters, void *arg) {
+    struct timeval tv;
+    for (uint64_t i = 0; i < iters; i++) {
+        gettimeofday(&tv, nullptr);
+    }
+    return (long)tv.tv_usec;
+}
 
 
 

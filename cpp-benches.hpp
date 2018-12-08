@@ -7,13 +7,39 @@
 
 #include "bench-declarations.h"
 
-bench2_f div64_lat_inline;
-bench2_f div64_lat_noinline;
-bench2_f div64_tput_inline;
-bench2_f div64_tput_noinline;
+// division benches
+
+#define IDENTITY(x, ...) x
+#define RCONCAT(x, y, ...) y ## x
+
+#define DIV_SPEC_X3(g, e) g(e)
+
+#define DIV_SPEC_X2(f, g, arg)     \
+    DIV_SPEC_X3(f, g( 32_64, arg)) \
+    DIV_SPEC_X3(f, g( 64_64, arg)) \
+    DIV_SPEC_X3(f, g(128_64, arg)) \
+
+
+// call f with 32_64, 64_64, etc - each division spec
+#define DIV_SPEC_X(f) DIV_SPEC_X2(f, IDENTITY, )
+
+
+// call f with each function name, the product of the 4
+#define DIV_BENCH_X(f)                             \
+        DIV_SPEC_X2(f, RCONCAT, div_lat_inline)    \
+        DIV_SPEC_X2(f, RCONCAT, div_lat_noinline)  \
+        DIV_SPEC_X2(f, RCONCAT, div_tput_inline)   \
+        DIV_SPEC_X2(f, RCONCAT, div_tput_noinline) \
+
+
+#define DECL_BENCH(name) bench2_f name;
+
+DIV_BENCH_X(DECL_BENCH)
+
 bench2_f linkedlist_sentinel;
 bench2_f linkedlist_counter;
 bench2_f shuffled_list_sum;
+bench2_f gettimeofday_bench;
 
 constexpr int LIST_COUNT = 4000;
 
