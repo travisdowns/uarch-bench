@@ -150,5 +150,10 @@ region& shuffled_region(const size_t size, const size_t offset = 0);
  */
 std::string errno_to_str(int e);
 
+/**
+ * This method always returns zero, but the optimizer doesn't know that.
+ */
+int always_zero();
+
 
 #endif /* UTIL_HPP_ */

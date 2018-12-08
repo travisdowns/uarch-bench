@@ -197,3 +197,7 @@ std::string errno_to_str(int e) {
     return strerror_r(e, buf, sizeof(buf));
 }
 
+int always_zero() {
+    return zero;
+}
+

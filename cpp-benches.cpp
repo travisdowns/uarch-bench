@@ -38,42 +38,40 @@ static inline uint64_t div64_64(uint64_t a) {
 }
 
 static inline uint64_t div128_64(uint64_t a) {
-    uint64_t high = 1, low = 2;
+    uint64_t high = 123, low = 2;
+    a |= 0xF234567890123456ull;
     asm ("div %2" : "+d"(high), "+a"(low) : "r"(a) : );
     return low;
 }
 
-template <div_func F>
-long div64_lat_templ(uint64_t iters, void *arg) {
-    uint64_t z = 1234;
-    for (uint64_t k = 0; k < iters; k++)
-      z = F(z);
-    return (long)z;
-}
-
-template <div_func F>
-long div64_tput_templ(uint64_t iters, void *arg) {
-    uint64_t z = 0;
-    for (uint64_t k = 0; k < iters; k++)
-      z += F(k + 2);
-    return (long)z;
+template <div_func F, bool forcedep>
+long div64_templ(uint64_t iters, void *arg) {
+    uint64_t sum = 0, zero = always_zero();
+    for (uint64_t k = 1; k <= iters; k++) {
+        uint64_t d = k;
+        if (forcedep) {
+            d += (sum & zero);
+        }
+        sum += F(d);
+    }
+    return (long)sum;
 }
 
 #define MAKE_DIV_BENCHES(suffix)                                            \
         long div_lat_inline ## suffix (uint64_t iters, void *arg) {         \
-            return div64_lat_templ<div ## suffix>(iters, arg);              \
+            return div64_templ<div ## suffix, true>(iters, arg);              \
         }                                                                   \
                                                                             \
         long div_tput_inline ## suffix(uint64_t iters, void *arg) {         \
-            return div64_tput_templ<div ## suffix>(iters, arg);             \
+            return div64_templ<div ## suffix, false>(iters, arg);             \
         }                                                                   \
                                                                             \
         long div_lat_noinline ## suffix(uint64_t iters, void *arg) {        \
-            return div64_lat_templ<no_inline<div ## suffix>>(iters, arg);   \
+            return div64_templ<no_inline<div ## suffix>, true>(iters, arg);   \
         }                                                                   \
                                                                             \
         long div_tput_noinline ## suffix(uint64_t iters, void *arg) {       \
-            return div64_tput_templ<no_inline<div ## suffix>>(iters, arg);  \
+            return div64_templ<no_inline<div ## suffix>, false>(iters, arg);  \
         }                                                                   \
 
 
