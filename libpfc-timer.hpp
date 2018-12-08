@@ -38,7 +38,7 @@ public:
 
     LibpfcTimer(Context &c);
 
-    virtual void init(Context&, const TimerArgs&) override;
+    virtual void init(Context&) override;
 
     HEDLEY_ALWAYS_INLINE
     static now_t now() {

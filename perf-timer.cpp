@@ -158,8 +158,10 @@ void print_caps(ostream& os, const rdpmc_ctx& ctx) {
             " index: 0x" << to_hex_string(ctx.buf->index) << endl;
 }
 
-void PerfTimer::init(Context &c, const TimerArgs& args) {
+void PerfTimer::init(Context &c) {
     assert(init_count++ == 0);
+
+    const TimerArgs& args = c.getTimerArgs();
 
     int res = do_read_events();
     if (res) {

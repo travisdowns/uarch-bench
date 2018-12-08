@@ -46,7 +46,8 @@ TimingResult LibpfcTimer::to_result(const LibpfcTimer& ti, LibpfcNow delta) {
     return TimingResult(std::move(results));
 }
 
-void LibpfcTimer::init(Context& c, const TimerArgs& args) {
+void LibpfcTimer::init(Context& c) {
+    const TimerArgs &args = c.getTimerArgs();
     auto err = pfcInit();
     if (err) {
         const char* msg = pfcErrorString(err);

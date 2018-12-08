@@ -67,6 +67,9 @@ public:
     /* execute the benchmark or other behavior */
     void run();
 
+    /* get the TimerArgs for the current context */
+    TimerArgs getTimerArgs();
+
 private:
     std::ostream *err_, *log_, *out_;
     TimerInfo *timer_info_;
@@ -74,7 +77,6 @@ private:
     char **argv_;
     bool verbose_;
 
-    TimerArgs getArgs();
 
     args::ArgumentParser parser{"uarch-bench: A CPU micro-architecture benchmark"};
     args::HelpFlag help{parser, "help", "Display this help menu", {'h', "help"}};

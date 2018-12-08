@@ -70,10 +70,7 @@ public:
             ") to measure wall-clock time, and convert to cycles using a calibration loop"),
             {"Cycles", "Nanos"}) {}
 
-    void init(Context &c, const TimerArgs& args) override {
-        if (!args.extra_events.empty()) {
-            throw std::runtime_error("ClockTimer doesn't support extra args");
-        }
+    void init(Context &c) override {
         c.out() << "Median CPU speed: " << std::fixed << std::setw(4) << std::setprecision(3)
         << getGHz() << " GHz" << std::endl;
     }

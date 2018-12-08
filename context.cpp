@@ -152,11 +152,6 @@ void listTimers(Context& c) {
     }
 }
 
-/* list the available timers */
-void listEvents(Context& c) {
-
-}
-
 /*
  * Allow each timer to handle their specific args before starting any benchmark - e.g., for arguments that
  * just want to list some configuration then exit (throw SilentSuccess in this case).
@@ -166,7 +161,7 @@ void handleTimerSpecificRun(Context& c) {
     ALL_TIMERS_X(HANDLE_TIMER);
 }
 
-TimerArgs Context::getArgs() {
+TimerArgs Context::getTimerArgs() {
     return { arg_extraevents.Get() };
 }
 
@@ -213,13 +208,12 @@ void Context::run() {
 
         TimeredList& toRun = getForTimer(*this);
         timer_info_ = &toRun.getTimerInfo();
-        timer_info_->init(*this, getArgs());
 
         // after this point, the timer_info_ field is initialized, so if your behavior needs that, put it here
         if (arg_listevents) {
             timer_info_->listEvents(*this);
         } else {
-
+            timer_info_->init(*this);
             predicate_t pred;
             if (!arg_test_tag && !arg_test_name) {
                 // no predicates specified on the command line, use tag=* as default predicate

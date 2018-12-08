@@ -97,7 +97,7 @@ public:
 	 * Really this is just a poor design though and we should factor out the simple timer state, from the
 	 * "ready to measure" state which might require complicated init such as calibration. One day...
 	 */
-	virtual void init(Context &context, const TimerArgs& args) = 0;
+	virtual void init(Context &context) = 0;
 
 	virtual ~TimerInfo() = default;
 
