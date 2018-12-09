@@ -52,8 +52,16 @@ static int init_count;
 static vector<RunningEvent> running_events;
 
 
-int do_read_events() {
-    return read_events(nullptr);
+void do_read_events(Context& c) {
+    const char* event_file;
+    if ((event_file = getenv("UARCH_BENCH_FORCE_EVENT_FILE"))) {
+        c.log() << "Using forced perf events file: " << event_file << std::endl;
+    }
+    int res = read_events(event_file);
+    if (res) {
+        throw std::runtime_error(std::string("jevents failed while reading events, error ") + std::to_string(res) + ": "
+                + jevent_error_to_string(res) + ". Details: " + jevent_get_error_details());
+    }
 }
 
 typedef int (*walker_callback_t)(void *data, char *name, char *event, char *desc);
@@ -163,10 +171,7 @@ void PerfTimer::init(Context &c) {
 
     const TimerArgs& args = c.getTimerArgs();
 
-    int res = do_read_events();
-    if (res) {
-        throw std::runtime_error("jevents failed while reading events: " + errno_to_str(res));
-    }
+    do_read_events(c);
 
     bool user_only = false;
 
@@ -251,6 +256,7 @@ void printEvents(Context& c, E event_func) {
 }
 
 void PerfTimer::listEvents(Context& c) {
+    do_read_events(c); // need this before walking events or else the default lists will be used, not accounting for forced lists
     const char *dashes = "----------------------------------------------\n";
     c.out() << dashes << "Generic perf HW events\n" << dashes << endl;
     printEvents(c, get_perf_events);
