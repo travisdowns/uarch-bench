@@ -127,9 +127,9 @@ libpfc-clean:
 	cd libpfc && make clean
 
 ifeq ($(USE_PERF_TIMER),1)
-# jevents handling - we don't put any dependencies for jevents so you'll have to rebuild it
-# yourself if you make some changes there
-$(JEVENTS_LIB):
+# jevents handling - we just assume jevents depends on all .c or .h files in the root directory
+# which doesn't catch stuff in the examples dir (for example), but that's probably fine 
+$(JEVENTS_LIB): $(JEVENTS_DIR)/*.[ch]
 	$(MAKE) -C $(JEVENTS_DIR)
 
 # this file just tracks whether you've downloaded the events file for this host
