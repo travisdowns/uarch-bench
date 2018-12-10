@@ -69,6 +69,9 @@ bench2_f vzsse_diffreg;
 
 bench2_f adc_chain32;
 bench2_f adc_chain64;
+
+bench2_f weird_store_mov;
+bench2_f weird_store_xor;
 }
 
 
@@ -124,9 +127,17 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<loop_weirdness_fast>(misc_group.get(), "loop-weirdness-fast", "Loop weirdness fast", 1,
                 []{ return aligned_ptr(1024, 1024); }, 10000),
 
+        // private email
         default_maker::template make_bench<adc_chain32>(misc_group.get(), "adc-chain32", "adc add chain 32-bit", 1000,
                 []{ return nullptr; }, 10000),
         default_maker::template make_bench<adc_chain64>(misc_group.get(), "adc-chain64", "adc add chain 64-bit", 1000,
+                []{ return nullptr; }, 10000),
+
+        // case where when using the LSD, a loop with 2 stores apparently takes an extra cycle
+        // Reported by Alexander Monakov in https://github.com/travisdowns/bimodal-performance/issues/4
+        default_maker::template make_bench<weird_store_mov>(misc_group.get(), "weird-store-mov", "Store LSD weirdness, mov 0", 1000,
+                []{ return nullptr; }, 10000),
+        default_maker::template make_bench<weird_store_xor>(misc_group.get(), "weird-store-xor", "Store LSD weirdness, xor zero", 1000,
                 []{ return nullptr; }, 10000),
     };
 

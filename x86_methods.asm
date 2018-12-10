@@ -1794,6 +1794,39 @@ define_adc_bench 32, eax
 define_adc_bench 64, rax
 
 
+; define the weird store bench
+; %1 suffix
+; %2 zeroing instruction
+%macro define_weird_store 2
+define_bench weird_store_%1
+push rbp
+mov rbp, rsp
+sub rsp, 8196
+mov rsi, rsp
+mov eax, edi
+.oloop:
+mov ecx, 1000
+%2
+align 16
+.iloop:
+mov [rsi], edi
+mov [rsp], edi
+sub rsp, 4
+dec ecx
+jnz .iloop
+lea rsp, [rbp - 8196]
+dec eax
+jnz .oloop
+
+mov rsp, rbp
+pop rbp
+ret
+%endmacro
+
+define_weird_store mov,{mov edi, 0}
+define_weird_store xor,{xor edi, edi}
+
+
 ; https://news.ycombinator.com/item?id=15935283
 ; https://eli.thegreenplace.net/2013/12/03/intel-i7-loop-performance-anomaly
 define_bench loop_weirdness_fast
