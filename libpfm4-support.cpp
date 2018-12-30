@@ -112,6 +112,11 @@ std::vector<PmuEvent> parseExtraEvents(Context& c, const std::string& event_list
     std::vector<PmuEvent> all_codes;
 
     for (auto &event_str : split_on_string(event_list, ",")) {
+
+        if (event_str.empty()) {
+            continue;
+        }
+
         // prepare the event info object
         pfm_pmu_encode_arg_t encode_info;
         char *name;
