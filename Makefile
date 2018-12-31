@@ -134,7 +134,7 @@ $(JEVENTS_LIB): $(JEVENTS_DIR)/*.[ch]
 
 # this file just tracks whether you've downloaded the events file for this host
 download_events.touch:
-	-pmu-tools/event_download.py
+	pmu-tools/event_download.py
 	echo "This presence of this file is used to indicate to make that the PMU event json files have been downloaded" >> $@
 
 endif
