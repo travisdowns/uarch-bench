@@ -104,6 +104,24 @@ dec rdi
 jnz .top
 ret
 
+define_bench div_64_64
+xor eax,eax
+mov ecx, 1
+.top:
+times 128 div rcx
+dec rdi
+jnz .top
+ret
+
+define_bench idiv_64_64
+xor eax,eax
+mov ecx, 1
+.top:
+times 128 idiv rcx
+dec rdi
+jnz .top
+ret
+
 define_bench dense_calls
 .top:
 %rep 16

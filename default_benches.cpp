@@ -16,6 +16,8 @@ bench2_f store_same_loc;
 bench2_f store64_disjoint;
 bench2_f dep_pushpop;
 bench2_f indep_pushpop;
+bench2_f div_64_64;
+bench2_f idiv_64_64;
 bench2_f sameloc_pointer_chase;
 bench2_f sameloc_pointer_chase_complex;
 }
@@ -36,6 +38,8 @@ void register_default(GroupList& list) {
     maker.template make<store64_disjoint> ("disjoint-stores", "Disjoint location stores",  128);
     maker.template make<dep_pushpop>      ("dep-push-pop", "Dependent push/pop chain",  128);
     maker.template make<indep_pushpop>    ("indep-push-pop", "Independent push/pop chain",  128);
+    maker.template make<div_64_64>        ("64-bit div", "64-bit dependent div 1/1 = 1",  128);
+    maker.template make<idiv_64_64>       ("64-bit idiv","64-bit dependent idiv 1/1 = 1",  128);
     maker.template make<sameloc_pointer_chase>         ("pointer-chase-simple", "Simple addressing pointer chase",  128);
     maker.template make<sameloc_pointer_chase_complex> ("pointer-chase-complex","Complex addressing pointer chase",  128);
     // note: more pointer-chasing tests in mem-benches.cpp
