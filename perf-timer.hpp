@@ -59,6 +59,14 @@ public:
     virtual ~PerfTimer();
 };
 
+/* parse an --extra-events string of perf events
+ * Basically split events on commas, but commas in-between / characters
+ * are ignored for splitting.
+ * So 'cpu/123,456/,cpu/xxx,yyy/' is split as two tokens:
+ * 'cpu/123,456' and 'cpu/xxx,yyy/'
+ */
+std::vector<std::string> parsePerfEvents(const std::string& event_string);
+
 #endif
 
 #endif /* PERF_TIMER_HPP_ */

@@ -7,6 +7,7 @@
 #include "../table.hpp"
 #include "../matchers.hpp"
 #include "../simple-timer.hpp"
+#include "../perf-timer.hpp"
 
 #include "catch.hpp"
 
@@ -203,6 +204,13 @@ TEST_CASE( "simple_timer", "[util]" ) {
 
 }
 
+TEST_CASE( "parse_perf_events", "[perf]" ) {
+    using sv = std::vector<std::string>;
+    CHECK(parsePerfEvents("foo,bar") == sv{"foo", "bar"});
+    CHECK(parsePerfEvents("foo/bar,baz/") == sv{"foo/bar,baz/"});
+    CHECK(parsePerfEvents("foo/bar,baz/,beef") == sv{"foo/bar,baz/", "beef"});
+    CHECK(parsePerfEvents("foo/bar,baz/,beef,blah") == sv{"foo/bar,baz/", "beef", "blah"});
+}
 
 
 

@@ -166,6 +166,26 @@ void print_caps(ostream& os, const rdpmc_ctx& ctx) {
             " index: 0x" << to_hex_string(ctx.buf->index) << endl;
 }
 
+std::vector<std::string> parsePerfEvents(const std::string& event_string) {
+    bool inslash = false;
+    std::vector<std::string> events;
+    std::string current_event;
+    for (size_t i = 0; i < event_string.size(); i++) {
+        char c = event_string[i];
+        if (c == ',' && !inslash) {
+            events.push_back(current_event);
+            current_event.clear();
+        } else {
+            if (c == '/') {
+                inslash = !inslash;
+            }
+            current_event += c;
+        }
+    }
+    events.push_back(current_event);
+    return events;
+}
+
 void PerfTimer::init(Context &c) {
     assert(init_count++ == 0);
 
@@ -200,7 +220,7 @@ void PerfTimer::init(Context &c) {
         running_events.emplace_back(ctx, "Cycles");
     }
 
-    for (auto&e : split_on_string(args.extra_events, "|")) {
+    for (auto&e : parsePerfEvents(args.extra_events)) {
         if (e.empty()) {
             continue;
         }
