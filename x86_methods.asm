@@ -106,6 +106,7 @@ ret
 
 define_bench div_64_64
 xor eax,eax
+xor edx,edx
 mov ecx, 1
 .top:
 times 128 div rcx
@@ -115,6 +116,7 @@ ret
 
 define_bench idiv_64_64
 xor eax,eax
+xor edx,edx
 mov ecx, 1
 .top:
 times 128 idiv rcx
