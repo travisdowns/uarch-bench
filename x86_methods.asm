@@ -1792,11 +1792,6 @@ mov     [rdi + offset], %2
 %assign offset (offset + 0)
 %endrep
 
-
-;lea     rdi, [rdi+32]
-;lea     rsi, [rsi+32]
-;lea     rdx, [rdx+32]
-
 sub     rcx, 1
 jne     .Loop
 
@@ -1812,6 +1807,43 @@ ret
 
 define_adc_bench 32, eax
 define_adc_bench 64, rax
+
+%define nopd(x) nop %+ x
+
+; given a list of byte counts, generate a series of nops
+; one for each count with that number of bytes
+%macro multinop 1-*
+%rep %0
+    nopd(%1)
+    %rotate 1
+%endrep
+%endmacro
+
+%define DECODE_OPS 50400/7
+%macro define_decode 2-*
+%define ICOUNT (%0-1)
+%if (DECODE_OPS % ICOUNT) != 0
+%error "count of body instructions should divide DECODE_OPS" REPS
+%endif
+define_bench decode%1
+ALIGN 64
+.top:
+%rep (DECODE_OPS / ICOUNT)
+multinop %{2:-1}
+%endrep
+dec rdi
+jnz .top
+ret
+%endmacro
+
+define_decode 33334,3,3,3,3,4
+define_decode 16x1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+define_decode 8x2,2,2,2,2,2,2,2,2
+define_decode 4x4,4,4,4,4
+define_decode 5551,5,5,5,1
+define_decode 664,6,6,4
+define_decode 88,8,8
+define_decode 871,8,7,1
 
 
 ; define the weird store bench
