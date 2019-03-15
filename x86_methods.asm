@@ -1819,7 +1819,7 @@ define_adc_bench 64, rax
 %endrep
 %endmacro
 
-%define DECODE_OPS 50400/7
+%define DECODE_OPS 50400/2
 %macro define_decode 2-*
 %define ICOUNT (%0-1)
 %if (DECODE_OPS % ICOUNT) != 0
@@ -1827,6 +1827,7 @@ define_adc_bench 64, rax
 %endif
 define_bench decode%1
 ALIGN 64
+times 16 nop
 .top:
 %rep (DECODE_OPS / ICOUNT)
 multinop %{2:-1}
@@ -1837,6 +1838,7 @@ ret
 %endmacro
 
 define_decode 33334,3,3,3,3,4
+define_decode 33333,3,3,3,3,3
 define_decode 16x1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 define_decode 8x2,2,2,2,2,2,2,2,2
 define_decode 4x4,4,4,4,4
@@ -1844,6 +1846,8 @@ define_decode 5551,5,5,5,1
 define_decode 664,6,6,4
 define_decode 88,8,8
 define_decode 871,8,7,1
+define_decode 8833334,8,8,3,3,3,3,4
+define_decode 884444,8,8,4,4,4,4
 
 
 ; define the weird store bench

@@ -71,12 +71,15 @@ bench2_f adc_chain32;
 bench2_f adc_chain64;
 
 bench2_f decode33334;
+bench2_f decode33333;
 bench2_f decode16x1;
 bench2_f decode8x2;
 bench2_f decode4x4;
 bench2_f decode664;
 bench2_f decode88;
 bench2_f decode871;
+bench2_f decode8833334;
+bench2_f decode884444;
 
 bench2_f weird_store_mov;
 bench2_f weird_store_xor;
@@ -90,7 +93,7 @@ void register_misc(GroupList& list) {
     using default_maker = StaticMaker<TIMER>;
 
     const uint32_t iters = 10*1000;
-    const size_t decode_ops = 50400/7;
+    const size_t decode_ops = 50400/2;
 
     auto maker = DeltaMaker<TIMER>(misc_group.get(), iters);
     auto makerbmi1 = maker.setFeatures({BMI1}).setLoopCount(3 * 1000 * 1000);
@@ -143,13 +146,15 @@ void register_misc(GroupList& list) {
                 []{ return nullptr; }, 10000),
 
         // legacy decode tests
-        default_maker::template make_bench<decode33334>(misc_group.get(), "decode33334", "Decode 3-3-3-3-4 byte nops", decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode16x1>(misc_group.get(),  "decode16x1",  "Decode 16x1 byte nops",      decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode8x2>(misc_group.get(),   "decode8x2",   "Decode 8x2 byte nops",       decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode4x4>(misc_group.get(),   "decode4x4",   "Decode 4x4 byte nops",       decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode664>(misc_group.get(),   "decode664",   "Decode 6-6-4 byte nops",     decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode88>(misc_group.get(),    "decode88",    "Decode 8-8 byte nops",       decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode871>(misc_group.get(),   "decode871",   "Decode 8-7-1 byte nops",     decode_ops, null_provider, 1000),
+        default_maker::template make_bench<decode33334>(misc_group.get(),   "decode33334", "Decode 3-3-3-3-4 byte nops", decode_ops, null_provider, 1000),
+        default_maker::template make_bench<decode33333>(misc_group.get(),   "decode33333", "Decode 3-3-3-3-3 byte nops", decode_ops, null_provider, 1000),
+        default_maker::template make_bench<decode16x1>(misc_group.get(),    "decode16x1",  "Decode 16x1 byte nops",      decode_ops, null_provider, 1000),
+        default_maker::template make_bench<decode8x2>(misc_group.get(),     "decode8x2",   "Decode 8x2 byte nops",       decode_ops, null_provider, 1000),
+        default_maker::template make_bench<decode4x4>(misc_group.get(),     "decode4x4",   "Decode 4x4 byte nops",       decode_ops, null_provider, 1000),
+        default_maker::template make_bench<decode664>(misc_group.get(),     "decode664",   "Decode 6-6-4 byte nops",     decode_ops, null_provider, 1000),
+        default_maker::template make_bench<decode88>(misc_group.get(),      "decode88",    "Decode 8-8 byte nops",       decode_ops, null_provider, 1000),
+        default_maker::template make_bench<decode8833334>(misc_group.get(), "decode8833334", "Decode 8-8-3-3-3-3-4 byte nops",     decode_ops, null_provider, 1000),
+        default_maker::template make_bench<decode884444>(misc_group.get(),  "decode884444",  "Decode 8-8-4-4-4-4 byte nops",     decode_ops, null_provider, 1000),
 
         // case where when using the LSD, a loop with 2 stores apparently takes an extra cycle
         // Reported by Alexander Monakov in https://github.com/travisdowns/bimodal-performance/issues/4
