@@ -1827,7 +1827,7 @@ define_adc_bench 64, rax
 %endif
 define_bench decode%1
 ALIGN 64
-times 16 nop
+times 0 nop
 .top:
 %rep (DECODE_OPS / ICOUNT)
 multinop %{2:-1}
