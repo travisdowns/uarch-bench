@@ -859,6 +859,22 @@ ret
 .never:
 ud2
 
+; can two macro fused branches per cycle be sustained?
+define_bench double_macro_fusion
+    mov eax, 1
+.top:
+%rep 128
+    cmp eax, 0
+    je .never
+    cmp eax, 0
+    je .never
+%endrep
+    dec rdi
+    jnz .top
+    ret
+.never:
+    ud2
+
 define_bench dendibakh_fused
 mov     rax, rdi
 shl     rax, 2
