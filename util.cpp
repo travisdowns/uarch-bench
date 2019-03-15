@@ -64,15 +64,15 @@ void *storage_ptr = 0;
 volatile int zero = 0;
 bool storage_init = false;
 
-/**
- * Return a new pointer to a memory region of at least size, aligned to a 2MB boundary and with
- * an effort to ensure the pointer is backed by transparent huge pages.
- */
-void *new_huge_ptr(size_t size) {
+
+void *new_2mb_ptr(size_t size, PageType pagetype) {
+    assert(pagetype >= PAGETYPE_DEFAULT && pagetype <= PAGETYPE_HUGE);
     void *ptr;
     int result = posix_memalign(&ptr, TWO_MB, size + TWO_MB);
     assert(result == 0);
-    madvise(ptr, size + TWO_MB, MADV_HUGEPAGE);
+    if (pagetype != PAGETYPE_DEFAULT) {
+        madvise(ptr, size + TWO_MB, pagetype == PAGETYPE_HUGE ? MADV_HUGEPAGE : MADV_NOHUGEPAGE);
+    }
     ptr = ((char *)ptr + TWO_MB);
     // It is critical that we memset the memory region to touch each page, otherwise all or some pages
     // can be mapped to the zero page, leading to unexpected results for read-only tests (i.e., "too good to be true"
@@ -84,6 +84,14 @@ void *new_huge_ptr(size_t size) {
     std::memset(ptr, 1, size);
     std::memset(ptr, 0, size);
     return ptr;
+}
+
+/**
+ * Return a new pointer to a memory region of at least size, aligned to a 2MB boundary and with
+ * an effort to ensure the pointer is backed by transparent huge pages.
+ */
+void *new_huge_ptr(size_t size) {
+    return new_2mb_ptr(size, PAGETYPE_HUGE);
 }
 
 void *align(size_t base_alignment, size_t required_size, void* p, size_t space) {
@@ -123,6 +131,16 @@ void *aligned_ptr(size_t base_alignment, size_t required_size) {
 void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misalignment) {
     char *p = static_cast<char *>(aligned_ptr(base_alignment, required_size));
     return p + misalignment;
+}
+
+void flush_region(void *start, size_t size) {
+    for (char *p = (char *)start, *e = p + size; p < e; p += UB_CACHE_LINE_SIZE) {
+        _mm_clflush(p);
+    }
+    if (size > 0) {
+        _mm_clflush(((char *)start) + size); // last line which is sometimes missed by the above
+    }
+    _mm_mfence();
 }
 
 static_assert(UB_CACHE_LINE_SIZE == sizeof(CacheLine), "sizeof(CacheLine) not equal to actual cache line size, huh?");
@@ -177,11 +195,7 @@ region& shuffled_region(const size_t size, const size_t offset) {
 
     assert(count(storage) == size_lines);
 
-    for (char *p = (char *)storage, *e = p + size; p < e; p += UB_CACHE_LINE_SIZE) {
-        _mm_clflush(p);
-    }
-
-    _mm_mfence();
+    flush_region(storage, size);
 
     return *(new region{ size, storage }); // leak
 }

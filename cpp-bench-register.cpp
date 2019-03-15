@@ -11,6 +11,8 @@
 #include "benchmark.hpp"
 #include "cpp-benches.hpp"
 
+#include <cstring>
+
 #define DIV_REG_X(f) \
         f( 32_64, " 32b / 64b") \
         f( 64_64, " 64b / 64b") \
@@ -21,6 +23,14 @@
         /*maker.template make<div_lat_noinline ##suffix >("div"#suffix"-lat-ni", "Dependent   " text " noinline divisions", 1); */\
         maker.template make<div_tput_inline  ##suffix >("div"#suffix"-tput",   "Independent " text "   inline divisions", 1); \
         /*maker.template make<div_tput_noinline##suffix> ("div"#suffix"-tput-ni","Independent " text " noinline divisions", 1); */\
+
+
+/* leaks a pointer to a region of the given size */
+region* make_region(size_t size) {
+    auto r = new region{size, aligned_ptr(4096, size)}; // leak
+    std::memset(r->start, 0, r->size);
+    return r;
+}
 
 template <typename TIMER>
 void register_cpp(GroupList& list) {
@@ -42,6 +52,24 @@ void register_cpp(GroupList& list) {
         size_t list_ops = LIST_COUNT;
         maker.template make<linkedlist_sentinel>("linkedlist-sentinel", "Linked-list w/ sentinel", list_ops, []{ return nullptr; });
         maker.template make<linkedlist_counter>  ("linkedlist-counter",  "Linked-list w/ count", list_ops, []{ return nullptr; });
+    }
+
+    {
+        // flush region tests
+        std::shared_ptr<BenchmarkGroup> util_group = std::make_shared<BenchmarkGroup>("util", "Benchmarks for utility functions");
+        list.push_back(util_group);
+        auto maker = DeltaMaker<TIMER>(util_group.get(), 1);  // just one iteration so we test the "in cache" performance
+
+        for (size_t size : {1, 10, 100, 1000, 10000, 100000}) {
+            std::string sizestr = std::to_string(size), name = "-region-" + sizestr;
+            std::string desc = "of " + sizestr + " KB (per line)";
+//            uint32_t loop_count = 10000 / size;
+//            if (loop_count <= 5) loop_count = 5;
+
+            maker.template make<flush_region_bench   >("clflush " + name, "clflush " + desc, size * 1024 / 64, [=]{ return make_region(size * 1024); });
+            maker.template make<flushopt_region_bench>("clflushopt " + name, "clflushopt " + desc, size * 1024 / 64, [=]{ return make_region(size * 1024); });
+        }
+
     }
 }
 

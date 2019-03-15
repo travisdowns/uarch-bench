@@ -41,6 +41,9 @@ bench2_f linkedlist_counter;
 bench2_f shuffled_list_sum;
 bench2_f gettimeofday_bench;
 
+bench2_f flush_region_bench;
+bench2_f flushopt_region_bench;
+
 constexpr int LIST_COUNT = 4000;
 
 

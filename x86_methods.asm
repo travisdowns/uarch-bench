@@ -1233,6 +1233,17 @@ jnz .top
 
 ret
 
+
+define_bench one_lfence_bench
+lfence
+ret
+
+; access a the memory location passed in, followed by lfence
+define_bench one_load_bench
+mov     rax, [rsi]
+lfence
+ret
+
 %ifndef UNROLLB
 %define UNROLLB 10
 %endif
@@ -2583,6 +2594,22 @@ syscall_123456
 
 define_bench syscall_misses_lfence
 parallel_miss_macro syscall_123456_lfence
+
+GLOBAL flushopt_region
+flushopt_region:
+lea    rax, [rdi + rsi]
+cmp    rdi,rax
+jae    zero
+top:
+clflushopt [rdi]
+add    rdi,0x40
+cmp    rax,rdi
+ja     top
+clflushopt [rax]
+zero:
+mfence
+ret
+
 
 
 ud2

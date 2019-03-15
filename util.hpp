@@ -37,9 +37,41 @@ static inline int64_t nanos() {
     return std::chrono::time_point_cast<std::chrono::nanoseconds>(t).time_since_epoch().count();
 }
 
+enum CacheStatus {
+    IN_L1,
+    IN_L2,
+    IN_L3,
+    UNCACHED
+};
+
+enum PageType {
+    PAGETYPE_DEFAULT,
+    PAGETYPE_SMALL,
+    PAGETYPE_HUGE
+};
+
+/* return a NEW memory block, aligned to 2MB */
+void *new_2mb_ptr(size_t size, PageType pagetype);
+
+/* shortcut for new_2mb_ptr(size, PAGETYPE_HUGE) */
 void *new_huge_ptr(size_t size);
+
+/* return an aligned pointer, always from the same block of memory (don't overwrite it) */
 void *aligned_ptr(size_t base_alignment, size_t required_size);
 void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misalignment);
+
+/** use clflush to flush the entire of size size starting at start */
+void flush_region(void *start, size_t size);
+
+/** use clflushopt to flush the entire of size size starting at start */
+extern "C" void flushopt_region(void *start, size_t size);  // implemented in ASM
+
+/*
+ * Try to flush all levels of the cache (and presumably the TLB) by repeatedly writing to a large
+ * area of memory, up to max_size (which should be larger than the LLC to flush all caches).
+ */
+void flush_all(size_t max_size);
+
 
 /*
  * Given a printf-style format and args, return the formatted string as a std::string.

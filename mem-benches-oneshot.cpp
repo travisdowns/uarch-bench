@@ -25,6 +25,9 @@ bench2_f oneshot_try4;
 bench2_f train_noalias;
 bench2_f aliasing_loads;
 
+bench2_f one_lfence_bench;
+bench2_f one_load_bench;
+
 #if USE_LIBPFC
 libpfc_raw1 aliasing_loads_raw;
 libpfc_raw1 mixed_loads_raw;
@@ -45,6 +48,16 @@ FWD_BENCH_DECL(5);
 }
 
 auto buf_provider = []{ return aligned_ptr(4096, 10 * 4096); };
+
+void *get_flushed_ptr() {
+    void* p = aligned_ptr(2 * 1024 * 1024, 8);
+    return p;
+}
+
+long flush_ptr(uint64_t iters, void *arg) {
+    flush_region(arg, 8);
+    return 0;
+}
 
 template <typename TIMER>
 void register_specific_stfwd(BenchmarkGroup* oneshot) {}
@@ -99,12 +112,12 @@ void register_mem_oneshot(GroupList& list) {
         maker.template make<oneshot_try2_10>("stfwd-try2-10", "stfwd-try2 10 loads", 1, buf_provider);
         maker.template make<oneshot_try2_20>("stfwd-try2-20", "stfwd-try2 20 loads", 1, buf_provider);
         maker.template make<oneshot_try2_1000>("stfwd-try2-1000", "stfwd-try2 1000 loads", 1, buf_provider);
-        maker.template withWarm<dummy_bench>().
+        maker.template withWarmEvery<dummy_bench>().
               template make<oneshot_try2_1000>("stfwd-try2-1000w", "stfwd-try2 1000 loads warm", 1, buf_provider);
 
         maker.template make<oneshot_try2>("stfwd-try2b", "stfwd-try2 100 loads", 1, buf_provider);
 
-        maker.  template withWarm<train_noalias>().
+        maker.  template withWarmEvery<train_noalias>().
                 template make<aliasing_loads>("stfwd-try2c-trained", "trained loads", 1, buf_provider);
         maker.  /* template withWarm<train_noalias>(). */
                 template make<aliasing_loads>("stfwd-try2c-untrained", "untrained loads", 1, buf_provider);
@@ -112,6 +125,26 @@ void register_mem_oneshot(GroupList& list) {
         register_specific_stfwd<TIMER>(stfwd.get());
 
     }
+
+    {
+         std::shared_ptr<BenchmarkGroup> latgroup = std::make_shared<OneshotGroup>("memory/oneshot-latency", "Single access latencies");
+         list.push_back(latgroup);
+
+         void *small_ptr = new_2mb_ptr(8, PAGETYPE_SMALL);
+         void *huge_ptr  = new_2mb_ptr(8, PAGETYPE_HUGE);
+
+         auto maker = OneshotMaker<TIMER>(latgroup.get())
+                .template withOverhead<one_lfence_bench>(std::string("lfence only"));
+
+         maker.template make<dummy_bench>("oneshot-dummy", "Empty oneshot bench", 1);
+
+         // these benchmark the effect of accesses on cflushed regions
+         auto flushmaker = maker.template withWarmEvery<flush_ptr>();
+         flushmaker.template make<one_load_bench>("clflush-load-smallpage", "Single load (small pages)", 1, [=](){ return small_ptr; });
+         flushmaker.template make<one_load_bench>("clflush-load-hugepage", "Single load (huge pages)", 1, [=](){ return huge_ptr; });
+
+
+     }
 
 
 }

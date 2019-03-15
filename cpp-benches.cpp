@@ -186,6 +186,22 @@ long gettimeofday_bench(uint64_t iters, void *arg) {
     return (long)tv.tv_usec;
 }
 
+long flush_region_bench(uint64_t iters, void *arg) {
+    region* r = (region*)arg;
+    while (iters--) {
+        flush_region(r->start, r->size);
+    }
+    return (long)r->start;
+}
+
+long flushopt_region_bench(uint64_t iters, void *arg) {
+    region* r = (region*)arg;
+    while (iters--) {
+        flushopt_region(r->start, r->size);
+    }
+    return (long)r->start;
+}
+
 
 
 

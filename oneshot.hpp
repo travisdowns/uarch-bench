@@ -225,18 +225,18 @@ public:
 //    template <typename TIMER_, int SAMPLES_, bench2_f TOUCH_, bench2_f WARMX_>
 //    OneshotMaker<TIMER, SAMPLES, TOUCH_, WARMX_> copy() { return {this->parent, overhead_func, this->loop_count}; }
 
-    template <bench2_f NEW_TOUCH>
-    OneshotMaker<TIMER, SAMPLES, NEW_TOUCH, WARM_EVERY> withTouch    () { return {this->parent, this->loop_count, this->overhead}; }
+    template <bench2_f NEW_ONCE>
+    OneshotMaker<TIMER, SAMPLES, NEW_ONCE, WARM_EVERY>   withWarmOnce () { return {this->parent, this->loop_count, this->overhead}; }
 
-    template <bench2_f NEW_WARM>
-    OneshotMaker<TIMER, SAMPLES, WARM_ONCE,   NEW_WARM> withWarm     () { return {this->parent, this->loop_count, this->overhead}; }
+    template <bench2_f NEW_EVERY>
+    OneshotMaker<TIMER, SAMPLES, WARM_ONCE,   NEW_EVERY> withWarmEvery() { return {this->parent, this->loop_count, this->overhead}; }
 
-    OneshotMaker<TIMER, SAMPLES, WARM_ONCE, WARM_EVERY> withOverhead (overhead_f o) {
+    OneshotMaker<TIMER, SAMPLES, WARM_ONCE, WARM_EVERY> withOverhead(overhead_f o) {
         return {this->parent, this->loop_count, o};
     }
 
     template <bench2_f NEW_OVERH>
-    OneshotMaker<TIMER, SAMPLES, WARM_ONCE,     WARM_EVERY  > withOverhead (const std::string& name) {
+    OneshotMaker<TIMER, SAMPLES, WARM_ONCE,     WARM_EVERY  > withOverhead(const std::string& name) {
         return withOverhead(bench::template benchToOverhead<NEW_OVERH>(name));
     }
 

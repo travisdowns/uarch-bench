@@ -64,7 +64,7 @@ void register_oneshot(GroupList& list) {
     // it in the other order
     maker.template make<dummy_bench_oneshot1>("oneshot-dummy-notouch", "Empty untouched oneshot bench", 1);
 
-    maker.template withTouch<dummy_bench_oneshot2_touch>().template make<dummy_bench_oneshot2>("oneshot-dummy-touch", "Empty touched oneshot bench", 1);
+    maker.template withWarmOnce<dummy_bench_oneshot2_touch>().template make<dummy_bench_oneshot2>("oneshot-dummy-touch", "Empty touched oneshot bench", 1);
 
     register_specific<TIMER>(oneshot.get());
 }
