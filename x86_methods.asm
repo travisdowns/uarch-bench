@@ -1885,10 +1885,10 @@ define_decode 884444,8,8,4,4,4,4
 define_bench decode_monoid
 .top:
 %rep 200
-%rep 10
+%rep 8
     multinop 3,3,3,3,4
 %endrep
-%rep 10
+%rep 8
     multinop 5,5,6
 %endrep
 %endrep
