@@ -17,6 +17,7 @@ bench2_f misc_flag_merge_1;
 bench2_f misc_flag_merge_2;
 bench2_f misc_flag_merge_3;
 bench2_f misc_flag_merge_4;
+bench2_f david_schor1;
 bench2_f double_macro_fusion;
 bench2_f dsb_alignment_cross64;
 bench2_f dsb_alignment_nocross64;
@@ -129,6 +130,8 @@ void register_misc(GroupList& list) {
                 null_provider, iters),
         default_maker::template make_bench<misc_flag_merge_4>(misc_group.get(), "flag-merge-4", "Flag merge 4", 128,
                 null_provider, iters),
+        default_maker::template make_bench<david_schor1>(misc_group.get(), "schor1", "Suggested by David Schor", 1,
+                    null_provider, iters),
         default_maker::template make_bench<double_macro_fusion>(misc_group.get(), "double-macro-fuse", "Double not-taken macro fusion", 128,
                 null_provider, iters),
         default_maker::template make_bench<tight_loop1>(misc_group.get(), "tight-loop1", "Tight dec loop", 1,

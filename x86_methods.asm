@@ -859,6 +859,22 @@ ret
 .never:
 ud2
 
+; https://twitter.com/david_schor/status/1106687885825241089
+define_bench david_schor1
+    push rbx
+    mov rdx, rdi
+.l:
+    inc rax
+    inc rbx
+    inc rcx
+    nop
+    nop
+    dec rdx
+    jnz .l
+
+    pop rbx
+    ret
+
 ; can two macro fused branches per cycle be sustained?
 define_bench double_macro_fusion
     mov eax, 1
