@@ -1881,6 +1881,21 @@ define_decode 871,8,7,1
 define_decode 8833334,8,8,3,3,3,3,4
 define_decode 884444,8,8,4,4,4,4
 
+; https://twitter.com/_monoid/status/1106976673646415872
+define_bench decode_monoid
+.top:
+%rep 100
+%rep 10
+    multinop 3,3,3,3,4
+%endrep
+%rep 10
+    multinop 5,5,6
+%endrep
+%endrep
+    dec rdi
+    jnz .top
+    ret
+
 
 ; define the weird store bench
 ; %1 suffix
