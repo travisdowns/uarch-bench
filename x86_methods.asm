@@ -1884,7 +1884,7 @@ define_decode 884444,8,8,4,4,4,4
 ; https://twitter.com/_monoid/status/1106976673646415872
 define_bench decode_monoid
 .top:
-%rep 100
+%rep 200
 %rep 10
     multinop 3,3,3,3,4
 %endrep
