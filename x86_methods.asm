@@ -875,13 +875,13 @@ define_bench david_schor1
     pop rbx
     ret
 
-; can two macro fused branches per cycle be sustained?
-define_bench double_macro_fusion
+; args:
+; %1 the number of cmp, je pairs in the main loop
+%macro define_macro_fusion 1
+define_bench double_macro_fusion%1
     mov eax, 1
 .top:
-%rep 128
-    cmp eax, 0
-    je .never
+%rep %1
     cmp eax, 0
     je .never
 %endrep
@@ -890,6 +890,12 @@ define_bench double_macro_fusion
     ret
 .never:
     ud2
+%endmacro
+
+; can two macro fused branches per cycle be sustained?
+define_macro_fusion 256
+define_macro_fusion 4000
+
 
 define_bench dendibakh_fused
 mov     rax, rdi
