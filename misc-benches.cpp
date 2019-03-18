@@ -84,6 +84,8 @@ bench2_f decode871;
 bench2_f decode8833334;
 bench2_f decode884444;
 bench2_f decode_monoid;
+bench2_f decode_monoid2;
+bench2_f decode_monoid3;
 
 bench2_f weird_store_mov;
 bench2_f weird_store_xor;
@@ -166,6 +168,8 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<decode8833334>(misc_group.get(), "decode8833334", "Decode 8-8-3-3-3-3-4 byte nops",     decode_ops, null_provider, 1000),
         default_maker::template make_bench<decode884444>(misc_group.get(),  "decode884444",  "Decode 8-8-4-4-4-4 byte nops",     decode_ops, null_provider, 1000),
         default_maker::template make_bench<decode_monoid>(misc_group.get(),  "decode-monoid",  "Decode 33334x10, 556x10 blocks", 3200, null_provider, 1000),
+        default_maker::template make_bench<decode_monoid2>(misc_group.get(),  "decode-monoid2",  "monoid2", 9000, null_provider, 1000),
+        default_maker::template make_bench<decode_monoid3>(misc_group.get(),  "decode-monoid3",  "monoid3", 9000, null_provider, 1000),
 
         // case where when using the LSD, a loop with 2 stores apparently takes an extra cycle
         // Reported by Alexander Monakov in https://github.com/travisdowns/bimodal-performance/issues/4

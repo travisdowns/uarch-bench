@@ -1902,6 +1902,43 @@ define_bench decode_monoid
     jnz .top
     ret
 
+; https://twitter.com/_monoid/status/1107760616650035205
+define_bench decode_monoid2
+.top:
+%rep 1000
+    db 0x90
+    db 0x90
+    db 0x90
+    db 0x66, 0x66, 0x66, 0x66, 0x66, 0x90
+    db 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x90
+
+    db 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x90
+    db 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x90
+    db 0x90
+    db 0x90
+%endrep
+    dec rdi
+    jnz .top
+    ret
+
+define_bench decode_monoid3
+.top:
+%rep 1000
+    nop
+    nop
+    nop
+    nop6
+    nop7
+
+    nop7
+    nop7
+    nop
+    nop
+%endrep
+    dec rdi
+    jnz .top
+    ret
+
 
 ; define the weird store bench
 ; %1 suffix
