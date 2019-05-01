@@ -225,7 +225,7 @@ void PerfTimer::init(Context &c) {
             continue;
         }
         if (running_events.size() == PerfNow::READING_COUNT) {
-            c.err() << "Event '" << e << "' - check the available events with --list-events" << endl;
+            c.err() << "Event '" << e << " could not be programmed since at most " << MAX_EXTRA_EVENTS << " are allowed" << endl;
             continue;
         }
 
