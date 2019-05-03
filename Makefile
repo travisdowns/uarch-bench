@@ -8,7 +8,7 @@ include config.mk
 CXX ?= g++
 CC ?= gcc
 ASM ?= nasm
-ASM_FLAGS ?= -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all -l x86_methods.list
+ASM_FLAGS ?= -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all
 
 # The target to build when building libpfc (if we build it at all). By default, we are going
 # to build everything, but TravisCI, for example, would (usually) like to skip building the kernel module. 
@@ -24,6 +24,8 @@ PSNIP_DIR ?= portable-snippets
 # all the psnip source files we want to compile into uarch-bench
 PSNIP_SRC := cpu.c
 
+BOOST_DIR := boost_1_70_0
+
 GIT_VERSION := $(shell git describe --dirty --always)
 
 ifneq ($(CPU_ARCH),)
@@ -33,7 +35,7 @@ O_LEVEL ?= -O2
 
 COMMON_FLAGS := -MMD -Wall $(ARCH_FLAGS) -g $(O_LEVEL) -DGIT_VERSION=\"$(GIT_VERSION)\" \
     -DUSE_LIBPFC=$(USE_LIBPFC) -DUSE_BACKWARD_CPP=$(USE_BACKWARD_CPP) -DBACKWARD_HAS_BFD=$(BACKWARD_HAS_BFD) \
-    -DBACKWARD_HAS_DW=$(BACKWARD_HAS_DW) -DUSE_PERF_TIMER=$(USE_PERF_TIMER) -I$(PSNIP_DIR)
+    -DBACKWARD_HAS_DW=$(BACKWARD_HAS_DW) -DUSE_PERF_TIMER=$(USE_PERF_TIMER) -I$(PSNIP_DIR) -I$(BOOST_DIR)
 CPPFLAGS := $(COMMON_FLAGS)
 CFLAGS := $(COMMON_FLAGS)
 
@@ -41,6 +43,7 @@ CFLAGS := $(COMMON_FLAGS)
 PFC_SRC := libpfc-timer.cpp libpfm4-support.cpp
 SRC_FILES := $(wildcard *.cpp) $(wildcard *.c) nasm-utils/nasm-utils-helper.c $(PSNIP_SRC)
 SRC_FILES := $(filter-out $(PFC_SRC), $(SRC_FILES))
+ASM_FILES := $(wildcard *.asm)
 
 # on most compilers we should use no-pie since the nasm stuff isn't position independent
 # but since old compilers don't support it, you can override it with PIE= on the command line
@@ -70,7 +73,7 @@ ifeq ($(BACKWARD_HAS_DW),1)
 LDFLAGS += -ldw
 endif
 
-OBJECTS := $(SRC_FILES:.cpp=.o) x86_methods.o x86_methods2.o
+OBJECTS := $(SRC_FILES:.cpp=.o) $(ASM_FILES:.asm=.o)
 OBJECTS := $(OBJECTS:.c=.o)
 DEPFILES = $(OBJECTS:.o=.d)
 # $(info OBJECTS=$(OBJECTS))

@@ -6,6 +6,7 @@
 
 #include "benchmark.hpp"
 #include "util.hpp"
+#include "boost/preprocessor/repetition/repeat_from_to.hpp"
 
 extern "C" {
 /* misc benches */
@@ -89,6 +90,10 @@ bench2_f decode_monoid3;
 
 bench2_f weird_store_mov;
 bench2_f weird_store_xor;
+
+// bench2_f quadratic;
+BOOST_PP_REPEAT_FROM_TO(35, 47, DECL_BENCH2, quadratic)
+BOOST_PP_REPEAT_FROM_TO(48, 50, DECL_BENCH2, quadratic)
 }
 
 
@@ -177,6 +182,16 @@ void register_misc(GroupList& list) {
                 []{ return nullptr; }, 10000),
         default_maker::template make_bench<weird_store_xor>(misc_group.get(), "weird-store-xor", "Store LSD weirdness, xor zero", 1000,
                 []{ return nullptr; }, 10000),
+
+        // shows that a loop split by a 64-byte boundary takes at least 2 cycles, probably because the DSB can deliever
+        // from only one set per cycle
+#define MAKE_QUAD(z, n, _) \
+        default_maker::template make_bench<quadratic ## n>(misc_group.get(), "quad" #n, "nested loops offset: " #n, 1000, \
+                [=]{ return aligned_ptr(4, 1024 * sizeof(uint32_t)); }, 1000),
+
+        BOOST_PP_REPEAT_FROM_TO(35, 37, MAKE_QUAD, ignore)
+        BOOST_PP_REPEAT_FROM_TO(48, 50, MAKE_QUAD, ignore)
+
     };
 
     misc_group->add(benches);

@@ -26,6 +26,9 @@ typedef long (bench2_f)(uint64_t iters, void *arg);
 
 bench2_f dummy_bench;
 
+// suitable for use with the BOOST_PP_REPEAT macros to generate numbered function declarations
+#define DECL_BENCH2(z, n, fname) bench2_f fname ## n;
+
 #if defined(__cplusplus)
 }
 #endif

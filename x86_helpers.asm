@@ -1,3 +1,7 @@
+%ifndef X86_HELPERS_GUARD
+%define X86_HELPERS_GUARD
+
+%include "nasm-utils/nasm-utils-inc.asm"
 
 ; aligns and declares the global label for the bench with the given name
 ; also potentally checks the ABI compliance (if enabled)
@@ -116,3 +120,5 @@ struc region
     .size  : resq 1
     .start : resq 1
 endstruc
+
+%endif ; X86_HELPERS_GUARD
