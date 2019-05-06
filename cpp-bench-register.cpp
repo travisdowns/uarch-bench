@@ -66,8 +66,8 @@ void register_cpp(GroupList& list) {
 //            uint32_t loop_count = 10000 / size;
 //            if (loop_count <= 5) loop_count = 5;
 
-            maker.template make<flush_region_bench   >("clflush " + name, "clflush " + desc, size * 1024 / 64, [=]{ return make_region(size * 1024); });
-            maker.template make<flushopt_region_bench>("clflushopt " + name, "clflushopt " + desc, size * 1024 / 64, [=]{ return make_region(size * 1024); });
+            maker.template make<flush_region_bench   >("clflush" + name, "clflush " + desc, size * 1024 / 64, [=]{ return make_region(size * 1024); });
+            maker.template make<flushopt_region_bench>("clflushopt" + name, "clflushopt " + desc, size * 1024 / 64, [=]{ return make_region(size * 1024); });
         }
 
     }

@@ -7,6 +7,10 @@
 #include "oneshot.hpp"
 #include "libpfc-timer.hpp"
 #include "libpfc-raw-helpers.hpp"
+#include "boost/preprocessor/repeat.hpp"
+
+// how many consecutive load requests we make in the MLP tests
+#define MLP_MAX 51
 
 extern "C" {
 bench2_f dep_add_rax_rax;
@@ -16,11 +20,11 @@ bench2_f dummy_bench_oneshot1;
 bench2_f dummy_bench_oneshot2;
 bench2_f dummy_bench_oneshot2_touch;
 bench2_f oneshot2_touch;
+BOOST_PP_REPEAT(MLP_MAX, DECL_BENCH2, mlp_load);
 }
 
 template <typename TIMER>
 void register_specific(BenchmarkGroup* oneshot) {}
-
 
 #if USE_LIBPFC
 
@@ -46,6 +50,15 @@ void register_specific<LibpfcTimer>(BenchmarkGroup* oneshot) {
 
 #endif  // USE_LIBPFC
 
+const size_t MLP_REGION_SIZE = 2 * 2048 * 2048;
+
+bench2_f flush_warmer;
+
+long flush_warmer(size_t iters, void *arg) {
+    flush_region(arg, MLP_REGION_SIZE);
+    return 0;
+}
+
 template <typename TIMER>
 void register_oneshot(GroupList& list) {
     std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("oneshot", "Oneshot Group");
@@ -64,7 +77,15 @@ void register_oneshot(GroupList& list) {
     // it in the other order
     maker.template make<dummy_bench_oneshot1>("oneshot-dummy-notouch", "Empty untouched oneshot bench", 1);
 
-    maker.template withWarmOnce<dummy_bench_oneshot2_touch>().template make<dummy_bench_oneshot2>("oneshot-dummy-touch", "Empty touched oneshot bench", 1);
+    maker.template withWarmOnce<dummy_bench_oneshot2_touch>().template make<dummy_bench_oneshot2>("oneshot-dummy-touch",
+            "Empty touched oneshot bench", 1);
+
+#define MAKE_MLPLOAD(z, n, _) \
+    maker.  template withWarmEvery<flush_warmer>().                \
+            template make<mlp_load ## n>("mlp" #n, "mlp" #n, 1,         \
+            [](){ return aligned_ptr(4096, MLP_REGION_SIZE); });   \
+
+    BOOST_PP_REPEAT(MLP_MAX, MAKE_MLPLOAD, _);
 
     register_specific<TIMER>(oneshot.get());
 }

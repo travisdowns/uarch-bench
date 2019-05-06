@@ -1963,6 +1963,24 @@ dec     rdi
 jne     .top
 rep ret
 
+%macro define_mlp_load 1
+define_bench mlp_load%1
+%assign offset 0
+%rep %1
+mov rax, [rsi + offset]
+%assign offset offset+64
+%endrep
+lfence
+ret
+%endmacro
+
+%assign i 0
+%rep 51
+define_mlp_load i
+%assign i i+1
+%endrep
+
+
 %macro fwd_lat_with_delay 1
 define_bench fwd_lat_delay_%1
 lea     rdx, [rsp - 8]
