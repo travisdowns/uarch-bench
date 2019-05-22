@@ -60,6 +60,41 @@ bench2_f tight_loop3;
 
 bench2_f dep_add_noloop_128;
 
+bench2_f unlam_store1;
+bench2_f unlam_store2;
+bench2_f unlam_rmw1c;
+bench2_f unlam_rmw1r;
+bench2_f unlam_rmw2c;
+bench2_f unlam_rmw2r;
+
+#define DECL_12(name, isa) \
+        bench2_f unlam_ ## name ## 1; \
+        bench2_f unlam_ ## name ## 2; \
+
+#define UNLAM_MEMSRC_X(f) \
+        f(add   ,      ) /*  memory source add                                */ \
+        f(cmove ,      ) /* memory source cmov                                */ \
+        f(andn  , bmi1 ) /* memory source andn                                */ \
+        f(blsi  , bmi2 ) /* memory source blsi (write-only destination)       */ \
+        f(popcnt, sse42) /* memory source blsi (write-only destination)       */ \
+        f(bsf   ,      ) /*  memory source bsf (mostly write-only destination)*/ \
+        f(tzcnt ,      ) /* memory source andn                                */ \
+
+UNLAM_MEMSRC_X(DECL_12);
+
+#define UNLAM_SSE_X(f) \
+    f(paddb ,     ) \
+    f(pabsb ,     ) \
+    f(vpabsb, avx2) \
+
+#define UNLAM_AVX_X(f) \
+    f(vpaddb, avx2) \
+
+
+UNLAM_SSE_X(DECL_12);
+
+
+
 bench2_f vz_samereg;
 bench2_f vz_diffreg;
 bench2_f vz_diffreg16;
@@ -242,6 +277,41 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<retpoline_sparse_dep_call_lfence,retpoline_sparse_call_base>(retpoline_group.get(),   "retp-sparse-dep-call-lfence", "Sparse retpo dep call lfence", 8)
     });
     list.push_back(retpoline_group);
+
+    {
+        // see discussion on unlamination at:
+        // https://stackoverflow.com/q/26046634/149138
+
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("misc/unlamination", "Unlamination tests");
+        list.push_back(group);
+        auto maker      = DeltaMaker<TIMER>(group.get()).setTags({"default"});
+        auto makerbmi1  = maker.setFeatures({BMI1});
+        auto makerbmi2  = maker.setFeatures({BMI2});
+        auto makersse42 = maker.setFeatures({SSE4_2});
+        auto makeravx2  = maker.setFeatures({AVX2});
+
+
+        // store
+        maker.template make<unlam_store1>("unlam-store1", "mov [reg], reg"      , 100);
+        maker.template make<unlam_store2>("unlam-store2", "mov [reg + reg], reg"      , 100);
+
+#define UNLAM12_MEMSRC(instr, isa, regstr) \
+            maker ## isa.template make<unlam_ ## instr ## 1>("unlam-" #instr "1", #instr regstr ", [reg]"       , 100);         \
+            maker ## isa.template make<unlam_ ## instr ## 2>("unlam-" #instr "2", #instr regstr ", [reg + reg]" , 100);
+
+#define UNLAM12_SCALAR(instr, isa) UNLAM12_MEMSRC(instr, isa, " reg")
+#define UNLAM12_SSE(   instr, isa) UNLAM12_MEMSRC(instr, isa, " xmm0")
+
+        UNLAM_MEMSRC_X(UNLAM12_SCALAR);
+        UNLAM_SSE_X(UNLAM12_SSE);
+
+        // memory src/dest RMWs
+        maker.template make<unlam_rmw1c>("unlam-rmw1c", "add [reg], 0"      , 100);
+        maker.template make<unlam_rmw1r>("unlam-rmw1r", "add [reg], reg"      , 100);
+        maker.template make<unlam_rmw2c>("unlam-rmw2c", "add [reg + reg], 0", 100);
+        maker.template make<unlam_rmw2r>("unlam-rmw2r", "add [reg + reg], reg", 100);
+
+    }
 
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/vzeroall", "VZEROALL weirdness");

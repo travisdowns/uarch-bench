@@ -31,9 +31,6 @@
         DIV_SPEC_X2(f, RCONCAT, div_tput_inline)   \
         DIV_SPEC_X2(f, RCONCAT, div_tput_noinline) \
 
-
-#define DECL_BENCH(name) bench2_f name;
-
 DIV_BENCH_X(DECL_BENCH)
 
 bench2_f linkedlist_sentinel;

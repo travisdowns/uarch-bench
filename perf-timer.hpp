@@ -14,7 +14,7 @@
 
 #include "timer-info.hpp"
 
-#define MAX_EXTRA_EVENTS 4
+#define MAX_EXTRA_EVENTS 8
 
 struct PerfNow {
     constexpr static unsigned READING_COUNT = MAX_EXTRA_EVENTS + 1;

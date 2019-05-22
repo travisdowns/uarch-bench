@@ -26,6 +26,9 @@ typedef long (bench2_f)(uint64_t iters, void *arg);
 
 bench2_f dummy_bench;
 
+#define DECL_BENCH(name)   bench2_f name;
+// takes an (unused) second arg for data-passing X arg funcs
+#define DECL_BENCHD(name,_) bench2_f name;
 // suitable for use with the BOOST_PP_REPEAT macros to generate numbered function declarations
 #define DECL_BENCH2(z, n, fname) bench2_f fname ## n;
 

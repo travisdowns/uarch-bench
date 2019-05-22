@@ -957,6 +957,65 @@ jnz     .unfused_loop
 add     rsp, rax
 ret
 
+
+%macro define_unlam 2
+define_bench unlam_%1
+sub     rsp, 24
+mov     rax, rsp
+mov     ecx, 0
+mov     edx, 0
+jmp     .top
+ALIGN 64
+.top:
+%rep 100
+%2
+%endrep
+dec     rdi
+jnz     .top
+add     rsp, 24
+ret
+%endmacro
+
+define_unlam store1, { mov [rax      ], ecx }
+define_unlam store2, { mov [rax + rdx], ecx }
+
+; standard memory source instructions can be defined in 1 line using this macro
+%macro define_unlam_memsrc 1
+define_unlam %1 %+ 1, { %1 ecx, [rax      ] }
+define_unlam %1 %+ 2, { %1 ecx, [rax + rdx] }
+%endmacro
+
+define_unlam_memsrc add
+define_unlam_memsrc cmove
+define_unlam_memsrc blsi
+define_unlam_memsrc popcnt
+define_unlam_memsrc bsf
+define_unlam_memsrc tzcnt
+
+define_unlam andn1, { andn ecx, ecx, [rax      ] }
+define_unlam andn2, { andn ecx, ecx, [rax + rdx] }
+
+%macro define_unlam_sse 1
+define_unlam %1 %+ 1, { %1 xmm0, [rax      ] }
+define_unlam %1 %+ 2, { %1 xmm0, [rax + rdx] }
+%endmacro
+
+%macro define_unlam_vex 1
+define_unlam %1 %+ 1, { %1 xmm0, xmm0, [rax      ] }
+define_unlam %1 %+ 2, { %1 xmm0, xmm0, [rax + rdx] }
+%endmacro
+
+define_unlam_sse paddb
+define_unlam_sse pabsb
+define_unlam_sse vpabsb
+
+define_unlam_vex vpaddb
+
+define_unlam rmw1c, {add DWORD [rax      ], 0   }
+define_unlam rmw1r, {add DWORD [rax      ], ecx }
+define_unlam rmw2c, {add DWORD [rax + rdx], 0   }
+define_unlam rmw2r, {add DWORD [rax + rdx], ecx }
+
 define_bench vz_samereg
 xor ecx, ecx
 vzeroall
