@@ -10,6 +10,8 @@
 #include <cinttypes>
 #include <stdexcept>
 #include <chrono>
+#include <string>
+#include <cstdio>
 
 template <typename CLOCK>
 class SimpleTimerT {
@@ -75,6 +77,27 @@ private:
 };
 
 using SimpleTimer = SimpleTimerT<std::chrono::high_resolution_clock>;
+
+class LoggingTimer : public SimpleTimer {
+public:
+    LoggingTimer(std::string message) : message_{std::move(message)}, printed_(false) {}
+
+    void printElapsed() {
+        double ms = elapsedNanos() / 1000000.0;
+        std::printf("%s : %5.2f ms\n", message_.c_str(), ms);
+        printed_ = true;
+    }
+
+    ~LoggingTimer() {
+        if (!printed_) {
+            printElapsed();
+        }
+    }
+
+private:
+    std::string message_;
+    bool printed_;
+};
 
 
 

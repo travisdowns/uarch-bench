@@ -130,6 +130,7 @@ public:
 
     virtual void printHeader(Context& c) {
         c.out() << getId() << " @ 0x" << func_addr << std::endl;
+        c.out() << "---BENCHMARK-START---" << std::endl;  // make stuff more parseable
         printNameHeader(c);
         printOneMetric(c, "Sample");
         printAlignedMetrics(c, c.getTimerInfo().getMetricNames());
@@ -157,7 +158,7 @@ public:
 
         // include median
         printOneSample(c, TimerHelper<TIMER>::median(std::begin(raw), std::end(raw)), "median");
-
+        c.out() << "---BENCHMARK-END---" << std::endl;  // make stuff more parseable
         c.out() << std::endl;
     }
 
