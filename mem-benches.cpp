@@ -112,6 +112,12 @@ bench2_f bandwidth_test256i_orig;
 bench2_f bandwidth_test256i_single;
 bench2_f bandwidth_test256i_double;
 
+bench2_f store_bandwidth_32;
+bench2_f store_bandwidth_64;
+bench2_f store_bandwidth_128;
+bench2_f store_bandwidth_256;
+bench2_f store_bandwidth_512;
+
 bench2_f sameloc_pointer_chase_alt;
 bench2_f sameloc_pointer_chase_diffpage;
 bench2_f sameloc_pointer_chase_alu;
@@ -270,7 +276,7 @@ void register_mem(GroupList& list) {
     }
 
     {
-        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/bandwidth", "Linear AVX2 loads");
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/bandwidth/load", "Linear AVX2 loads");
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 1024).setFeatures({AVX2});
 
@@ -281,6 +287,23 @@ void register_mem(GroupList& list) {
             make_load_bench<bandwidth_test256i_orig>(maker, kib, "bandwidth-orig", "original bandwidth", kib * 1024 / 64); // timings are per cache line
             make_load_bench<bandwidth_test256i_single>(maker, kib, "bandwidth-oneloop-u1", "oneloop-1-wide bandwidth", kib * 1024 / 64); // timings are per cache line
             make_load_bench<bandwidth_test256i_double>(maker, kib, "bandwidth-oneloop-u2", "oneloop-2-wide bandwidth", kib * 1024 / 64); // timings are per cache line
+        }
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/bandwidth/store", "Linear stores");
+        list.push_back(group);
+        auto maker        = DeltaMaker<TIMER>(group.get(), 1024);
+        auto maker_avx2   = maker.setFeatures({AVX2});
+        auto maker_avx512 = maker.setFeatures({AVX512F});
+
+        // test names need to have exactly two words and contain the word 'bandwidth' for scripts/tricky.sh to parse the output correctly
+        for (int kib : {4, 8, 16, 32, 54, 64, 128, 256, 512}) {
+            make_load_bench<store_bandwidth_32 >(maker,        kib, "store-bandwidth-32b",  "32-bit linear store BW",  kib * 1024 / 64); // timings are per cache line
+            make_load_bench<store_bandwidth_64 >(maker,        kib, "store-bandwidth-64b",  "64-bit linear store BW",  kib * 1024 / 64); // timings are per cache line
+            make_load_bench<store_bandwidth_128>(maker,        kib, "store-bandwidth-128b", "128-bit linear store BW", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<store_bandwidth_256>(maker_avx2,   kib, "store-bandwidth-256b", "256-bit linear store BW", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<store_bandwidth_512>(maker_avx512, kib, "store-bandwidth-512b", "512-bit linear store BW", kib * 1024 / 64); // timings are per cache line
         }
     }
 

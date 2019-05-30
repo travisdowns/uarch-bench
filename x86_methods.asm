@@ -1237,6 +1237,44 @@ ret
 %define UNROLLB 10
 %endif
 
+; %1 size of store in bytes
+; %2 instruction to use
+; %3 register (2nd) argument to store instruction
+%macro define_store_bandwidth 3
+%assign BITSIZE (%1*8)
+define_bench store_bandwidth_ %+ BITSIZE
+mov     rdx, [rsi + region.size]
+mov     rsi, [rsi + region.start]
+
+xor     eax, eax
+vpxor   ymm0, ymm0, ymm0
+
+.top:
+mov     rax, rdx
+mov     rcx, rsi
+
+.inner:
+%assign offset 0
+%rep (64 / %1)
+%2 [rcx + offset], %3
+%assign offset (offset + %1)
+%endrep
+
+add     rcx, 64
+sub     rax, 64
+jge      .inner
+
+dec rdi
+jnz .top
+ret
+%endmacro
+
+define_store_bandwidth  4,mov,eax
+define_store_bandwidth  8,mov,rax
+define_store_bandwidth 16,vmovdqa,xmm0
+define_store_bandwidth 32,vmovdqa,ymm0
+define_store_bandwidth 64,vmovdqa64,zmm0
+
 ; version that doesn't interleave the loads in a "clever way"
 define_bench bandwidth_test256
 mov     rdx, [rsi + region.size]
