@@ -7,6 +7,8 @@
 
 #include "bench-declarations.h"
 
+#include <stdlib.h>
+
 // division benches
 
 #define IDENTITY(x, ...) x
@@ -43,6 +45,13 @@ bench2_f gettimeofday_bench;
 
 constexpr int LIST_COUNT = 4000;
 
+struct mem_args {
+    char *region;
+    uint64_t stride;
+    uint64_t mask;
+};
+
+bench2_f strided_stores;
 
 void* getLinkedList();
 

@@ -186,6 +186,22 @@ long gettimeofday_bench(uint64_t iters, void *arg) {
     return (long)tv.tv_usec;
 }
 
+static inline void sink_ptr(void *p) {
+    __asm__ volatile ("" :: "r"(p) : "memory");
+}
+
+long strided_stores(uint64_t iters, void *arg) {
+    mem_args args = *(mem_args *)arg;
+    for (uint64_t i = 0; i < iters; i += 4) {
+        uint64_t offset = i * args.stride & args.mask;
+        args.region[offset + args.stride * 0] = 0;
+        args.region[offset + args.stride * 1] = 0;
+        args.region[offset + args.stride * 2] = 0;
+        args.region[offset + args.stride * 3] = 0;
+    }
+    sink_ptr(args.region);
+    return (long)args.region[0];
+}
 
 
 
