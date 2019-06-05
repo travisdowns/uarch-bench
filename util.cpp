@@ -146,6 +146,10 @@ size_t count(CacheLine* first) {
  * this function is called.
  */
 region& shuffled_region(const size_t size, const size_t offset) {
+#if UARCH_BENCH_PORTABLE
+    assert(false); // need xplat impl of clflush below
+    abort();
+#else
     assert(size + offset <= MAX_SHUFFLED_REGION_SIZE);
     assert(size % UB_CACHE_LINE_SIZE == 0);
     size_t size_lines = size / UB_CACHE_LINE_SIZE;
@@ -182,6 +186,7 @@ region& shuffled_region(const size_t size, const size_t offset) {
     _mm_mfence();
 
     return *(new region{ size, storage }); // leak
+#endif
 }
 
 std::string errno_to_str(int e) {
