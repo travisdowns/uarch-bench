@@ -35,7 +35,7 @@ using namespace std::chrono;
  */
 template <size_t ITERS, typename CLOCK, size_t TRIES = 10, size_t WARMUP = 100>
 double CalcCpuFreq() {
-    static_assert((ITERS & 1) == 0, "iters must be even because we unroll some loops by 2");
+    static_assert((ITERS & 3) == 0, "iters must be divisible by 4 because we unroll some loops by 4");
     const char* mhz;
     if ((mhz = getenv("UARCH_BENCH_CLOCK_MHZ"))) {
         double ghz = std::stoi(mhz) / 1000.0;

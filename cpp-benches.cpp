@@ -193,17 +193,32 @@ static inline void sink_ptr(void *p) {
     __asm__ volatile ("" :: "r"(p) : "memory");
 }
 
+template <typename T>
 long strided_stores(uint64_t iters, void *arg) {
     mem_args args = *(mem_args *)arg;
+    T* region = (T *)args.region;
+    size_t mask = args.mask / sizeof(T);
     for (uint64_t i = 0; i < iters; i += 4) {
-        uint64_t offset = i * args.stride & args.mask;
-        args.region[offset + args.stride * 0] = 0;
-        args.region[offset + args.stride * 1] = 0;
-        args.region[offset + args.stride * 2] = 0;
-        args.region[offset + args.stride * 3] = 0;
+        uint64_t offset = i * args.stride & mask;
+        region[offset + args.stride * 0] = 0;
+        region[offset + args.stride * 1] = 0;
+        region[offset + args.stride * 2] = 0;
+        region[offset + args.stride * 3] = 0;
     }
     sink_ptr(args.region);
     return (long)args.region[0];
+}
+
+long strided_stores_1byte(uint64_t iters, void *arg) {
+    return strided_stores<uint8_t>(iters, arg);
+}
+
+long strided_stores_4byte(uint64_t iters, void *arg) {
+    return strided_stores<uint32_t>(iters, arg);
+}
+
+long strided_stores_8byte(uint64_t iters, void *arg) {
+    return strided_stores<uint64_t>(iters, arg);
 }
 
 long portable_add_chain(uint64_t itersu, void *arg) {

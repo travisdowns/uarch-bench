@@ -51,7 +51,9 @@ struct mem_args {
     uint64_t mask;
 };
 
-bench2_f strided_stores;
+bench2_f strided_stores_1byte;
+bench2_f strided_stores_4byte;
+bench2_f strided_stores_8byte;
 
 void* getLinkedList();
 
