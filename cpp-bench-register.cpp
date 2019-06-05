@@ -63,7 +63,7 @@ void register_cpp(GroupList& list) {
                         template make<strided_stores>(std::string("strided-") + stride_str + "-stores-" + std::to_string(kib) + "-kib",
                         "Stores with stride: " + stride_str + ", " + region,
                         1,
-                        [=]{ return new mem_args{args}; });
+                        [=]{ return new mem_args(args); });
             }
         }
     }
