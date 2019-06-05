@@ -69,6 +69,7 @@ endif
 ifeq ($(USE_PERF_TIMER),1)
 EXTRA_DEPS += $(JEVENTS_LIB) download_events.touch
 LDLIBS += $(JEVENTS_LIB)
+SEQTEST := util/seqtest
 endif
 
 ifeq ($(BACKWARD_HAS_BFD),1)
@@ -92,7 +93,7 @@ VPATH = test:$(PSNIP_DIR)/cpu
 # Targets #
 ###########
 
-all: uarch-bench unit-test util/seqtest
+all: uarch-bench unit-test $(SEQTEST)
 
 -include $(DEPFILES) unit-test.d
 
