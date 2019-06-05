@@ -204,6 +204,8 @@ TEST_CASE( "simple_timer", "[util]" ) {
 
 }
 
+#if USE_PERF_TIMER
+
 TEST_CASE( "parse_perf_events", "[perf]" ) {
     using sv = std::vector<std::string>;
     CHECK(parsePerfEvents("foo,bar") == sv{"foo", "bar"});
@@ -212,6 +214,4 @@ TEST_CASE( "parse_perf_events", "[perf]" ) {
     CHECK(parsePerfEvents("foo/bar,baz/,beef,blah") == sv{"foo/bar,baz/", "beef", "blah"});
 }
 
-
-
-
+#endif

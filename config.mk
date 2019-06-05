@@ -1,15 +1,26 @@
 -include local.mk
 
+# OS detection
+OS ?= $(shell uname)
+ifneq ($(OS),Linux)
+$(error non-Linux not supported yet)
+endif
+
+OS_ARCH := $(shell uname -p)
+ifneq ($(OS_ARCH),x86_64)
+PORTABLE := 1
+endif
+
 # Whether to compile support for using --timer=libpfc, which is a kernel module
 # and associated userland code that allows use of rdpmc instruction to sample
 # the Intel performance counters directly, leading to very precise measurements.
 # Even when this is enabled, the default std::chrono based timing is still available.
-USE_LIBPFC ?= 1
+USE_LIBPFC ?= $(if $(PORTABLE),0,1)
 
 # Whether to compile support for using --timer=perf which is a timer that uses the perf
 # subsystem through Andi Kleen's jevent events library. It uses uses the Intel 01.org
 # downloaded event csvs to support use of perf_event_open and friends
-USE_PERF_TIMER ?= 1
+USE_PERF_TIMER ?= $(if $(PORTABLE),0,1)
 
 # Whether to compile support for using backwards-cpp, which gives stack traces
 # on crashes. By default, only binaries and addresses are given in the backtrace, but

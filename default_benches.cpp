@@ -24,6 +24,7 @@ bench2_f sameloc_pointer_chase_complex;
 
 template <typename TIMER>
 void register_default(GroupList& list) {
+#if !UARCH_BENCH_PORTABLE
     std::shared_ptr<BenchmarkGroup> default_group = std::make_shared<BenchmarkGroup>("basic", "Basic Benchmarks");
     list.push_back(default_group);
 
@@ -43,6 +44,7 @@ void register_default(GroupList& list) {
     maker.template make<sameloc_pointer_chase>         ("pointer-chase-simple", "Simple addressing pointer chase",  128);
     maker.template make<sameloc_pointer_chase_complex> ("pointer-chase-complex","Complex addressing pointer chase",  128);
     // note: more pointer-chasing tests in mem-benches.cpp
+#endif // #if !UARCH_BENCH_PORTABLE
 }
 
 #define REG_DEFAULT(CLOCK) template void register_default<CLOCK>(GroupList& list);

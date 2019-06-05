@@ -31,16 +31,11 @@ ret
 ;; twice the true frequency for the "add" approach on the double-pumped ALU on the P4
 ;; or half or less than the true frequency on CPUs that can't issue one taken branch
 ;; per cycle.
-GLOBAL add_calibration:function
+GLOBAL add_calibration_x86:function
 ALIGN 32
-add_calibration:
+add_calibration_x86:
 times 2 sub  rdi, 1
-jge add_calibration
-ret
-
-; a benchmark that immediately returns, useful as the "base" method
-; to cancel out some forms of overhead
-define_bench dummy_bench
+jge add_calibration_x86
 ret
 
 define_bench dummy_bench_oneshot1
@@ -123,10 +118,13 @@ dec rdi
 jnz .top
 ret
 
+empty_fn:
+ret
+
 define_bench dense_calls
 .top:
 %rep 16
-call dummy_bench
+call empty_fn
 ;nop
 %endrep
 dec rdi
@@ -138,7 +136,7 @@ define_bench sparse %+ %1 %+ _calls
 xor     eax, eax
 .top:
 %rep 16
-call dummy_bench
+call empty_fn
 times %1 add eax, 1
 %endrep
 dec rdi

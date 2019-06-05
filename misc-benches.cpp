@@ -99,6 +99,8 @@ BOOST_PP_REPEAT_FROM_TO(48, 50, DECL_BENCH2, quadratic)
 
 template <typename TIMER>
 void register_misc(GroupList& list) {
+#if !UARCH_BENCH_PORTABLE
+
     std::shared_ptr<BenchmarkGroup> misc_group = std::make_shared<BenchmarkGroup>("misc", "Miscellaneous tests");
 
     using default_maker = StaticMaker<TIMER>;
@@ -261,6 +263,8 @@ void register_misc(GroupList& list) {
         maker256.template make<vzsse_samereg>("vzsse-samereg", "paddq xmm0, xmm0", 100);
         maker256.template make<vzsse_diffreg>("vzsse-diffreg", "paddq xmm0, xmm1", 100);
     }
+
+#endif // #if !UARCH_BENCH_PORTABLE
 
 }
 

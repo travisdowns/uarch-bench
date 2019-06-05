@@ -77,6 +77,7 @@ void register_syscall(GroupList& list) {
         maker.template make<getpid_syscall>           ("getpid-syscall",   "getpid using syscall()",        1);
         maker.template make<close999>                 ("close-999",         "close() on a non-existent FD", 1);
         maker.template make<notexist_syscall>         ("notexist-syscall", "non-existent syscall",          1);
+#if !UARCH_BENCH_PORTABLE
         maker.template make<syscall_asm>              ("getuid-asm",       "getuid direct syscall",         1, constant<SYS_getuid>);
         maker.template make<syscall_asm>              ("notexist-asm",     "non-existent direct syscall",   1, constant<123456>);
         maker.template make<syscall_asm_lfence_before>("lfence-before",    "syscall+lfence before",         1, constant<123456>);
@@ -91,6 +92,7 @@ void register_syscall(GroupList& list) {
         maker.template make<lfenced_misses>       ("lfenced-misses",        "lfenced misses",            1, aligned_buf);
         maker.template make<syscall_misses>       ("syscall-misses",        "syscall misses",            1, aligned_buf);
         maker.template make<syscall_misses_lfence>("syscall-misses-lfence", "misses + lfence + syscall", 1, aligned_buf);
+#endif // #if !UARCH_BENCH_PORTABLE
 
     }
 

@@ -6,8 +6,9 @@
  */
 
 #include "cpp-benches.hpp"
-#include "util.hpp"
 #include "hedley.h"
+#include "opt-control.hpp"
+#include "util.hpp"
 
 #include <limits>
 #include <cinttypes>
@@ -201,6 +202,25 @@ long strided_stores(uint64_t iters, void *arg) {
     }
     sink_ptr(args.region);
     return (long)args.region[0];
+}
+
+long portable_add_chain(uint64_t itersu, void *arg) {
+    using opt_control::modify;
+
+    int64_t iters = itersu;
+    // we use the modify call to force the compiler to emit the separate
+    // decrements, otherwise it will simply combine consecutive subtractions
+    do {
+        modify(iters);
+        --iters;
+        modify(iters);
+        --iters;
+        // it is key that the last decrement before the check doesn't have a modify call
+        // after since this lets the compiler use the result of the flags set by the last
+        // decrement in the check (which will be fused)
+    } while (iters != 0);
+
+    return iters;
 }
 
 

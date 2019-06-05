@@ -158,6 +158,7 @@ static void make_load_bench(M& maker, int kib, const char* id_prefix, const char
 
 template <typename TIMER>
 void register_mem(GroupList& list) {
+#if !UARCH_BENCH_PORTABLE
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-parallel", "Parallel loads from fixed-size regions");
         list.push_back(group);
@@ -382,7 +383,10 @@ void register_mem(GroupList& list) {
         list.push_back(fwd_group);
     }
 
+#endif // #if !UARCH_BENCH_PORTABLE
+
     register_mem_oneshot<TIMER>(list);
+
 }
 
 #define REG_DEFAULT(CLOCK) template void register_mem<CLOCK>(GroupList& list);

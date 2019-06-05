@@ -3,6 +3,7 @@
  */
 #include "benchmark.hpp"
 #include "isa-support.hpp"
+#include "opt-control.hpp"
 
 #include <cassert>
 
@@ -57,6 +58,16 @@ void BenchmarkBase::runAndPrint(Context& c) {
 
 std::string BenchmarkBase::getPath() const {
     return getGroup().getId() + "/" + getId();
+}
+
+// a benchmark that immediately returns, useful as the "base" method
+// to cancel out some forms of overhead
+long dummy_bench(uint64_t iters, void* arg) {
+    // we jump through these hoops to get a function with a single ret
+    // instruction
+    long l;
+    opt_control::overwrite(l);
+    return l;
 }
 
 

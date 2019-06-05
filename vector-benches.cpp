@@ -31,6 +31,7 @@ bench2_f vector_load_load_lat_vlddqu_63;
 
 template <typename TIMER>
 void register_vector(GroupList& list) {
+#if !UARCH_BENCH_PORTABLE
     {
         std::shared_ptr<BenchmarkGroup> vector_group = std::make_shared<BenchmarkGroup>("vector/bypass", "Vector unit bypass latency");
 
@@ -71,6 +72,8 @@ void register_vector(GroupList& list) {
         vector_group->add(benches);
         list.push_back(vector_group);
     }
+
+#endif // #if !UARCH_BENCH_PORTABLE
 }
 
 #define REG_DEFAULT(CLOCK) template void register_vector<CLOCK>(GroupList& list);

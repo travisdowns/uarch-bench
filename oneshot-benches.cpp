@@ -48,6 +48,7 @@ void register_specific<LibpfcTimer>(BenchmarkGroup* oneshot) {
 
 template <typename TIMER>
 void register_oneshot(GroupList& list) {
+#if !UARCH_BENCH_PORTABLE
     std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("oneshot", "Oneshot Group");
     list.push_back(oneshot);
 
@@ -67,6 +68,7 @@ void register_oneshot(GroupList& list) {
     maker.template withTouch<dummy_bench_oneshot2_touch>().template make<dummy_bench_oneshot2>("oneshot-dummy-touch", "Empty touched oneshot bench", 1);
 
     register_specific<TIMER>(oneshot.get());
+#endif // #if !UARCH_BENCH_PORTABLE
 }
 
 #define REGISTER(CLOCK) template void register_oneshot<CLOCK>(GroupList& list);

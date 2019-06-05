@@ -32,6 +32,7 @@ bench2_f addrsp8_calls;
 
 template <typename TIMER>
 void register_call(GroupList& list) {
+#if !UARCH_BENCH_PORTABLE
     std::shared_ptr<BenchmarkGroup> call_group = std::make_shared<BenchmarkGroup>("call", "Call/ret benchmarks");
     list.push_back(call_group);
 
@@ -55,6 +56,7 @@ void register_call(GroupList& list) {
     default_maker.template make<pushpop_calls>    ("pushpop-call", "calls to pushpop fn",  16);
     default_maker.template make<addrsp0_calls>    ("addrsp0-call", "calls to addrsp0 fn",  16);
     default_maker.template make<addrsp8_calls>    ("addrsp8-call", "calls to addrsp8 fn",  16);
+#endif // #if !UARCH_BENCH_PORTABLE
 }
 
 #define REGISTER(CLOCK) template void register_call<CLOCK>(GroupList& list);

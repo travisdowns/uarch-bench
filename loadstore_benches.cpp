@@ -148,6 +148,7 @@ std::string LoadStoreGroup::make_id(ssize_t misalign) {
 
 template <typename TIMER>
 void register_loadstore(GroupList& list) {
+#if !UARCH_BENCH_PORTABLE
     // load throughput benches
     list.push_back(LoadStoreGroup::make<TIMER,  load16_any>("load/16-bit",  2));
     list.push_back(LoadStoreGroup::make<TIMER,  load32_any>("load/32-bit",  4));
@@ -163,6 +164,7 @@ void register_loadstore(GroupList& list) {
     list.push_back(LoadStoreGroup::make<TIMER, store128_any>("store/128-bit", 16));
     list.push_back(LoadStoreGroup::make<TIMER, store256_any>("store/256-bit", 32));
     list.push_back(LoadStoreGroup::make<TIMER, store512_any>("store/512-bit", 64, { x86Feature::AVX512F }));
+#endif // #if !UARCH_BENCH_PORTABLE
 }
 
 #define REG_LOADSTORE(CLOCK) template void register_loadstore<CLOCK>(GroupList& list);

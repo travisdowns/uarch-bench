@@ -66,6 +66,7 @@ void register_specific_stfwd<LibpfcTimer>(BenchmarkGroup* oneshot) {
 
 template <typename TIMER>
 void register_mem_oneshot(GroupList& list) {
+#if !UARCH_BENCH_PORTABLE
 
     {
         std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("memory/store-fwd-oneshot", "Store forwaring latency and throughput");
@@ -113,7 +114,7 @@ void register_mem_oneshot(GroupList& list) {
 
     }
 
-
+#endif // #if !UARCH_BENCH_PORTABLE
 }
 
 #define REG_DEFAULT(CLOCK) template void register_mem_oneshot<CLOCK>(GroupList& list);

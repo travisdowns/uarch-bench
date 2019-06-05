@@ -12,10 +12,15 @@
 
 using namespace std;
 
-extern "C" {
+
 /* execute a 1-cycle loop 'iters' times */
-bench2_f add_calibration;
-}
+#if UARCH_BENCH_PORTABLE
+bench2_f portable_add_chain;
+#define CAL_FN portable_add_chain
+#else
+extern "C" bench2_f add_calibration_x86;
+#define CAL_FN add_calibration_x86
+#endif
 
 using namespace Stats;
 using namespace std::chrono;
@@ -30,6 +35,7 @@ using namespace std::chrono;
  */
 template <size_t ITERS, typename CLOCK, size_t TRIES = 10, size_t WARMUP = 100>
 double CalcCpuFreq() {
+    static_assert((ITERS & 1) == 0, "iters must be even because we unroll some loops by 2");
     const char* mhz;
     if ((mhz = getenv("UARCH_BENCH_CLOCK_MHZ"))) {
         double ghz = std::stoi(mhz) / 1000.0;
@@ -41,9 +47,9 @@ double CalcCpuFreq() {
     for (size_t w = 0; w < WARMUP + 1; w++) {
         for (size_t r = 0; r < TRIES; r++) {
             auto t0 = CLOCK::nanos();
-            add_calibration(ITERS, nullptr);
+            CAL_FN(ITERS, nullptr);
             auto t1 = CLOCK::nanos();
-            add_calibration(ITERS * 2, nullptr);
+            CAL_FN(ITERS * 2, nullptr);
             auto t2 = CLOCK::nanos();
             results[r] = (t2 - t1) - (t1 - t0);
         }
