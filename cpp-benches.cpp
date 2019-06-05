@@ -39,10 +39,14 @@ static inline uint64_t div64_64(uint64_t a) {
 }
 
 static inline uint64_t div128_64(uint64_t a) {
+#if !UARCH_BENCH_PORTABLE
     uint64_t high = 123, low = 2;
     a |= 0xF234567890123456ull;
     asm ("div %2" : "+d"(high), "+a"(low) : "r"(a) : );
     return low;
+#else
+    return 1;
+#endif
 }
 
 template <div_func F, bool forcedep>
@@ -114,8 +118,6 @@ std::vector<list_head> makeLists() {
     std::vector<list_head> lists;
     for (int i = 0; i < LIST_COUNT; i++) {
         lists.push_back(makeList(NODE_COUNT));
-//        lists.push_back(makeList(dist(engine)));
-//        printf("SIZE %d\n", lists.back().size);
     }
     return lists;
 }

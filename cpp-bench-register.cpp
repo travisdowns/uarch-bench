@@ -17,9 +17,9 @@
         f(128_64, "128b / 64b") \
 
 #define DIV_REG(suffix, text) \
-        maker.template make<div_lat_inline   ##suffix> ("div"#suffix"-lat",    "Dependent   " text "   inline divisions", 1); \
+        maker.template make<div_lat_inline   ##suffix> ("div"#suffix"-lat",    "Dependent   " text "  inline divisions", 1); \
         /*maker.template make<div_lat_noinline ##suffix >("div"#suffix"-lat-ni", "Dependent   " text " noinline divisions", 1); */\
-        maker.template make<div_tput_inline  ##suffix >("div"#suffix"-tput",   "Independent " text "   inline divisions", 1); \
+        maker.template make<div_tput_inline  ##suffix >("div"#suffix"-tput",   "Independent " text "  inline divisions", 1); \
         /*maker.template make<div_tput_noinline##suffix> ("div"#suffix"-tput-ni","Independent " text " noinline divisions", 1); */\
 
 
