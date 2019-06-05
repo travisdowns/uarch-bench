@@ -217,6 +217,10 @@ long portable_add_chain(uint64_t itersu, void *arg) {
         --iters;
         modify(iters);
         --iters;
+        modify(iters);
+        --iters;
+        modify(iters);
+        --iters;
         // it is key that the last decrement before the check doesn't have a modify call
         // after since this lets the compiler use the result of the flags set by the last
         // decrement in the check (which will be fused)
