@@ -15,6 +15,7 @@ function check_msrtools_installed {
 		echo "msr-tools is not installed. Run 'sudo apt-get install msr-tools' to install it." >&2
 		exit 1
 	fi
+	lsmod | egrep -q "^msr " || { echo "loading msr kernel module"; sudo modprobe msr; }
 }
 
 function get_core_turbo_intel {
@@ -111,8 +112,6 @@ if [[ "$SCALING_GOVERNOR" != "performance" ]]; then
 		echo "FAILED";
 	fi
 fi
-
-lsmod | egrep -q "^msr " || { echo "loading msr kernel module"; sudo modprobe msr; }
 
 ################# Disable turbo boost (Intel only) #######################
 if [ $VENDOR_ID == "GenuineIntel" ]; then check_no_turbo; fi
