@@ -114,8 +114,8 @@ fi
 
 lsmod | egrep -q "^msr " || { echo "loading msr kernel module"; sudo modprobe msr; }
 
-################# Disable turbo boost #######################
-check_no_turbo
+################# Disable turbo boost (Intel only) #######################
+if [ $VENDOR_ID == "GenuineIntel" ]; then check_no_turbo; fi
 
 ################ Load the libpfc kernel module if necessary ##################
 
