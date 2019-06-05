@@ -114,7 +114,7 @@ if [[ "$SCALING_GOVERNOR" != "performance" ]]; then
 fi
 
 ################# Disable turbo boost (Intel only) #######################
-if [ $VENDOR_ID == "GenuineIntel" ]; then check_no_turbo; fi
+if [ ${VENDOR_ID}x == "GenuineIntelx" ]; then check_no_turbo; fi
 
 ################ Load the libpfc kernel module if necessary ##################
 
