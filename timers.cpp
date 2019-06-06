@@ -136,7 +136,9 @@ void printClockOverheads(std::ostream& out) {
     PRINT_CLOCK(GettimeAdapter<CLOCK_MONOTONIC_RAW>);
     PRINT_CLOCK(GettimeAdapter<CLOCK_PROCESS_CPUTIME_ID>);
     PRINT_CLOCK(GettimeAdapter<CLOCK_THREAD_CPUTIME_ID>);
+#ifdef CLOCK_BOOTTIME
     PRINT_CLOCK(GettimeAdapter<CLOCK_BOOTTIME>);
+#endif
 
     PRINT_CLOCK(DumbClock);
 
