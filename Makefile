@@ -10,6 +10,10 @@ CC ?= gcc
 ASM ?= nasm
 ASM_FLAGS ?= -DNASM_ENABLE_DEBUG=$(NASM_DEBUG) -w+all
 
+# make submakes use the specified compiler also
+export CXX
+export CC
+
 
 ifeq ($(PORTABLE),1)
 $(info uarch-bench is being compiled in PORTABLE=1 mode, most x86-specific tests disabled)
@@ -131,10 +135,10 @@ libpfc/pfc.ko: libpfc/libpfc.so
 
 libpfc/libpfc.so libpfc/pfc.ko:
 	@echo "Buiding libpfc target $(LIBPFC_TARGET)"
-	cd libpfc && make $(LIBPFC_TARGET)
+	$(MAKE) -C libpfc $(LIBPFC_TARGET)
 
 libpfc-clean:
-	cd libpfc && make clean
+	$(MAKE) -C libpfc clean
 
 ifeq ($(USE_PERF_TIMER),1)
 # jevents handling - we just assume jevents depends on all .c or .h files in the root directory
