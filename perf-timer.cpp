@@ -14,6 +14,7 @@
 #include <cstdlib>
 
 #include <linux/perf_event.h>
+#include <linux/version.h>
 #include <sched.h>
 
 extern "C" {
@@ -159,11 +160,16 @@ void fixup_event(perf_event_attr* attr, bool user_only) {
 }
 
 void print_caps(ostream& os, const rdpmc_ctx& ctx) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,12,0)
     os << "caps:" <<
             " R:" << ctx.buf->cap_user_rdpmc <<
             " UT:" << ctx.buf->cap_user_time <<
             " ZT:" << ctx.buf->cap_user_time_zero <<
             " index: 0x" << to_hex_string(ctx.buf->index) << endl;
+#else
+    // prior to 3.12 these caps had different names and were buggy, just don't both printing them
+    os << "caps: <not available: kernel too old>" << endl;
+#endif
 }
 
 std::vector<std::string> parsePerfEvents(const std::string& event_string) {
