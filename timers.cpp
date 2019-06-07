@@ -113,7 +113,6 @@ template <typename CLOCK>
 void printOneClock(std::ostream& out, const char* name) {
     out << setw(48) << name << setw(28) << CalcClockRes<100,CLOCK>().getString4(5,1);
     out << setw(30) << CalcClockCost<100,CLOCK>().getString4(5,1) << endl;
-
 }
 
 struct DumbClock {

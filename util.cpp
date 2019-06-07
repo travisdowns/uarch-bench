@@ -17,6 +17,17 @@
 #include <immintrin.h>
 #endif
 
+/* decide whether to use hugepages based on whether MADV_HUGEPAGE has it
+ * as some very old kernels don't. */
+#ifndef UARCH_BENCH_USE_HUGEPAGES
+#ifdef MADV_HUGEPAGE
+#define UARCH_BENCH_USE_HUGEPAGES 1
+#else
+#warning no MADV_HUGEPAGE on this system, huge pages not available
+#define UARCH_BENCH_USE_HUGEPAGES 0
+#endif
+#endif
+
 #if defined(__GNUC__) && !defined(__clang__)
 #define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
@@ -74,8 +85,16 @@ void *new_huge_ptr(size_t size) {
     void *ptr;
     int result = posix_memalign(&ptr, TWO_MB, size + TWO_MB);
     assert(result == 0);
+#if UARCH_BENCH_USE_HUGEPAGES
     madvise(ptr, size + TWO_MB, MADV_HUGEPAGE);
     ptr = ((char *)ptr + TWO_MB);
+#else
+    static bool once;
+    if (!once) {
+        fprintf(stderr, "WARNING: huge pages not available\n");
+        once = true;
+    }
+#endif
     // It is critical that we memset the memory region to touch each page, otherwise all or some pages
     // can be mapped to the zero page, leading to unexpected results for read-only tests (i.e., "too good to be true"
     // results for benchmarks that read large amounts of memory, because internally these are all mapped
