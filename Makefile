@@ -20,8 +20,9 @@ $(info uarch-bench is being compiled in PORTABLE=1 mode, most x86-specific tests
 endif
 
 # The target to build when building libpfc (if we build it at all). By default, we are going
-# to build everything, but TravisCI, for example, would (usually) like to skip building the kernel module. 
-LIBPFC_TARGET ?= all
+# to build the userspace shared lib and the kernel module, but TravisCI, for example, would
+# (usually) like to skip building the kernel module. Note that we don't build the demo, see #issue 71
+LIBPFC_TARGET ?= libpfc.so pfc.ko
 
 PFM_DIR ?= libpfm4
 PFM_LIBDIR ?= $(PFM_DIR)/lib
