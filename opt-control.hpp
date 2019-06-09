@@ -30,7 +30,7 @@ namespace opt_control {
  */
 template <typename T>
 HEDLEY_ALWAYS_INLINE
-static inline void sink(T x) {
+static void sink(T x) {
     static_assert(std::is_arithmetic<T>::value, "types should be primitive");
     __asm__ volatile ("" :: "r"(x) :);
 }
@@ -50,7 +50,7 @@ static inline void sink(T x) {
  */
 template <typename T>
 HEDLEY_ALWAYS_INLINE
-static inline void modify(T& x) {
+static void modify(T& x) {
     static_assert(std::is_arithmetic<T>::value, "types should be primitive");
     __asm__ volatile ("" :"+r"(x)::);
 }
@@ -69,7 +69,7 @@ static inline void modify(T& x) {
  */
 template <typename T>
 HEDLEY_ALWAYS_INLINE
-static inline void overwrite(T& x) {
+static void overwrite(T& x) {
     static_assert(std::is_arithmetic<T>::value, "types should be primitive");
     __asm__ volatile ("" :"=r"(x)::);
 }
