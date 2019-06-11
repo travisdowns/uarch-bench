@@ -10,11 +10,13 @@
 #include "opt-control.hpp"
 #include "util.hpp"
 
-#include <limits>
+#include <cassert>
 #include <cinttypes>
-#include <vector>
-#include <random>
 #include <cstddef>
+#include <cstring>
+#include <limits>
+#include <random>
+#include <vector>
 
 #include <sys/time.h>
 
@@ -248,6 +250,172 @@ long portable_add_chain(uint64_t itersu, void *arg) {
     return iters;
 }
 
+// off course the table is not supposed to be full of zeros but for our purposes this is fine
+uint8_t crc8_table[256] = {};
+
+// from https://stackoverflow.com/a/15171925
+uint32_t crc8(uint32_t crc, uint8_t *data, size_t len)
+{
+    crc &= 0xff;
+    unsigned char const *end = data + len;
+    while (data < end)
+        crc = crc8_table[crc ^ *data++];
+    return crc;
+}
+
+
+long crc8_bench(uint64_t iters, void *arg) {
+    uint8_t buf[4096];
+    opt_control::sink_ptr(buf);
+    uint32_t crc = 0;
+    do {
+        crc = crc8(crc, buf, sizeof(buf));
+    } while (--iters != 0);
+    return crc;
+}
+
+struct top_bottom {
+    uint32_t top, bottom;
+};
+
+// HEDLEY_NEVER_INLINE
+top_bottom sum_halves(const uint32_t *data, size_t len) {
+    uint32_t top = 0, bottom = 0;
+    for (size_t i = 0; i < len; i += 2) {
+        uint32_t elem;
+
+        elem = data[i];
+        top    += elem >> 16;
+        bottom += elem & 0xFFFF;
+
+        elem = data[i+1];
+        top    += elem >> 16;
+        bottom += elem & 0xFFFF;
+    }
+    return {top, bottom};
+}
+
+long sum_halves_bench(uint64_t iters, void *arg) {
+    uint32_t buf[4096];
+    opt_control::sink_ptr(buf);
+    do {
+        auto ret = sum_halves(buf, sizeof(buf) / sizeof(buf[0]));
+        opt_control::sink(ret.top + ret.bottom);
+    } while (--iters != 0);
+    return 0;
+}
+
+HEDLEY_NEVER_INLINE
+uint32_t mul_by(const uint32_t *data, size_t len, uint32_t m) {
+    uint32_t sum = 0;
+    for (size_t i = 0; i < len - 1; i++) {
+        uint32_t x = data[i], y = data[i + 1];
+        sum += x * y * m * i * i;
+    }
+    opt_control::sink(sum);
+    return sum;
+}
+
+HEDLEY_NEVER_INLINE
+uint32_t mul_chain(const uint32_t *data, size_t len, uint32_t m) {
+    uint32_t product = 1;
+    for (size_t i = 0; i < len; i++) {
+        uint32_t x = data[i];
+        product *= x;
+    }
+    opt_control::sink(product);
+    return product;
+}
+
+HEDLEY_NEVER_INLINE
+uint32_t mul_chain4(const uint32_t *data, size_t len, uint32_t m) {
+    uint32_t p1 = 1, p2 = 1, p3 = 1, p4 = 1;
+    for (size_t i = 0; i < len; i += 4) {
+        p1 *= data[i + 0];
+        p2 *= data[i + 1];
+        p3 *= data[i + 2];
+        p4 *= data[i + 3];
+    }
+    uint32_t product = p1 * p2 * p3 * p4;
+    opt_control::sink(product);
+    return product;
+}
+
+template <typename F>
+long mul_by_bench_f(uint64_t iters, void *arg, F f) {
+    uint32_t buf[4096];
+    opt_control::sink_ptr(buf);
+    uint32_t x = 123;
+    opt_control::modify(x);
+    do {
+        opt_control::sink(f(buf, sizeof(buf) / sizeof(buf[0]), x));
+    } while (--iters != 0);
+    return 0;
+}
+
+long mul_by_bench(uint64_t iters, void *arg) {
+    return mul_by_bench_f(iters, arg, mul_by);
+}
+
+long mul_chain_bench(uint64_t iters, void *arg) {
+    return mul_by_bench_f(iters, arg, mul_chain);
+}
+
+long mul_chain4_bench(uint64_t iters, void *arg) {
+    return mul_by_bench_f(iters, arg, mul_chain4);
+}
+
+HEDLEY_NEVER_INLINE
+uint32_t add_indirect_inner(const uint32_t *data, const uint32_t *offsets, size_t len)
+{
+    assert(len >= 2 && len % 2 == 0);
+    uint32_t sum1 = 0, sum2 = 0;
+    size_t i = len;
+    do {
+        sum1 += data[offsets[i - 1]];
+        sum2 += data[offsets[i - 2]];
+        i -= 2;
+    } while (i);
+    opt_control::sink(sum1 + sum2);
+    return sum1 + sum2;
+}
+
+HEDLEY_NEVER_INLINE
+uint32_t add_indirect_shift_inner(const uint32_t *data, const uint32_t *offsets, size_t len) {
+    uint32_t sum1 = 0, sum2 = 0;
+    size_t i = len;
+    do {
+        uint64_t twooffsets;
+        std::memcpy(&twooffsets, offsets + i - 2, sizeof(uint64_t));
+        sum1 += data[twooffsets >> 32];
+        sum2 += data[twooffsets & 0xFFFFFFFF];
+        i -= 2;
+    } while (i);
+    opt_control::sink(sum1 + sum2);
+    return sum1 + sum2;
+}
+
+
+template <typename F>
+long add_indirect_f(uint64_t iters, void *arg, F f) {
+    uint32_t buf[4096], offsets[4096] = {};
+    opt_control::sink_ptr(buf);
+    opt_control::sink_ptr(offsets);
+    uint32_t x = 123;
+    opt_control::modify(x);
+    do {
+        opt_control::sink(f(buf, offsets, sizeof(buf) / sizeof(buf[0])));
+    } while (--iters != 0);
+    return 0;
+}
+
+long add_indirect(uint64_t iters, void *arg) {
+    return add_indirect_f(iters, arg, add_indirect_inner);
+}
+
+long add_indirect_shift(uint64_t iters, void *arg) {
+    return add_indirect_f(iters, arg, add_indirect_shift_inner);
+}
 
 
 

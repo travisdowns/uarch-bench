@@ -55,6 +55,14 @@ bench2_f strided_stores_1byte;
 bench2_f strided_stores_4byte;
 bench2_f strided_stores_8byte;
 
+bench2_f crc8_bench;
+bench2_f sum_halves_bench;
+bench2_f mul_by_bench;
+bench2_f mul_chain_bench;
+bench2_f mul_chain4_bench;
+bench2_f add_indirect;
+bench2_f add_indirect_shift;
+
 void* getLinkedList();
 
 #endif /* CPP_BENCHES_HPP_ */

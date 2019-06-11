@@ -57,11 +57,18 @@ void register_cpp(GroupList& list) {
     list.push_back(cpp_group);
 
     {
-        auto maker = DeltaMaker<TIMER>(cpp_group.get());
+        auto maker = DeltaMaker<TIMER>(cpp_group.get()).useLoopDelta(true);
 
         DIV_REG_X(DIV_REG)
 
-        maker.template make<gettimeofday_bench>   ("gettimeofday",    "gettimeofday() libc call", 1);
+        maker.template make<gettimeofday_bench>("gettimeofday",    "gettimeofday() libc call", 1);
+        maker.template make<crc8_bench>("crc8",  "crc8 loop", 4096);
+        maker.setLoopCount(1000).template make<sum_halves_bench>("sum-halves",  "Sum 16-bit halves of array elems", 2048);
+        maker.setLoopCount(1000).template make<mul_by_bench>("mul-4", "Four multiplications", 4096);
+        maker.setLoopCount(1000).template make<mul_chain_bench>("mul-chain",  "Chained multiplications", 4096);
+        maker.setLoopCount(1000).template make<mul_chain4_bench>("mul-chain4", "Chained multiplications, 4 chains", 4096);
+        maker.setLoopCount(1000).template make<add_indirect      >("add-indirect",       "Indirect adds from memory", 2048);
+        maker.setLoopCount(1000).template make<add_indirect_shift>("add-indirect-shift", "Indirect adds from memory, tricky", 2048);
     }
 
     {
