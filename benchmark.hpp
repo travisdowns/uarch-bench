@@ -327,6 +327,13 @@ struct DeltaAlgo {
 
     typedef raw_result (raw_f)(size_t loop_count, void *arg);
 
+    template <bench2_f BENCH_METHOD>
+    static raw_result delta_loop_bench(size_t loop_count, void *arg) {
+        raw_result result;
+        result.base  = time_one<TIMER, total_samples, BENCH_METHOD>(loop_count,     arg);
+        result.bench = time_one<TIMER, total_samples, BENCH_METHOD>(loop_count * 2, arg);
+        return result;
+    }
 
     template <bench2_f BENCH_METHOD, bench2_f BASE_METHOD>
     static raw_result delta_bench(size_t loop_count, void *arg) {
@@ -427,13 +434,17 @@ template <typename TIMER>
 class DeltaMaker : public MakerBase<TIMER, DeltaMaker<TIMER>> {
 public:
 
+    using this_t = DeltaMaker<TIMER>;
     using base_t = MakerBase<TIMER, DeltaMaker<TIMER>>;
 
     DeltaMaker(const DeltaMaker& ) = default;
-    DeltaMaker(BenchmarkGroup* parent, uint32_t loop_count = default_loop_count) : base_t(parent, loop_count) {}
+    DeltaMaker(BenchmarkGroup* parent, uint32_t loop_count = default_loop_count) :
+        base_t(parent, loop_count), use_loop_delta(false) {}
 
     static constexpr uint32_t default_loop_count = 10000;
     static constexpr int                 samples =    33;
+
+    bool use_loop_delta;
 
     /**
      * Makes a benchmark with the given BASE_METHOD and BENCH_METHOD, and adds it to the group associated with
@@ -457,8 +468,23 @@ public:
             uint32_t ops_per_loop,
             const arg_provider_t& arg_provider = null_provider)
     {
-        typename BenchTemplate<TIMER, DeltaAlgo<TIMER>>::raw_f *f = DeltaAlgo<TIMER>::template delta_bench<BENCH_METHOD, BASE_METHOD>;
+        typename BenchTemplate<TIMER, DeltaAlgo<TIMER>>::raw_f *f;
+        if (use_loop_delta) {
+            f = DeltaAlgo<TIMER>::template delta_loop_bench<BENCH_METHOD>;
+        } else {
+            f = DeltaAlgo<TIMER>::template delta_bench<BENCH_METHOD, BASE_METHOD>;
+        }
         return base_t::template make_bench_from_raw<DeltaAlgo<TIMER>>(id, description, ops_per_loop, f, arg_provider);
+    }
+
+    /* If useLoopDelta is set to true, the benchmark results are calculated by running the benchmark twice, once with
+     * loop_count iterations, and once with loop_count * 2 iterations, and taking the delta. This is as opposted to
+     * the default which runs two different bench methods.
+     */
+    DeltaMaker useLoopDelta(bool use_loop_delta_) {
+        DeltaMaker ret(*this);
+        ret.use_loop_delta = use_loop_delta_;
+        return ret;
     }
 };
 
