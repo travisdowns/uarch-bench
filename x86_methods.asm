@@ -1236,11 +1236,11 @@ ret
 %endif
 
 ; %1 size of store in bytes
-; %2 instruction to use
-; %3 register (2nd) argument to store instruction
-%macro define_store_bandwidth 3
+; %2 full instruction to use
+; %3 prefix for benchmark name
+%macro define_bandwidth 3
 %assign BITSIZE (%1*8)
-define_bench store_bandwidth_ %+ BITSIZE
+define_bench %3_bandwidth_ %+ BITSIZE
 mov     rdx, [rsi + region.size]
 mov     rsi, [rsi + region.start]
 
@@ -1254,10 +1254,10 @@ mov     rcx, rsi
 .inner:
 %assign offset 0
 %rep (64 / %1)
-%2 [rcx + offset], %3
+%2
 %assign offset (offset + %1)
 %endrep
-
+%undef offset ; needed to prevent offset from being expanded wrongly in the macro invocations below
 add     rcx, 64
 sub     rax, 64
 jge      .inner
@@ -1267,11 +1267,22 @@ jnz .top
 ret
 %endmacro
 
-define_store_bandwidth  4,mov,eax
-define_store_bandwidth  8,mov,rax
-define_store_bandwidth 16,vmovdqa,xmm0
-define_store_bandwidth 32,vmovdqa,ymm0
-define_store_bandwidth 64,vmovdqa64,zmm0
+
+
+define_bandwidth  4,{mov      [rcx + offset], eax},store
+define_bandwidth  8,{mov      [rcx + offset], rax},store
+define_bandwidth 16,{vmovdqa  [rcx + offset],xmm0},store
+define_bandwidth 32,{vmovdqa  [rcx + offset],ymm0},store
+define_bandwidth 64,{vmovdqa64[rcx + offset],zmm0},store
+
+define_bandwidth  4,{mov        r8d, [rcx + offset]},load
+define_bandwidth  8,{mov        r8 , [rcx + offset]},load
+define_bandwidth 16,{vmovdqa   xmm0, [rcx + offset]},load
+define_bandwidth 32,{vmovdqa   ymm0, [rcx + offset]},load
+define_bandwidth 64,{vmovdqa64 zmm0, [rcx + offset]},load
+define_bandwidth 64,{movzx      r8d, BYTE [rcx + offset]},loadtouch
+
+
 
 ; version that doesn't interleave the loads in a "clever way"
 define_bench bandwidth_test256

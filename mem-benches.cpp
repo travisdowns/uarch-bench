@@ -112,6 +112,13 @@ bench2_f bandwidth_test256i_orig;
 bench2_f bandwidth_test256i_single;
 bench2_f bandwidth_test256i_double;
 
+bench2_f load_bandwidth_32;
+bench2_f load_bandwidth_64;
+bench2_f load_bandwidth_128;
+bench2_f load_bandwidth_256;
+bench2_f load_bandwidth_512;
+bench2_f loadtouch_bandwidth_512;
+
 bench2_f store_bandwidth_32;
 bench2_f store_bandwidth_64;
 bench2_f store_bandwidth_128;
@@ -134,10 +141,10 @@ void register_mem_oneshot(GroupList& list);
 
 
 template <bench2_f F, typename M>
-static void make_load_bench(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops, size_t offset = 0) {
+static void make_load_bench(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops, size_t offset = 0, bool sizecheck = true) {
 
     size_t accessed_kib = (uint64_t)maker.getLoopCount() * UB_CACHE_LINE_SIZE / 1024 * ops;
-    if (accessed_kib < (size_t)kib) {
+    if (sizecheck && accessed_kib < (size_t)kib) {
         auto msg = string_format("make_load_bench: for bench %s/%s-%d accessed size kib is only %zu with kib %d",
                 maker.getGroup().getId().c_str(), id_prefix, kib, accessed_kib, kib);
         throw std::logic_error(msg);
@@ -279,15 +286,20 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/bandwidth/load", "Linear AVX2 loads");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 1024).setFeatures({AVX2});
+        auto maker = DeltaMaker<TIMER>(group.get(), 1024).useLoopDelta(true);
 
-        // test names need to have exactly two words and contain the word 'bandwidth' for scripts/tricky.sh to parse the output correctly
-        for (int kib : {8, 16, 32, 54, 64, 128, 256, 512}) {
-            make_load_bench<bandwidth_test256>(maker, kib, "bandwidth-normal", "linear bandwidth", kib * 1024 / 64); // timings are per cache line
-            make_load_bench<bandwidth_test256i>(maker, kib, "bandwidth-tricky", "interleaved bandwidth", kib * 1024 / 64); // timings are per cache line
-            make_load_bench<bandwidth_test256i_orig>(maker, kib, "bandwidth-orig", "original bandwidth", kib * 1024 / 64); // timings are per cache line
-            make_load_bench<bandwidth_test256i_single>(maker, kib, "bandwidth-oneloop-u1", "oneloop-1-wide bandwidth", kib * 1024 / 64); // timings are per cache line
-            make_load_bench<bandwidth_test256i_double>(maker, kib, "bandwidth-oneloop-u2", "oneloop-2-wide bandwidth", kib * 1024 / 64); // timings are per cache line
+        for (int kib = 4; kib <= 64 * 1024; kib *= 2) {
+            uint32_t loop_count = std::max(16, 32 * 1024 / kib);
+            maker = maker.setLoopCount(loop_count);
+            auto maker_avx2   = maker.setFeatures({AVX2});
+            auto maker_avx512 = maker.setFeatures({AVX512F});
+
+            make_load_bench<load_bandwidth_32 >(maker,        kib, "load-bandwidth-32b",  " 32-bit linear load BW per CL", kib * 1024 / 64, 0, false); // timings are per cache line
+            make_load_bench<load_bandwidth_64 >(maker,        kib, "load-bandwidth-64b",  " 64-bit linear load BW per CL", kib * 1024 / 64, 0, false); // timings are per cache line
+            make_load_bench<load_bandwidth_128>(maker,        kib, "load-bandwidth-128b", "128-bit linear load BW per CL", kib * 1024 / 64, 0, false); // timings are per cache line
+            make_load_bench<load_bandwidth_256>(maker_avx2,   kib, "load-bandwidth-256b", "256-bit linear load BW per CL", kib * 1024 / 64, 0, false); // timings are per cache line
+            make_load_bench<load_bandwidth_512>(maker_avx512, kib, "load-bandwidth-512b", "512-bit linear load BW per CL", kib * 1024 / 64, 0, false); // timings are per cache line
+            make_load_bench<loadtouch_bandwidth_512>(maker,   kib, "load-bandwidth-touch-line",  "touch 1 byte in CL"    , kib * 1024 / 64, 0, false); // timings are per cache line
         }
     }
 
@@ -299,7 +311,9 @@ void register_mem(GroupList& list) {
         auto maker_avx512 = maker.setFeatures({AVX512F});
 
         // test names need to have exactly two words and contain the word 'bandwidth' for scripts/tricky.sh to parse the output correctly
-        for (int kib : {4, 8, 16, 32, 54, 64, 128, 256, 512}) {
+        for (int kib = 4; kib <= 64 * 1024; kib *= 2) {
+            uint32_t loop_count = std::max(64, 8196 / kib);
+            maker = maker.setLoopCount(loop_count);
             make_load_bench<store_bandwidth_32 >(maker,        kib, "store-bandwidth-32b",  "32-bit linear store BW",  kib * 1024 / 64); // timings are per cache line
             make_load_bench<store_bandwidth_64 >(maker,        kib, "store-bandwidth-64b",  "64-bit linear store BW",  kib * 1024 / 64); // timings are per cache line
             make_load_bench<store_bandwidth_128>(maker,        kib, "store-bandwidth-128b", "128-bit linear store BW", kib * 1024 / 64); // timings are per cache line
@@ -339,6 +353,16 @@ void register_mem(GroupList& list) {
         maker.template make<serial_double_loadpf_same>  ("pf-first-same",    "Same loc prefetcht0 first", 1, []{ return &shuffled_region(128 * 1024); });
         maker.template make<serial_double_loadpf_diff>  ("pf-first-diff",    "Diff loc prefetcht0 first", 1, []{ return &shuffled_region(128 * 1024); });
         maker.template make<serial_double_loadpft1_diff>("pf-first-diff-t1",    "Diff loc prefetcht1 first", 1, []{ return &shuffled_region(128 * 1024); });
+
+        auto bw_maker = maker.setLoopCount(512).setFeatures({AVX2});
+        // test names need to have exactly two words and contain the word 'bandwidth' for scripts/tricky.sh to parse the output correctly
+        for (int kib = 8; kib <= 1024; kib *= 2) {
+            make_load_bench<bandwidth_test256>        (bw_maker, kib, "bandwidth-normal", "linear bandwidth", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<bandwidth_test256i>       (bw_maker, kib, "bandwidth-tricky", "interleaved bandwidth", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<bandwidth_test256i_orig>  (bw_maker, kib, "bandwidth-orig", "original bandwidth", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<bandwidth_test256i_single>(bw_maker, kib, "bandwidth-oneloop-u1", "oneloop-1-wide bandwidth", kib * 1024 / 64); // timings are per cache line
+            make_load_bench<bandwidth_test256i_double>(bw_maker, kib, "bandwidth-oneloop-u2", "oneloop-2-wide bandwidth", kib * 1024 / 64); // timings are per cache line
+        }
 
         // these tests are written in C++ and do a linked list traversal
         maker.setLoopCount(1000).template make<shuffled_list_sum>("list-traversal", "Linked list traversal + sum",  128 * 1024 / UB_CACHE_LINE_SIZE, []{ return &shuffled_region(128 * 1024); });
