@@ -155,7 +155,10 @@ before_install:
 
 script:
 - set -e && echo "CC is ${CC}, CXX is ${CXX}" && ${CC} --version && ${CXX} --version
+- ccache -s
+- ccache -z
 - make LIBPFC_TARGET=libpfc.so
+- ccache -s
 - lscpu
 - *unit_command
 - *uarch_command
