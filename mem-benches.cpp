@@ -286,11 +286,14 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/bandwidth/load", "Linear AVX2 loads");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 1024).useLoopDelta(true);
+        auto maker = DeltaMaker<TIMER>(group.get(), 1024);
 
-        for (int kib = 4; kib <= 64 * 1024; kib *= 2) {
-            uint32_t loop_count = std::max(16, 32 * 1024 / kib);
+        for (int kib = 4; kib <= 128 * 1024; kib *= 2) {
+            uint32_t loop_count = std::max(16, 16 * 1024 / kib);
             maker = maker.setLoopCount(loop_count);
+            if (kib > 1024) {
+                maker = maker.setTags({"slow"});
+            }
             auto maker_avx2   = maker.setFeatures({AVX2});
             auto maker_avx512 = maker.setFeatures({AVX512F});
 
@@ -306,14 +309,17 @@ void register_mem(GroupList& list) {
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/bandwidth/store", "Linear stores");
         list.push_back(group);
-        auto maker        = DeltaMaker<TIMER>(group.get(), 1024);
-        auto maker_avx2   = maker.setFeatures({AVX2});
-        auto maker_avx512 = maker.setFeatures({AVX512F});
 
         // test names need to have exactly two words and contain the word 'bandwidth' for scripts/tricky.sh to parse the output correctly
         for (int kib = 4; kib <= 64 * 1024; kib *= 2) {
-            uint32_t loop_count = std::max(64, 8196 / kib);
-            maker = maker.setLoopCount(loop_count);
+            uint32_t loop_count = std::max(16, 16 * 1024 / kib);
+            auto maker        = DeltaMaker<TIMER>(group.get(), 1024).setLoopCount(loop_count);
+            if (kib > 1024) {
+                maker = maker.setTags({"slow"});
+            }
+            auto maker_avx2   = maker.setFeatures({AVX2});
+            auto maker_avx512 = maker.setFeatures({AVX512F});
+
             make_load_bench<store_bandwidth_32 >(maker,        kib, "store-bandwidth-32b",  "32-bit linear store BW",  kib * 1024 / 64); // timings are per cache line
             make_load_bench<store_bandwidth_64 >(maker,        kib, "store-bandwidth-64b",  "64-bit linear store BW",  kib * 1024 / 64); // timings are per cache line
             make_load_bench<store_bandwidth_128>(maker,        kib, "store-bandwidth-128b", "128-bit linear store BW", kib * 1024 / 64); // timings are per cache line
