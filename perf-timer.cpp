@@ -60,8 +60,7 @@ void do_read_events(Context& c) {
     }
     int res = read_events(event_file);
     if (res) {
-        throw std::runtime_error(std::string("jevents failed while reading events, error ") + std::to_string(res) + ": "
-                + jevent_error_to_string(res) + ". Details: " + jevent_get_error_details());
+        throw std::runtime_error(std::string("jevents failed while reading events, error ") + std::to_string(res));
     }
 }
 
