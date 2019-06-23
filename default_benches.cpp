@@ -20,6 +20,8 @@ bench2_f div_64_64;
 bench2_f idiv_64_64;
 bench2_f sameloc_pointer_chase;
 bench2_f sameloc_pointer_chase_complex;
+bench2_f rdtsc_bench;
+bench2_f rdtscp_bench;
 }
 
 template <typename TIMER>
@@ -43,6 +45,8 @@ void register_default(GroupList& list) {
     maker.template make<idiv_64_64>       ("64-bit idiv","64-bit dependent idiv 1/1 = 1",  128);
     maker.template make<sameloc_pointer_chase>         ("pointer-chase-simple", "Simple addressing pointer chase",  128);
     maker.template make<sameloc_pointer_chase_complex> ("pointer-chase-complex","Complex addressing pointer chase",  128);
+    maker.template make<rdtsc_bench> ("rdtsc","back-to-back rdtsc throughput",  128);
+    maker.template make<rdtscp_bench> ("rdtscp","back-to-back rdtscp throughput",  128);
     // note: more pointer-chasing tests in mem-benches.cpp
 #endif // #if !UARCH_BENCH_PORTABLE
 }

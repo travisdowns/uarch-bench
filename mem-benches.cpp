@@ -125,6 +125,11 @@ bench2_f store_bandwidth_128;
 bench2_f store_bandwidth_256;
 bench2_f store_bandwidth_512;
 
+bench2_f gatherdd_xmm;
+bench2_f gatherdd_ymm;
+bench2_f gatherdd_lat_xmm;
+bench2_f gatherdd_lat_ymm;
+
 bench2_f sameloc_pointer_chase_alt;
 bench2_f sameloc_pointer_chase_diffpage;
 bench2_f sameloc_pointer_chase_alu;
@@ -326,6 +331,20 @@ void register_mem(GroupList& list) {
             make_load_bench<store_bandwidth_256>(maker_avx2,   kib, "store-bandwidth-256b", "256-bit linear store BW", kib * 1024 / 64); // timings are per cache line
             make_load_bench<store_bandwidth_512>(maker_avx512, kib, "store-bandwidth-512b", "512-bit linear store BW", kib * 1024 / 64); // timings are per cache line
         }
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/gather", "Gather tests");
+        list.push_back(group);
+
+        auto maker        = DeltaMaker<TIMER>(group.get());
+        auto maker_avx2   = maker.setFeatures({AVX2});
+        auto maker_avx512 = maker.setFeatures({AVX512F});
+
+        maker.template make<gatherdd_xmm>("gatherdd_xmm",  "L1-hit gatherdd tput xmm",  16);
+        maker.template make<gatherdd_ymm>("gatherdd_ymm",  "L1-hit gatherdd tput ymm",  16);
+        maker.template make<gatherdd_lat_xmm>("gatherdd_lat_xmm",  "gatherdd latency xmm + 1",  16);
+        maker.template make<gatherdd_lat_ymm>("gatherdd_lat_ymm",  "gatherdd latency ymm + 1",  16);
     }
 
     {

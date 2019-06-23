@@ -241,14 +241,23 @@ dec rdi
 jnz .top
 ret
 
-; a dependent chain of multiplications
-define_bench dep_mul_64
+; a basic bench that repeats a single op the given number
+; of times, defaults to 128
+; %1 the benchmark name
+; %2 the full operation
+; %3 the default of repeates (128 if not specified)
+%macro define_single_op 2-3 128
+define_bench %1
 xor eax, eax
 .top:
-times 128 add rax, rax
+times %3 %2
 dec rdi
 jnz .top
 ret
+%endmacro
+
+define_single_op rdtsc_bench,rdtsc
+define_single_op rdtscp_bench,rdtscp
 
 ; pointer chasing loads from a single stack location on the stack
 ; %1 name suffix
@@ -1267,8 +1276,6 @@ jnz .top
 ret
 %endmacro
 
-
-
 define_bandwidth  4,{mov      [rcx + offset], eax},store
 define_bandwidth  8,{mov      [rcx + offset], rax},store
 define_bandwidth 16,{vmovdqa  [rcx + offset],xmm0},store
@@ -1654,6 +1661,101 @@ ret
 make_serial_double_loadpf pf_diff,    0, t0
 make_serial_double_loadpf pf_same,   56, t0
 make_serial_double_loadpf pft1_diff,  0, t1
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                                           ;;
+;; GATHER GATHER GATHER GATHER GATHER GATHER ;;
+;;                                           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;
+%macro define_gather_bench 1
+
+%define vec0 %1 %+ 0
+%define vec1 %1 %+ 1
+%define vec2 %1 %+ 2
+%define vec3 %1 %+ 3
+%define vec4 %1 %+ 4
+
+define_bench gatherdd_%1
+mov  r10, rsp
+vzeroall
+
+sub rsp,  1024
+and rsp,  -64
+mov rdx, rsp
+
+xor eax, eax
+
+vpxor    vec0, vec0, vec0
+
+vmovdqa     vec1, [CONST_DWORD_0_7]
+vmovdqa     vec3, vec1
+
+vpcmpeqd    vec4, vec4, vec4
+
+.top:
+%rep 16
+vmovdqa     vec2, vec4
+vpxor       vec3, vec3, vec3
+vpgatherdd  vec3, [rsp + vec1], vec2
+%endrep
+dec rdi
+jnz .top
+
+lfence
+
+mov rsp, r10
+ret
+%endmacro
+
+define_gather_bench xmm
+define_gather_bench ymm
+
+;;;;;;;;; gather latency ;;;;;;;;;;
+%macro define_gather_lat_bench 1
+
+%define vec0 %1 %+ 0
+%define vec1 %1 %+ 1
+%define vec2 %1 %+ 2
+%define vec3 %1 %+ 3
+%define vec4 %1 %+ 4
+%define vec5 %1 %+ 5
+
+define_bench gatherdd_lat_%1
+mov  r10, rsp
+vzeroall
+
+sub rsp,  1024
+and rsp,  -64
+mov rdx, rsp
+
+xor eax, eax
+
+vpxor       vec0, vec0, vec0
+vpcmpeqd    vec4, vec4, vec4
+vpxor       vec5, vec5, vec5
+
+vmovdqa     vec1, [CONST_DWORD_0_7]
+vmovdqa     [rsp], vec1
+
+.top:
+%rep 16
+vmovdqa     vec2, vec4
+vpgatherdd  vec0, [rsp + vec1 * 4], vec2
+vpand       vec0, vec0, vec5
+vpor        vec1, vec1, vec0 ; make vec1 (indexes) depend on vec0 (result)
+%endrep
+dec rdi
+jnz .top
+
+mov rsp, r10
+ret
+%endmacro
+
+define_gather_lat_bench xmm
+define_gather_lat_bench ymm
 
 ; retpoline stuff
 
@@ -2633,4 +2735,10 @@ parallel_miss_macro syscall_123456_lfence
 
 
 ud2
+
+; constants
+
+align 32
+CONST_DWORD_0_7:
+dd 0,64,128,192,256,320,384,448
 
