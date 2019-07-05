@@ -4,12 +4,13 @@
  * Various "default" benchmarks.
  */
 
-#include "oneshot.hpp"
-#include "util.hpp"
-#include "libpfc-raw-helpers.hpp"
-
-#include <random>
 #include "benchmark.hpp"
+#include "oneshot.hpp"
+#include "libpfc-raw-helpers.hpp"
+#include "util.hpp"
+
+#include <emmintrin.h>
+#include <random>
 
 extern "C" {
 
