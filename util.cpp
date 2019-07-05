@@ -4,6 +4,8 @@
 
 #include "util.hpp"
 
+#include "opt-control.hpp"
+
 #include <regex>
 #include <cassert>
 #include <numeric>
@@ -211,6 +213,65 @@ region& shuffled_region(const size_t size, const size_t offset) {
     return *(new region{ size, storage }); // leak
 #endif
 }
+
+long touch_lines(void *region, size_t size, size_t stride) {
+    if (size == 0) {
+        return 0;
+    }
+    char sum = 0;
+    volatile char* cregion = reinterpret_cast<volatile char*>(region);
+    for (volatile char *r = cregion; r < cregion + size; r += stride) {
+        sum += *r;
+    }
+    sum += cregion[size - 1];
+    return sum;
+}
+
+template <typename A>
+void flush_helper(size_t working_set, A alloc) {
+    const size_t EXTRA_SIZE = 4096; // we will allocate this much extra on each end to avoid prefetching effects
+    static region buffer = {0, nullptr};
+
+    if (buffer.size < working_set) {
+        size_t total_size = working_set + 2 * EXTRA_SIZE;
+        auto p = alloc(total_size);
+        memset(p, 1, total_size);
+        buffer.start = (char *)p + EXTRA_SIZE;
+        buffer.size  = working_set;
+    }
+
+    char sum = 0;
+    volatile char* vptr = reinterpret_cast<volatile char*>(buffer.start);
+    for (size_t size = 1; ; size *= 2) {
+        // use powers of two except on the last iteration
+        if (size > working_set) {
+            size = working_set;
+        }
+
+        for (size_t ifast = 0, islow = 0; islow < size; islow += UB_CACHE_LINE_SIZE / 2, ifast += UB_CACHE_LINE_SIZE) {
+            if (HEDLEY_UNLIKELY(ifast >= working_set)) {
+                ifast = 0; // wrap
+            }
+            sum ^= vptr[islow];
+            sum += vptr[ifast];
+//            vptr[islow]++
+        }
+
+        if (size == working_set) {
+            break;
+        }
+    }
+
+    opt_control::sink(sum);
+}
+
+void flush_caches(size_t working_set) {
+    static_assert(UB_CACHE_LINE_SIZE > 1, "UB_CACHE_LINE_SIZE must be >1 because we do /2");
+    flush_helper(working_set, new_huge_ptr);
+    flush_helper(working_set, [](size_t s){ return new char[s]; });
+}
+
+
 
 std::string errno_to_str(int e) {
     char buf[128];

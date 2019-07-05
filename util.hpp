@@ -146,6 +146,14 @@ struct region {
 region& shuffled_region(const size_t size, const size_t offset = 0);
 
 /**
+ * Touch each cache line (or other specified stride) in region of size size.
+ */
+long touch_lines(void *region, size_t size, size_t stride = UB_CACHE_LINE_SIZE);
+
+
+void flush_caches(size_t working_set = 16 * 1024 * 1024);
+
+/**
  * Return the string description of the given system errno
  */
 std::string errno_to_str(int e);

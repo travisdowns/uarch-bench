@@ -64,9 +64,43 @@ void register_specific_stfwd<LibpfcTimer>(BenchmarkGroup* oneshot) {
 }
 #endif // USE_LIBPFC
 
+bench2_f touch_bench;
+long touch_bench(size_t iters, void *arg) {
+    region* r = (region *)arg;
+    return touch_lines(r->start, r->size);
+}
+
+bench2_f touch_warm;
+long touch_warm(size_t iters, void *arg) {
+    region* r = (region *)arg;
+    for (char *p = (char *)r->start, *e = p + r->size; p < e; p += UB_CACHE_LINE_SIZE) {
+//        _mm_clflush(p);
+    }
+    _mm_mfence();
+    flush_caches(12 * 1024 * 1024);
+    return 0;
+}
+
 template <typename TIMER>
 void register_mem_oneshot(GroupList& list) {
 #if !UARCH_BENCH_PORTABLE
+
+    {
+        std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("memory/touch-lines", "Touching cache lines");
+        list.push_back(oneshot);
+
+        auto maker = OneshotMaker<TIMER, 20>(oneshot.get());
+
+        for (size_t kib = 1; kib <= 1024; kib *= 2) {
+            size_t size = 1024 * kib;
+            region r = { size, aligned_ptr(64, size) };
+            std::string kibstr = std::to_string(kib);
+            maker.  template withWarm<touch_warm>().
+                    template make<touch_bench>("touch-lines-" + kibstr, "touch one cache line " + kibstr + " KiB",
+                    r.size / UB_CACHE_LINE_SIZE, [r](){ return (void *)&r; });
+        }
+
+    }
 
     {
         std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("memory/store-fwd-oneshot", "Store forwaring latency and throughput");
