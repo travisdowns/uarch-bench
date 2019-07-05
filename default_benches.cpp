@@ -12,6 +12,7 @@ bench2_f indep_add;
 bench2_f dep_imul128_rax;
 bench2_f dep_imul64_rax;
 bench2_f indep_imul128_rax;
+bench2_f indep_imul64_rax;
 bench2_f store_same_loc;
 bench2_f store64_disjoint;
 bench2_f dep_pushpop;
@@ -37,6 +38,7 @@ void register_default(GroupList& list) {
     maker.template make<dep_imul128_rax>  ("dep-mul128", "Dependent imul 64->128",    128);
     maker.template make<dep_imul64_rax>   ("dep-mul64",  "Dependent imul 64->64",     128);
     maker.template make<indep_imul128_rax>("indep-mul128", "Independent imul 64->128",  128);
+    maker.template make<indep_imul64_rax >("indep-mul64",  "Independent imul 64->64",  128);
     maker.template make<store_same_loc>   ("same-stores", "Same location stores",      128);
     maker.template make<store64_disjoint> ("disjoint-stores", "Disjoint location stores",  128);
     maker.template make<dep_pushpop>      ("dep-push-pop", "Dependent push/pop chain",  128);

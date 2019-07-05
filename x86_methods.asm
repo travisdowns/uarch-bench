@@ -66,10 +66,33 @@ dec rdi
 jnz .top
 ret
 
+; because the 64x64=128 imul uses an implicit destination & first source
+; we need to clear out eax each iteration to make it independent, although
+; of course that may bias the measurement on some architectures
+define_bench indep_imul128_rax
+.top:
+%rep 128
+xor eax, eax
+imul rax
+%endrep
+dec rdi
+jnz .top
+ret
+
 define_bench dep_imul64_rax
 xor eax, eax
 .top:
 times 128  imul rax, rax
+dec rdi
+jnz .top
+ret
+
+define_bench indep_imul64_rax
+.top:
+%rep 128
+xor eax, eax
+imul rax, rax
+%endrep
 dec rdi
 jnz .top
 ret
@@ -211,19 +234,6 @@ ret
 addrsp_calls 0
 addrsp_calls 8
 
-
-; because the 64x64=128 imul uses an implicit destination & first source
-; we need to clear out eax each iteration to make it independent, although
-; of course that may bias the measurement on some architectures
-define_bench indep_imul128_rax
-.top:
-%rep 128
-xor eax, eax
-imul rax
-%endrep
-dec rdi
-jnz .top
-ret
 
 define_bench indep_add
 .top:
