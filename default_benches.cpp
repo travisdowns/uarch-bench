@@ -19,6 +19,12 @@ bench2_f dep_pushpop;
 bench2_f indep_pushpop;
 bench2_f div_64_64;
 bench2_f idiv_64_64;
+
+bench2_f nop1_128;
+bench2_f nop2_128;
+bench2_f xor_eax_128;
+
+
 bench2_f sameloc_pointer_chase;
 bench2_f sameloc_pointer_chase_complex;
 bench2_f rdtsc_bench;
@@ -45,10 +51,20 @@ void register_default(GroupList& list) {
     maker.template make<indep_pushpop>    ("indep-push-pop", "Independent push/pop chain",  128);
     maker.template make<div_64_64>        ("64-bit div", "64-bit dependent div 1/1 = 1",  128);
     maker.template make<idiv_64_64>       ("64-bit idiv","64-bit dependent idiv 1/1 = 1",  128);
+
+    // tests to test the maximum CPU width for a variety of easy instruction mixes
+    maker.template make<nop1_128> ("1-byte nops",  "128 consecutive 1-byte nops",  128);
+    maker.template make<nop2_128> ("2-byte nops",  "128 consecutive 2-byte nops",  128);
+    maker.template make<xor_eax_128>  ("xor zero", "128 consecutive xor eax, eax", 128);
+
+
     maker.template make<sameloc_pointer_chase>         ("pointer-chase-simple", "Simple addressing pointer chase",  128);
     maker.template make<sameloc_pointer_chase_complex> ("pointer-chase-complex","Complex addressing pointer chase",  128);
     maker.template make<rdtsc_bench> ("rdtsc","back-to-back rdtsc throughput",  128);
     maker.template make<rdtscp_bench> ("rdtscp","back-to-back rdtscp throughput",  128);
+
+
+
     // note: more pointer-chasing tests in mem-benches.cpp
 #endif // #if !UARCH_BENCH_PORTABLE
 }

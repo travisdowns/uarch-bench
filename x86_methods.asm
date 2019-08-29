@@ -141,6 +141,28 @@ dec rdi
 jnz .top
 ret
 
+define_bench nop1_128
+.top:
+times 128 nop
+dec rdi
+jnz .top
+ret
+
+define_bench nop2_128
+.top:
+times 128 nop2
+dec rdi
+jnz .top
+ret
+
+define_bench xor_eax_128
+.top:
+times 128 xor eax, eax
+dec rdi
+jnz .top
+ret
+
+
 empty_fn:
 ret
 
