@@ -24,6 +24,13 @@ bench2_f nop1_128;
 bench2_f nop2_128;
 bench2_f xor_eax_128;
 
+bench2_f alu_load_6_0;
+bench2_f alu_load_6_1;
+bench2_f alu_load_6_2;
+bench2_f alu_load_6_3;
+bench2_f alu_load_6_4;
+bench2_f alu_load_6_5;
+bench2_f alu_load_6_6;
 
 bench2_f sameloc_pointer_chase;
 bench2_f sameloc_pointer_chase_complex;
@@ -57,6 +64,13 @@ void register_default(GroupList& list) {
     maker.template make<nop2_128> ("2-byte nops",  "128 consecutive 2-byte nops",  128);
     maker.template make<xor_eax_128>  ("xor zero", "128 consecutive xor eax, eax", 128);
 
+    maker.template make<alu_load_6_0>  ("alu-load-6-0", "6 adds, 0 loads",  6 * 64);
+    maker.template make<alu_load_6_1>  ("alu-load-6-1", "6 adds, 1 loads",  7 * 64);
+    maker.template make<alu_load_6_2>  ("alu-load-6-2", "6 adds, 2 loads",  8 * 64);
+    maker.template make<alu_load_6_3>  ("alu-load-6-3", "6 adds, 3 loads",  9 * 64);
+    maker.template make<alu_load_6_4>  ("alu-load-6-4", "6 adds, 4 loads", 10 * 64);
+    maker.template make<alu_load_6_5>  ("alu-load-6-5", "6 adds, 5 loads", 11 * 64);
+    maker.template make<alu_load_6_6>  ("alu-load-6-6", "6 adds, 6 loads", 12 * 64);
 
     maker.template make<sameloc_pointer_chase>         ("pointer-chase-simple", "Simple addressing pointer chase",  128);
     maker.template make<sameloc_pointer_chase_complex> ("pointer-chase-complex","Complex addressing pointer chase",  128);

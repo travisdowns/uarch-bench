@@ -162,6 +162,46 @@ dec rdi
 jnz .top
 ret
 
+%if 1
+
+%macro define_alu_load 1
+define_bench alu_load_6_%1
+push_callee_saved
+
+.top:
+%rep 64
+add eax, 1
+add ebx, 1
+add ecx, 1
+add edx, 1
+add esi, 1
+add ebp, 1
+%assign rnum 8
+%rep %1
+mov r %+ rnum, [rsp + (rnum - 8) * 4]
+%assign rnum (rnum + 1)
+%endrep
+%undef rnum
+%endrep
+dec rdi
+jnz .top
+
+pop_callee_saved
+ret
+%endmacro
+
+define_alu_load 0
+define_alu_load 1
+define_alu_load 2
+define_alu_load 3
+define_alu_load 4
+define_alu_load 5
+define_alu_load 6
+
+
+%endif
+
+
 
 empty_fn:
 ret
