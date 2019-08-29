@@ -1,5 +1,6 @@
 language: cpp
 sudo: false
+dist: xenial
 branches:
   except:
     - /^(wip\/)?(appveyor|msvc|mingw|windows)(\-.+)?$/
@@ -33,7 +34,7 @@ matrix:
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-xenial-5.0
           packages:
             - *default_pacakges
             - libc++abi1
@@ -100,7 +101,7 @@ matrix:
         apt:
           sources:
           - *default_sources
-          - llvm-toolchain-trusty-6.0
+          - llvm-toolchain-xenial-6.0
           packages:
           - *default_pacakges
           - clang-6.0
@@ -111,7 +112,7 @@ matrix:
         apt:
           sources:
           - *default_sources
-          - llvm-toolchain-trusty-7
+          - llvm-toolchain-xenial-7
           packages:
           - *default_pacakges
           - clang-7
@@ -122,7 +123,7 @@ matrix:
         apt:
           sources:
           - *default_sources
-          - llvm-toolchain-trusty-8
+          - llvm-toolchain-xenial-8
           packages:
           - *default_pacakges
           - clang-8
