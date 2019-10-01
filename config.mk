@@ -6,7 +6,7 @@ ifneq ($(OS),Linux)
 $(error non-Linux not supported yet)
 endif
 
-OS_ARCH := $(shell uname -p)
+OS_ARCH := $(shell uname -m)
 ifneq ($(OS_ARCH),x86_64)
 PORTABLE ?= 1
 endif
