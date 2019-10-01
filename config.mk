@@ -8,7 +8,7 @@ endif
 
 OS_ARCH := $(shell uname -p)
 ifneq ($(OS_ARCH),x86_64)
-PORTABLE := 1
+PORTABLE ?= 1
 endif
 
 # Whether to compile support for using --timer=libpfc, which is a kernel module
