@@ -60,3 +60,6 @@ local.mk
 
 # event download indicator file
 /download_events.touch
+
+# hotspot error dumps
+hs_err_pid*.log
