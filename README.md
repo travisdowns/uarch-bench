@@ -49,10 +49,11 @@ This project has submodules, so it is best cloned with the `--recursive` flag to
     
 If you've already cloned it without `--recursive`, this should pull in the submodules:
 
-   git submodule update --init
-
+    git submodule update --init
 
 Then just run `make` in the project directory. If you want to modify any of the make settings, you can do it directly in `config.mk` or in a newly created local file `local.mk` (the latter having the advantage that this file is ignored by git so you won't have any merge conflicts on later pulls and won't automatically commit your local build settings).
+
+For more about building, see [BUILDING.md](BUILDING.md).
 
 ## Running
 
