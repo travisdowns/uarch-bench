@@ -172,7 +172,7 @@ template <typename TIMER>
 void register_mem(GroupList& list) {
 #if !UARCH_BENCH_PORTABLE
     {
-        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-parallel", "Parallel loads from fixed-size regions");
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-parallel", "Random(ish) parallel loads from fixed-size regions");
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 1000 * 1000).setTags({"default"});
 
@@ -237,7 +237,7 @@ void register_mem(GroupList& list) {
         // that the implied "max MLP" derived by dividing the serial access time by the parallel one is larger than 10 (about 12.5),
         // which I think is impossible on current Intel. We should make comparable parallel/serial tests that have identical access
         // patterns.
-        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-serial", "Serial loads from fixed-size regions");
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/load-serial", "Random serial loads from fixed-size regions");
         list.push_back(group);
 
         {
@@ -271,7 +271,7 @@ void register_mem(GroupList& list) {
     }
 
     {
-        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/super-load-serial", "Finer-grained serial loads from fixed-size regions");
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/super-load-serial", "Random serial loads from fixed-size regions");
         list.push_back(group);
         // loop_count needs to be large enough to touch all the elements!
         auto maker = DeltaMaker<TIMER>(group.get(), 5 * 1000 * 1000).setTags({"slow"});
@@ -289,7 +289,7 @@ void register_mem(GroupList& list) {
     }
 
     {
-        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/bandwidth/load", "Linear AVX2 loads");
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/bandwidth/load", "Linear loads");
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 1024);
 
@@ -302,12 +302,12 @@ void register_mem(GroupList& list) {
             auto maker_avx2   = maker.setFeatures({AVX2});
             auto maker_avx512 = maker.setFeatures({AVX512F});
 
-            make_load_bench<load_bandwidth_32 >(maker,        kib, "load-bandwidth-32b",  " 32-bit linear load BW per CL", kib * 1024 / 64, 0, false); // timings are per cache line
-            make_load_bench<load_bandwidth_64 >(maker,        kib, "load-bandwidth-64b",  " 64-bit linear load BW per CL", kib * 1024 / 64, 0, false); // timings are per cache line
-            make_load_bench<load_bandwidth_128>(maker,        kib, "load-bandwidth-128b", "128-bit linear load BW per CL", kib * 1024 / 64, 0, false); // timings are per cache line
-            make_load_bench<load_bandwidth_256>(maker_avx2,   kib, "load-bandwidth-256b", "256-bit linear load BW per CL", kib * 1024 / 64, 0, false); // timings are per cache line
-            make_load_bench<load_bandwidth_512>(maker_avx512, kib, "load-bandwidth-512b", "512-bit linear load BW per CL", kib * 1024 / 64, 0, false); // timings are per cache line
             make_load_bench<loadtouch_bandwidth_512>(maker,   kib, "load-bandwidth-touch-line",  "touch 1 byte in CL"    , kib * 1024 / 64, 0, false); // timings are per cache line
+            make_load_bench<load_bandwidth_32 >(maker,        kib, "load-bandwidth-32b",  " 32-bit loads (time per CL)", kib * 1024 / 64, 0, false); // timings are per cache line
+            make_load_bench<load_bandwidth_64 >(maker,        kib, "load-bandwidth-64b",  " 64-bit loads (time per CL)", kib * 1024 / 64, 0, false); // timings are per cache line
+            make_load_bench<load_bandwidth_128>(maker,        kib, "load-bandwidth-128b", "128-bit loads (time per CL)", kib * 1024 / 64, 0, false); // timings are per cache line
+            make_load_bench<load_bandwidth_256>(maker_avx2,   kib, "load-bandwidth-256b", "256-bit loads (time per CL)", kib * 1024 / 64, 0, false); // timings are per cache line
+            make_load_bench<load_bandwidth_512>(maker_avx512, kib, "load-bandwidth-512b", "512-bit loads (time per CL)", kib * 1024 / 64, 0, false); // timings are per cache line
         }
     }
 
