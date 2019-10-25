@@ -2388,6 +2388,7 @@ define_bench mixed_loads_raw
     nop6
     mov     eax, DWORD [rsi]       ; non-aliasing load
     imul    eax, 1                 ; make the eax dep chain longer
+
 %if r == (REPCOUNT/2)
     ; half way through the unroll, we add 19 bytes of nop so that the the aliasing loads
     ; in the second half of the loop collide with the non-aliasing loads in the second

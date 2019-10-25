@@ -548,6 +548,9 @@ void register_oneshot(GroupList& list);
 template <typename TIMER>
 void register_syscall(GroupList& list);
 
+template <typename TIMER>
+void register_rstalls(GroupList& list);
+
 void printResultHeader(Context& c, const TimerInfo& ti);
 
 

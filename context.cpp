@@ -53,6 +53,7 @@ GroupList make_benches() {
     register_call<TIMER>(groupList);
     register_oneshot<TIMER>(groupList);
     register_syscall<TIMER>(groupList);
+    register_rstalls<TIMER>(groupList);
 
     return groupList;
 }
