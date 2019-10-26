@@ -17,16 +17,24 @@ bench2_f rs_split_stores;
 bench2_f rs_dep_fsqrt;
 
 #define MAX_RATIO 10
-#define DECL_FSQRT_OP(op) BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, DECL_BENCH2, rs_fsqrt_ ## op)
+#define DECL_MANY(fname, op) BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, DECL_BENCH2, fname ## op)
 
-DECL_FSQRT_OP(nop)
-DECL_FSQRT_OP(add)
-DECL_FSQRT_OP(xorzero)
-DECL_FSQRT_OP(load)
-DECL_FSQRT_OP(store)
-DECL_FSQRT_OP(paddb)
-DECL_FSQRT_OP(vpaddb)
-DECL_FSQRT_OP(add_padd)
+DECL_MANY(rs_fsqrt_,nop)
+DECL_MANY(rs_fsqrt_,add)
+DECL_MANY(rs_fsqrt_,xorzero)
+DECL_MANY(rs_fsqrt_,load)
+DECL_MANY(rs_fsqrt_,store)
+DECL_MANY(rs_fsqrt_,paddb)
+DECL_MANY(rs_fsqrt_,vpaddb)
+DECL_MANY(rs_fsqrt_,add_padd)
+DECL_MANY(rs_fsqrt_,load_dep)
+
+DECL_MANY(rs_load_,nop)
+DECL_MANY(rs_load_,add)
+
+BOOST_PP_REPEAT_FROM_TO(0, 80, DECL_BENCH2, rs_loadchain)
+
+BOOST_PP_REPEAT_FROM_TO(0, 80, DECL_BENCH2, rs_storebuf)
 
 }
 
@@ -47,8 +55,8 @@ void register_rstalls(GroupList& list) {
     maker.template make<rs_dep_fsqrt>   ("fsqrt",       "Dependent fqrt (RS limit)",  128);
 
     // a macro to call maker.make on test that mix fsqrt and antoher op in a variery of ratios
-#define MAKE_FSQRT_OP(z, n, op) maker.template make<rs_fsqrt_ ## op ## n>("fsqrt-sqrt-" #op "-" #n, \
-        "fqrt:" #op " in 1:" #n " ratio", 32);
+#define MAKE_FSQRT_OP(z, n, op) maker.template make<rs_fsqrt_ ## op ## n>("fsqrt-" #op "-" #n, \
+        "fsqrt:" #op " in 1:" #n " ratio", 32);
 
     BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_FSQRT_OP, nop)
     BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_FSQRT_OP, add)
@@ -58,6 +66,23 @@ void register_rstalls(GroupList& list) {
     BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_FSQRT_OP, paddb)
     BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_FSQRT_OP, vpaddb)
     BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_FSQRT_OP, add_padd)
+    BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_FSQRT_OP, load_dep)
+
+#define MAKE_LOAD_OP(z, n, op) maker.template make<rs_load_ ## op ## n>("load-" #op "-" #n, \
+        "load:" #op " in 1:" #n " ratio", 32);
+
+    BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_LOAD_OP, nop)
+    BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_LOAD_OP, add)
+
+#define MAKE_LOADCHAIN(z, n, _) maker.template make<rs_loadchain ## n>("loadchain-" #n, \
+        "loadchain: " #n " loads", 32);
+
+    BOOST_PP_REPEAT_FROM_TO(0, 80, MAKE_LOADCHAIN, _)
+
+#define MAKE_STOREBUF(z, n, _) maker.template make<rs_storebuf ## n>("storebuf-" #n, \
+        "storebuf: " #n " stores", 32);
+
+    BOOST_PP_REPEAT_FROM_TO(0, 80, MAKE_STOREBUF, _)
 
 
 #endif // #if !UARCH_BENCH_PORTABLE

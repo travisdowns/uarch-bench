@@ -1,4 +1,10 @@
+BITS 64
+default rel
+
 %include "x86_helpers.asm"
+
+nasm_util_assert_boilerplate
+thunk_boilerplate
 
 ; depedent series of adds
 define_bench rs_dep_add
@@ -66,11 +72,16 @@ define_bench rs_dep_fsqrt
 ; will fill with nops before exhausting another resource. With more nops, the ROB
 ; will be exhausted. Generally, if the RS has size R and the ROB size O, we expect
 ; the crossover point to be when N == O / R - 1;
-%macro define_rs_fsqrt_op 3-*
+;
+; %1 number of filler ops
+; %2 long latency op
+; %3 name (suffix)
+; %4 filler op asm
+%macro define_rs_op_op 4-*
 
 %xdefine ratio %1
 
-define_bench rs_fsqrt_%2%1
+define_bench rs_fsqrt_%3%1
     push rbp
     mov  rbp, rsp
 
@@ -81,13 +92,13 @@ define_bench rs_fsqrt_%2%1
     vzeroupper
 .top:
 %rep 32
-    fsqrt
+    %2
 %rep ratio
-%rep (%0 - 2)
-    %3
+%rep (%0 - 3)
+    %4
 %rotate 1
 %endrep
-%rotate 2
+%rotate 3
 %endrep
 %endrep
     dec rdi
@@ -103,14 +114,157 @@ define_bench rs_fsqrt_%2%1
 
 %assign i 0
 %rep 20
-define_rs_fsqrt_op i, nop     , nop
-define_rs_fsqrt_op i, add     , {add eax, 1}
-define_rs_fsqrt_op i, xorzero , {xor eax, eax}
-define_rs_fsqrt_op i, load    , {mov eax, [rsp]}
-define_rs_fsqrt_op i, store   , {mov [rsp], eax}
-define_rs_fsqrt_op i, paddb   , {paddb xmm0, xmm1}
-define_rs_fsqrt_op i, vpaddb  , {vpaddb xmm0, xmm1, xmm2}
-define_rs_fsqrt_op i, add_padd, {vpaddb xmm0, xmm1, xmm2}, {add eax, 1} ; mixed scalar and vector adds
+define_rs_op_op i, fsqrt, nop     , nop
+define_rs_op_op i, fsqrt, add     , {add eax, 1}
+define_rs_op_op i, fsqrt, xorzero , {xor eax, eax}
+define_rs_op_op i, fsqrt, load    , {mov eax, [rsp]}
+define_rs_op_op i, fsqrt, store   , {mov [rsp], eax}
+define_rs_op_op i, fsqrt, paddb   , {paddb xmm0, xmm1}
+define_rs_op_op i, fsqrt, vpaddb  , {vpaddb xmm0, xmm1, xmm2}
+define_rs_op_op i, fsqrt, add_padd, {vpaddb xmm0, xmm1, xmm2}, {add eax, 1} ; mixed scalar and vector adds
+define_rs_op_op i, fsqrt, load_dep, {mov eax, [rsp]}, {add eax, 0}, {add eax, 0}, {add eax, 0}
+%assign i (i + 1)
+%endrep
 
+
+%macro define_rs_load_op 3-*
+
+%xdefine ratio %1
+
+; like the fsqrt bench, but with 5-cycle loads as the limiting instruction
+define_bench rs_load_%2%1
+    push rbp
+    mov  rbp, rsp
+
+    and rsp,  -64 ; align to 64-byte boundary
+    sub rsp,  128 ; we have a 128 byte byte buffer above rsp, aligned to 64 bytes
+
+    xor eax, eax
+    xor ecx, ecx
+    xor edx, edx
+    mov QWORD [rsp], 0
+
+    vzeroupper
+.top:
+%rep 32
+    mov rax, [rax + rsp]
+%rep ratio
+%rep (%0 - 2)
+    %3
+%rotate 1
+%endrep
+%rotate 2
+%endrep
+%endrep
+    dec rdi
+    jnz .top
+
+    mov  rsp, rbp
+    pop  rbp
+    vzeroupper
+    ret
+%endmacro
+
+%assign i 0
+%rep 20
+define_rs_load_op i, nop     , nop
+define_rs_load_op i, add     , {add edx, eax}, {add r8d, eax}, {add r9d, eax}
+%assign i (i + 1)
+%endrep
+
+
+; here we test how many dependent loads can enter the RS at once
+;
+%macro define_rs_loadchain 2
+
+%xdefine ratio %1
+
+; like the fsqrt bench, but with 5-cycle loads as the limiting instruction
+define_bench rs_loadchain%2
+    push rbp
+    mov  rbp, rsp
+
+    and rsp,  -64 ; align to 64-byte boundary
+    sub rsp,  128 ; we have a 128 byte byte buffer above rsp, aligned to 64 bytes
+
+    mov QWORD [rsp], 0
+
+    xor eax, eax
+    xor ecx, ecx
+    mov rdx, rsp
+
+.top:
+%rep 32
+
+%rep %1
+    imul rax, rax, 1
+%endrep
+
+%rep %2
+    mov ecx, [rax + rdx]
+    times 4 nop
+%endrep
+
+    mov rax, 0
+
+%endrep
+    dec rdi
+    jnz .top
+
+    mov  rsp, rbp
+    pop  rbp
+    vzeroupper
+    ret
+%endmacro
+
+%assign i 0
+%rep 80
+define_rs_loadchain 40,i
+%assign i (i + 1)
+%endrep
+
+
+; test store buffer capacity
+; %1 number of vsqrtss latency builders
+; %2 number of dependent store instructions
+%macro define_rs_storebuf 2
+
+; the basic idea is that we issue a bunch of dependent vsqrtss
+; then N indepedent stores
+; then a dependency breaking op vxorps so that the next sqrt chian
+; is indepedent
+; when N is equal to size of the store buffer + 1, allocation will
+; stall and the sqrt chains won't be able to run in parallel and there
+; will be a big jump (~43 cycles on SKL) in the iteration time
+
+define_bench rs_storebuf%2
+    sub rsp,  8
+
+    vxorps xmm0, xmm0, xmm0
+
+.top:
+%rep 32
+
+%rep %1
+    vsqrtss xmm0, xmm0, xmm0
+%endrep
+    movq rax, xmm0
+%rep %2
+    mov DWORD [rsp], 0
+%endrep
+
+    vxorps xmm0, xmm0, xmm0
+
+%endrep
+    dec rdi
+    jnz .top
+
+    add rsp, 8
+    ret
+%endmacro
+
+%assign i 0
+%rep 80
+define_rs_storebuf 10,i
 %assign i (i + 1)
 %endrep

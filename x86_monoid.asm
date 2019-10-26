@@ -6,6 +6,9 @@ default rel
 
 %include "x86_helpers.asm"
 
+nasm_util_assert_boilerplate
+thunk_boilerplate
+
 %define nopd(x) nop %+ x
 
 ; given a list of byte counts, generate a series of nops
