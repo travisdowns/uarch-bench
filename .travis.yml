@@ -10,14 +10,12 @@ addons:
     sources: &default_sources
       - ubuntu-toolchain-r-test
     packages: &default_pacakges
-      - nasm
-      
+
 env:
   global:
-    - ASM=./nasm-2.13.03/nasm
 # fix clang complaining about unused command line args with ccache, see http://peter.eisentraut.org/blog/2014/12/01/ccache-and-clang-part-3/
     - CCACHE_CPP2=yes
-    
+
 
 cache: ccache
 
@@ -150,7 +148,7 @@ matrix:
 
 before_install:
 # Travis will set CC and CXX after the env commands specified in the matrix are run, overwriting whatever
-# we've specified there, so we need to reset them here. See also https://github.com/travis-ci/travis-ci/issues/6633 . 
+# we've specified there, so we need to reset them here. See also https://github.com/travis-ci/travis-ci/issues/6633 .
   - CC="ccache ${TRUE_CC:-$CC}"
   - CXX="ccache ${TRUE_CXX:-$CXX}"
 
