@@ -25,7 +25,7 @@ USE_PERF_TIMER ?= $(if $(PORTABLE),0,1)
 # Whether to compile support for using backwards-cpp, which gives stack traces
 # on crashes. By default, only binaries and addresses are given in the backtrace, but
 # for better stack traces you can enable either of the BACKWARD_HAS options below.
-# See https://github.com/bombela/backward-cpp for more details. 
+# See https://github.com/bombela/backward-cpp for more details.
 USE_BACKWARD_CPP ?= 1
 
 # Only has an effect if USE_BACKWARD_CPP == 1, set this to 1 to use gnu binutils
@@ -42,7 +42,13 @@ BACKWARD_HAS_DW ?= 0
 DEBUG ?= 0
 
 # The assembler to use, we used to support yasm also but as of issue #63 we only support nasm
+ifeq (, $(shell which nasm))
+$(info using local nasm)
+ASM ?= ./nasm-2.13.03/nasm
+else
+$(info using system nasm)
 ASM ?= nasm
+endif
 
 ifeq ($(DEBUG),1)
 O_LEVEL ?= -O0
