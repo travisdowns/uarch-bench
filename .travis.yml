@@ -39,10 +39,6 @@ matrix:
             - libc++1
     - compiler: gcc-default
       env: TRUE_CC=gcc TRUE_CXX=g++ PIE=
-      addons:
-        apt:
-          packages:
-            - nasm
     - compiler: gcc-4.9
       env: TRUE_CC=gcc-4.9 TRUE_CXX=g++-4.9 PIE=
       addons:
