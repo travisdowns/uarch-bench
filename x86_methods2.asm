@@ -1,6 +1,3 @@
-BITS 64
-default rel
-
 %include "x86_helpers.asm"
 
 nasm_util_assert_boilerplate

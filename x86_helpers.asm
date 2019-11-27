@@ -1,6 +1,13 @@
 %ifndef X86_HELPERS_GUARD
 %define X86_HELPERS_GUARD
 
+BITS 64
+default rel
+
+%ifdef __YASM_MAJOR__
+%error "We don't support YASM compilation anymore, see issue #63"
+%endif
+
 %include "nasm-utils/nasm-utils-inc.asm"
 
 ; aligns and declares the global label for the bench with the given name

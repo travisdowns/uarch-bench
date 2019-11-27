@@ -27,6 +27,10 @@ bench2_f bmi_tzcnt;
 bench2_f bmi_lzcnt;
 bench2_f bmi_popcnt;
 
+bench2_f kreg_lat;
+bench2_f kreg_lat_nz;
+bench2_f kreg_lat_z;
+
 bench2_f dendibakh_fused;
 bench2_f dendibakh_fused_simple;
 bench2_f dendibakh_fused_add;
@@ -244,6 +248,16 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<retpoline_sparse_dep_call_lfence,retpoline_sparse_call_base>(retpoline_group.get(),   "retp-sparse-dep-call-lfence", "Sparse retpo dep call lfence", 8)
     });
     list.push_back(retpoline_group);
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("avx512", "AVX512 stuff");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get()).setTags({"default"}).setFeatures({AVX512F});
+
+        maker.template make<kreg_lat>( "kreg_lat",   "kreg-GP rountrip latency", 128);
+        maker.template make<kreg_lat_nz>("kreg_lat_nz", "kreg-GP roundtrip + nonzeroing kxorb", 128);
+        maker.template make<kreg_lat_z>("kreg_lat_z", "kreg-GP roundtrip + zeroing kxorb", 128);
+    }
 
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/vzeroall", "VZEROALL weirdness");

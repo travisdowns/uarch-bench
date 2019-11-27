@@ -1,10 +1,3 @@
-BITS 64
-default rel
-
-%ifdef __YASM_MAJOR__
-%error "We don't support YASM compilation anymore, see issue #63"
-%endif
-
 %include "x86_helpers.asm"
 
 nasm_util_assert_boilerplate
