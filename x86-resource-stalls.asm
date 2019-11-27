@@ -193,19 +193,29 @@ define_bench rs_loadchain%2
     xor ecx, ecx
     mov rdx, rsp
 
+
+
 .top:
 %rep 32
 
 %rep %1
-    imul rax, rax, 1
+    ;imul rax, rax, 1
 %endrep
 
 %rep %2
-    mov ecx, [rax + rdx]
-    times 4 nop
+    ;jc udd
+    ;add eax, 0
+    ;mov ecx, [rax + rdx]
+    ;movsx  rcx, eax
+    ;lea rcx, [rax + rdx]
+    ;cdq
+    ;imul rax, rax, 1
+    popcnt rax, rax
+    ;times 4 nop
 %endrep
 
-    mov rax, 0
+    lfence
+    ;mov rax, 0
 
 %endrep
     dec rdi
@@ -218,8 +228,8 @@ define_bench rs_loadchain%2
 %endmacro
 
 %assign i 0
-%rep 80
-define_rs_loadchain 40,i
+%rep 120
+define_rs_loadchain 20,i
 %assign i (i + 1)
 %endrep
 
@@ -268,3 +278,6 @@ define_bench rs_storebuf%2
 define_rs_storebuf 10,i
 %assign i (i + 1)
 %endrep
+
+mov  ebx, [rsp]
+mov  [rsp - 0x8], ebx

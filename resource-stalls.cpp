@@ -32,7 +32,7 @@ DECL_MANY(rs_fsqrt_,load_dep)
 DECL_MANY(rs_load_,nop)
 DECL_MANY(rs_load_,add)
 
-BOOST_PP_REPEAT_FROM_TO(0, 80, DECL_BENCH2, rs_loadchain)
+BOOST_PP_REPEAT_FROM_TO(0, 120, DECL_BENCH2, rs_loadchain)
 
 BOOST_PP_REPEAT_FROM_TO(0, 80, DECL_BENCH2, rs_storebuf)
 
@@ -77,7 +77,7 @@ void register_rstalls(GroupList& list) {
 #define MAKE_LOADCHAIN(z, n, _) maker.template make<rs_loadchain ## n>("loadchain-" #n, \
         "loadchain: " #n " loads", 32);
 
-    BOOST_PP_REPEAT_FROM_TO(0, 80, MAKE_LOADCHAIN, _)
+    BOOST_PP_REPEAT_FROM_TO(0, 120, MAKE_LOADCHAIN, _)
 
 #define MAKE_STOREBUF(z, n, _) maker.template make<rs_storebuf ## n>("storebuf-" #n, \
         "storebuf: " #n " stores", 32);
