@@ -30,6 +30,7 @@ bench2_f bmi_popcnt;
 bench2_f kreg_lat;
 bench2_f kreg_lat_nz;
 bench2_f kreg_lat_z;
+bench2_f kreg_lat_mov;
 
 bench2_f dendibakh_fused;
 bench2_f dendibakh_fused_simple;
@@ -257,6 +258,7 @@ void register_misc(GroupList& list) {
         maker.template make<kreg_lat>( "kreg_lat",   "kreg-GP rountrip latency", 128);
         maker.template make<kreg_lat_nz>("kreg_lat_nz", "kreg-GP roundtrip + nonzeroing kxorb", 128);
         maker.template make<kreg_lat_z>("kreg_lat_z", "kreg-GP roundtrip + zeroing kxorb", 128);
+        maker.template make<kreg_lat_mov>("kreg_lat_mov", "kreg-GP roundtrip + mov from GP", 128);
     }
 
     {

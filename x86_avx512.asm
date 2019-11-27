@@ -36,8 +36,7 @@ dec rdi
 jnz .top
 ret
 
-; test whether kxorb same, same, same
-; is dependency breaking
+; variant with zeroing kxor
 define_bench kreg_lat_z
 xor eax, eax
 kxorb k0, k0, k0
@@ -46,6 +45,22 @@ kxorb k1, k1, k1
 %rep 128
 kmovb k0, eax
 kxorb k0, k0, k0
+kmovb eax, k0
+%endrep
+dec rdi
+jnz .top
+ret
+
+; variant with dep-breaking move from GP
+define_bench kreg_lat_mov
+xor eax, eax
+xor ecx, ecx
+kxorb k0, k0, k0
+kxorb k1, k1, k1
+.top:
+%rep 128
+kmovb k0, eax
+kmovb k0, ecx
 kmovb eax, k0
 %endrep
 dec rdi
