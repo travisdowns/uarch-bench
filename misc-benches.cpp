@@ -76,6 +76,9 @@ bench2_f vz128_diffreg;
 bench2_f vzsse_samereg;
 bench2_f vzsse_diffreg;
 
+bench2_f movd_xmm;
+bench2_f movd_ymm;
+
 bench2_f adc_chain32;
 bench2_f adc_chain64;
 
@@ -278,6 +281,15 @@ void register_misc(GroupList& list) {
         maker256.template make<vz128_diffreg>("vz128-diffreg", "vpaddq xmm0, xmm1, xmm0", 100);
         maker256.template make<vzsse_samereg>("vzsse-samereg", "paddq xmm0, xmm0", 100);
         maker256.template make<vzsse_diffreg>("vzsse-diffreg", "paddq xmm0, xmm1", 100);
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/movd", "movd weirdness");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get()).setFeatures({AVX});
+
+        maker.template make<movd_xmm>("movd-xmm", "roundtrip mov + vpor xmm", 100);
+        maker.template make<movd_ymm>("movd-ymm", "roundtrip mov + vpor ymm", 100);
     }
 
 #endif // #if !UARCH_BENCH_PORTABLE
