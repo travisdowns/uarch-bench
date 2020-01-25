@@ -1122,31 +1122,6 @@ dec rdi
 jnz .top
 ret
 
-define_bench movd_xmm
-vzeroall
-.top:
-%rep 100
-vpor   xmm0, xmm0, xmm0
-movd   eax, xmm0
-movd   xmm0, eax
-%endrep
-dec rdi
-jnz .top
-ret
-
-define_bench movd_ymm
-vzeroall
-.top:
-%rep 100
-vpor   ymm0, ymm0, ymm0
-movd   eax, xmm0
-movd   xmm0, eax
-%endrep
-dec rdi
-jnz .top
-ret
-
-
 %define fused_unroll_order 4
 %define fused_unroll (1 << fused_unroll_order)
 
