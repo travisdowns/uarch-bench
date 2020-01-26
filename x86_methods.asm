@@ -987,6 +987,22 @@ ret
 .never:
 ud2
 
+define_bench misc_flag_merge_9
+xor eax, eax
+mov ecx, 1
+mov edx, 1
+.top:
+%rep 128
+and rcx, rdx
+nop
+jbe .never
+%endrep
+dec rdi
+jnz .top
+ret
+.never:
+ud2
+
 ; https://twitter.com/david_schor/status/1106687885825241089
 define_bench david_schor1
     push rbx

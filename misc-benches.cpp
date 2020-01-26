@@ -162,6 +162,8 @@ void register_misc(GroupList& list) {
                 null_provider, iters),
         default_maker::template make_bench<misc_flag_merge_8>(misc_group.get(), "flag-merge-8", "Flag merge cmovbe (no merge)", 128,
                 null_provider, iters),
+        default_maker::template make_bench<misc_flag_merge_9>(misc_group.get(), "flag-merge-9", "Flag merge macro-fuse and", 128,
+                null_provider, iters),
         default_maker::template make_bench<david_schor1>(misc_group.get(), "schor1", "Suggested by David Schor", 1,
                     null_provider, iters),
         default_maker::template make_bench<double_macro_fusion256>(misc_group.get(), "double-macro-fuse", "Double not-taken macro fusion", 256,
