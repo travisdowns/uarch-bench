@@ -213,9 +213,9 @@ TEST_CASE( "parse_perf_events", "[perf]" ) {
     CHECK(parsePerfEvents("foo/bar,baz/,beef") == sv{{"foo/bar,baz/"}, {"beef"}});
     CHECK(parsePerfEvents("foo/bar,baz/,beef,blah") == sv{{"foo/bar,baz/"}, {"beef"}, {"blah"}});
 
-    CHECK(parsePerfEvents("foo|name") == sv{{"foo", "name"}});
-    CHECK(parsePerfEvents("foo|name,bar|name2") == sv{{"foo", "name"}, {"bar", "name2"}});
-    CHECK(parsePerfEvents("foo/bar,baz/|name,beef,blah") == sv{{"foo/bar,baz/", "name"}, {"beef"}, {"blah"}});
+    CHECK(parsePerfEvents("foo#name") == sv{{"foo", "name"}});
+    CHECK(parsePerfEvents("foo#name,bar#name2") == sv{{"foo", "name"}, {"bar", "name2"}});
+    CHECK(parsePerfEvents("foo/bar,baz/#name,beef,blah") == sv{{"foo/bar,baz/", "name"}, {"beef"}, {"blah"}});
 }
 
 #endif
