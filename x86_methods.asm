@@ -930,6 +930,63 @@ ret
 .never:
 ud2
 
+define_bench misc_flag_merge_5
+xor eax, eax
+.top:
+%rep 128
+add rcx, 5
+inc rax
+nop
+jna  .never
+%endrep
+dec rdi
+jnz .top
+ret
+.never:
+ud2
+
+define_bench misc_flag_merge_6
+xor eax, eax
+.top:
+%rep 128
+add rcx, 5
+inc rax
+cmovbe rdx, r8
+%endrep
+dec rdi
+jnz .top
+ret
+.never:
+ud2
+
+define_bench misc_flag_merge_7
+xor eax, eax
+.top:
+%rep 128
+add rcx, 5
+inc rax
+cmovc rdx, r8
+%endrep
+dec rdi
+jnz .top
+ret
+.never:
+ud2
+
+define_bench misc_flag_merge_8
+xor eax, eax
+.top:
+%rep 128
+inc rax
+add rcx, 5
+cmovbe rdx, r8
+%endrep
+dec rdi
+jnz .top
+ret
+.never:
+ud2
+
 ; https://twitter.com/david_schor/status/1106687885825241089
 define_bench david_schor1
     push rbx

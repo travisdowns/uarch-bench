@@ -18,6 +18,11 @@ bench2_f misc_flag_merge_1;
 bench2_f misc_flag_merge_2;
 bench2_f misc_flag_merge_3;
 bench2_f misc_flag_merge_4;
+bench2_f misc_flag_merge_5;
+bench2_f misc_flag_merge_6;
+bench2_f misc_flag_merge_7;
+bench2_f misc_flag_merge_8;
+bench2_f misc_flag_merge_9;
 bench2_f david_schor1;
 bench2_f double_macro_fusion256;
 bench2_f double_macro_fusion4000;
@@ -148,6 +153,14 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<misc_flag_merge_3>(misc_group.get(), "flag-merge-3", "Flag merge 3", 128,
                 null_provider, iters),
         default_maker::template make_bench<misc_flag_merge_4>(misc_group.get(), "flag-merge-4", "Flag merge 4", 128,
+                null_provider, iters),
+        default_maker::template make_bench<misc_flag_merge_5>(misc_group.get(), "flag-merge-5", "Flag merge 5", 128,
+                null_provider, iters),
+        default_maker::template make_bench<misc_flag_merge_6>(misc_group.get(), "flag-merge-6", "Flag merge cmovbe", 128,
+                null_provider, iters),
+        default_maker::template make_bench<misc_flag_merge_7>(misc_group.get(), "flag-merge-7", "Flag merge cmovc", 128,
+                null_provider, iters),
+        default_maker::template make_bench<misc_flag_merge_8>(misc_group.get(), "flag-merge-8", "Flag merge cmovbe (no merge)", 128,
                 null_provider, iters),
         default_maker::template make_bench<david_schor1>(misc_group.get(), "schor1", "Suggested by David Schor", 1,
                     null_provider, iters),
