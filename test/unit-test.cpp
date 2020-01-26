@@ -207,11 +207,15 @@ TEST_CASE( "simple_timer", "[util]" ) {
 #if USE_PERF_TIMER
 
 TEST_CASE( "parse_perf_events", "[perf]" ) {
-    using sv = std::vector<std::string>;
-    CHECK(parsePerfEvents("foo,bar") == sv{"foo", "bar"});
-    CHECK(parsePerfEvents("foo/bar,baz/") == sv{"foo/bar,baz/"});
-    CHECK(parsePerfEvents("foo/bar,baz/,beef") == sv{"foo/bar,baz/", "beef"});
-    CHECK(parsePerfEvents("foo/bar,baz/,beef,blah") == sv{"foo/bar,baz/", "beef", "blah"});
+    using sv = std::vector<NamedEvent>;
+    CHECK(parsePerfEvents("foo,bar") == sv{{"foo"}, {"bar"}});
+    CHECK(parsePerfEvents("foo/bar,baz/") == sv{{"foo/bar,baz/"}});
+    CHECK(parsePerfEvents("foo/bar,baz/,beef") == sv{{"foo/bar,baz/"}, {"beef"}});
+    CHECK(parsePerfEvents("foo/bar,baz/,beef,blah") == sv{{"foo/bar,baz/"}, {"beef"}, {"blah"}});
+
+    CHECK(parsePerfEvents("foo|name") == sv{{"foo", "name"}});
+    CHECK(parsePerfEvents("foo|name,bar|name2") == sv{{"foo", "name"}, {"bar", "name2"}});
+    CHECK(parsePerfEvents("foo/bar,baz/|name,beef,blah") == sv{{"foo/bar,baz/", "name"}, {"beef"}, {"blah"}});
 }
 
 #endif

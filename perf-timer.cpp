@@ -37,20 +37,21 @@ struct PerfEvent {
 
 struct RunningEvent {
     rdpmc_ctx ctx;
-    std::string name;
-    std::string header;
+    NamedEvent name;
 
-    RunningEvent(const rdpmc_ctx& ctxx, const std::string& name) :
-        ctx(ctxx), name{name}, header{make_header(name)}
-    {}
-
-    static std::string make_header(std::string name) {
-        return name.substr(0, std::min((size_t)6, name.length()));
-    }
+    RunningEvent(const rdpmc_ctx& ctxx, const NamedEvent& name) : ctx(ctxx), name{name} {}
 };
 
 static int init_count;
 static vector<RunningEvent> running_events;
+
+static std::string make_header(std::string name) {
+    return name.substr(0, std::min((size_t)6, name.length()));
+}
+
+NamedEvent::NamedEvent(const std::string& name) : NamedEvent(name, make_header(name)) {}
+
+NamedEvent::NamedEvent(const std::string& name, const std::string& header) : name{name}, header{header} {}
 
 
 void do_read_events(Context& c) {
@@ -120,8 +121,6 @@ std::string perf_attr_to_string(const perf_event_attr* attr) {
     return ret;
 }
 
-
-
 PerfTimer::PerfTimer(Context& c) : TimerInfo(
         "perf",
         "A timer which uses rdpmc and the perf_events subsystem for accurate cycle measurements",
@@ -171,15 +170,26 @@ void print_caps(ostream& os, const rdpmc_ctx& ctx) {
 #endif
 }
 
-std::vector<std::string> parsePerfEvents(const std::string& event_string) {
+std::vector<NamedEvent> parsePerfEvents(const std::string& event_string) {
     bool inslash = false;
-    std::vector<std::string> events;
+    std::vector<NamedEvent> events;
     std::string current_event;
+    auto add_event = [&events, &current_event]{
+        if (current_event.find('#') == std::string::npos) {
+            events.emplace_back(current_event);
+        } else {
+            auto components = split_on_string(current_event, "#");
+            if (components.size() != 2) {
+                throw std::runtime_error("wrong looking event string: " + current_event);
+            }
+            events.emplace_back(components[0], components[1]);
+        }
+        current_event.clear();
+    };
     for (size_t i = 0; i < event_string.size(); i++) {
         char c = event_string[i];
         if (c == ',' && !inslash) {
-            events.push_back(current_event);
-            current_event.clear();
+            add_event();
         } else {
             if (c == '/') {
                 inslash = !inslash;
@@ -187,7 +197,7 @@ std::vector<std::string> parsePerfEvents(const std::string& event_string) {
             current_event += c;
         }
     }
-    events.push_back(current_event);
+    add_event();
     return events;
 }
 
@@ -222,10 +232,11 @@ void PerfTimer::init(Context &c) {
         c.out() << "Programmed cycles event, ";
         print_caps(c.out(), ctx);
 
-        running_events.emplace_back(ctx, "Cycles");
+        running_events.emplace_back(ctx, NamedEvent{"Cycles"});
     }
 
-    for (auto&e : parsePerfEvents(args.extra_events)) {
+    for (auto& named_event : parsePerfEvents(args.extra_events)) {
+        auto& e = named_event.name;
         if (e.empty()) {
             continue;
         }
@@ -250,7 +261,7 @@ void PerfTimer::init(Context &c) {
                     c.err() << "Failed to program event '" << e << "' (index == 0, rdpmc not available)" << endl;
                     rdpmc_close(&ctx);
                 } else {
-                    running_events.emplace_back(ctx, e);
+                    running_events.emplace_back(ctx, named_event);
                 }
             }
         }
@@ -259,7 +270,7 @@ void PerfTimer::init(Context &c) {
     assert(running_events.size() <= PerfNow::READING_COUNT);
 
     for (auto& e : running_events) {
-        metric_names_.push_back(e.header);
+        metric_names_.push_back(e.name.header);
     }
 }
 

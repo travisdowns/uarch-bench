@@ -59,13 +59,27 @@ public:
     virtual ~PerfTimer();
 };
 
+struct NamedEvent {
+    std::string name;
+    std::string header;
+
+    NamedEvent(const std::string& name);
+
+    NamedEvent(const std::string& name, const std::string& header);
+
+    bool operator==(const NamedEvent& e) const {
+        return name == e.name && header == e.header;
+    }
+};
+
+
 /* parse an --extra-events string of perf events
  * Basically split events on commas, but commas in-between / characters
  * are ignored for splitting.
  * So 'cpu/123,456/,cpu/xxx,yyy/' is split as two tokens:
  * 'cpu/123,456' and 'cpu/xxx,yyy/'
  */
-std::vector<std::string> parsePerfEvents(const std::string& event_string);
+std::vector<NamedEvent> parsePerfEvents(const std::string& event_string);
 
 #endif
 
