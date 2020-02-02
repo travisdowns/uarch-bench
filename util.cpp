@@ -79,10 +79,6 @@ void *storage_ptr = 0;
 volatile int zero = 0;
 bool storage_init = false;
 
-/**
- * Return a new pointer to a memory region of at least size, aligned to a 2MB boundary and with
- * an effort to ensure the pointer is backed by transparent huge pages.
- */
 void *new_huge_ptr(size_t size) {
     void *ptr;
     int result = posix_memalign(&ptr, TWO_MB, size + TWO_MB);
@@ -128,14 +124,18 @@ void *align(size_t base_alignment, size_t required_size, void* p, size_t space) 
     return r;
 }
 
-void *aligned_ptr(size_t base_alignment, size_t required_size) {
+void *aligned_ptr(size_t base_alignment, size_t required_size, bool set_zero) {
     assert(required_size <= STORAGE_SIZE);
     assert(is_pow2(base_alignment));
     assert(base_alignment <= TWO_MB);
     if (!storage_ptr) {
         storage_ptr = new_huge_ptr(STORAGE_SIZE);
     }
-    return align(base_alignment, required_size, storage_ptr, STORAGE_SIZE);
+    auto p = align(base_alignment, required_size, storage_ptr, STORAGE_SIZE);
+    if (set_zero) {
+        memset(p, 0, required_size);
+    }
+    return p;
 }
 
 

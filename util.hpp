@@ -37,8 +37,16 @@ static inline int64_t nanos() {
     return std::chrono::time_point_cast<std::chrono::nanoseconds>(t).time_since_epoch().count();
 }
 
+/**
+ * Return a pointer to a NEWLY ALLOCATED memory region of at least size, aligned to a 2MB boundary and with
+ * an effort to ensure the pointer is backed by transparent huge pages.
+ */
 void *new_huge_ptr(size_t size);
-void *aligned_ptr(size_t base_alignment, size_t required_size);
+
+/**
+ * Return a pointer to a region of the of the given size and alignment. The same region is repeated REUSED.
+ */
+void *aligned_ptr(size_t base_alignment, size_t required_size, bool set_zero = false);
 void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misalignment);
 
 /*

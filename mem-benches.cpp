@@ -144,6 +144,9 @@ bench2_f sameloc_pointer_chase_8way45;
 template <typename TIMER>
 void register_mem_oneshot(GroupList& list);
 
+template <typename TIMER>
+void register_mem_studies(GroupList& list);
+
 
 template <bench2_f F, typename M>
 static void make_load_bench(M& maker, int kib, const char* id_prefix, const char *desc_suffix, uint32_t ops, size_t offset = 0, bool sizecheck = true) {
@@ -435,6 +438,7 @@ void register_mem(GroupList& list) {
 #endif // #if !UARCH_BENCH_PORTABLE
 
     register_mem_oneshot<TIMER>(list);
+    register_mem_studies<TIMER>(list);
 
 }
 
