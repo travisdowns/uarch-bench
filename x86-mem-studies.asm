@@ -101,7 +101,7 @@ fw_define_start fw_write_split_read
 %rep 100
     vmovdqa [rsp], xmm0
     mov     rax, [rsp]
-    movq    xmm0, rax
+    vmovq    xmm0, rax
 %endrep
 fw_define_end
 
@@ -113,6 +113,6 @@ fw_define_start fw_write_split_read_both
     vmovdqa [rsp], xmm0
     mov     rax, [rsp]
     add     rax, [rsp + 8]
-    movq    xmm0, rax
+    vmovq    xmm0, rax
 %endrep
 fw_define_end
