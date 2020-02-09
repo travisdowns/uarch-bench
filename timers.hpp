@@ -10,8 +10,6 @@
 
 #include <chrono>
 #include <string>
-#include <iostream>
-#include <iomanip>
 
 #include "timer-info.hpp"
 #include "context.hpp"
@@ -70,10 +68,7 @@ public:
             ") to measure wall-clock time, and convert to cycles using a calibration loop"),
             {"Cycles", "Nanos"}) {}
 
-    void init(Context &c) override {
-        c.out() << "Median CPU speed: " << std::fixed << std::setw(4) << std::setprecision(3)
-        << getGHz() << " GHz" << std::endl;
-    }
+    void init(Context &c) override;
 
     HEDLEY_ALWAYS_INLINE
     static int64_t now() {

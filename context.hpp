@@ -5,7 +5,7 @@
 #ifndef CONTEXT_HPP_
 #define CONTEXT_HPP_
 
-#include <iostream>
+#include <iosfwd>
 
 #include "args.hxx"
 #include "timer-info.hpp"

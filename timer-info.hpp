@@ -5,7 +5,6 @@
 #ifndef TIMER_INFO_HPP_
 #define TIMER_INFO_HPP_
 
-#include <iostream>
 #include <vector>
 #include <string>
 #include <functional>

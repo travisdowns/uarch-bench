@@ -67,8 +67,15 @@ double ClockTimerT<CLOCK>::getGHz() {
     return ghz;
 }
 
+template <typename CLOCK>
+void ClockTimerT<CLOCK>::init(Context &c) {
+        c.out() << "Median CPU speed: " << std::fixed << std::setw(4) << std::setprecision(3)
+        << getGHz() << " GHz" << std::endl;
+}
+
 // explicit instantiation for the default clock
 template double DefaultClockTimer::getGHz();
+template void DefaultClockTimer::init(Context& c);
 
 // stuff for calculating clock overhead
 
