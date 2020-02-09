@@ -5,8 +5,10 @@
  */
 
 #include "benchmark.hpp"
-#include "util.hpp"
 #include "boost/preprocessor/repetition/repeat_from_to.hpp"
+#include "hedley.h"
+#include "util.hpp"
+
 
 extern "C" {
 
@@ -38,6 +40,22 @@ BOOST_PP_REPEAT_FROM_TO(0, 80, DECL_BENCH2, rs_storebuf)
 
 }
 
+struct thunk_args {
+    bench2_f* underlying;
+};
+
+long indirect_thunk(uint64_t iters, void *arg) {
+    auto thunk_arg = *static_cast<thunk_args *>(arg);
+    return thunk_arg.underlying(iters, nullptr);
+}
+
+template <typename M>
+HEDLEY_NEVER_INLINE
+void makei(bench2_f* fn, M& maker, const char* name, const char* desc, uint32_t ops_per_loop) {
+    thunk_args args{fn};
+    arg_provider_t ap = [=]{ return (void *)&args; };
+    maker.template make<indirect_thunk>(name, desc, ops_per_loop, ap);
+}
 
 template <typename TIMER>
 void register_rstalls(GroupList& list) {
@@ -48,14 +66,14 @@ void register_rstalls(GroupList& list) {
 
     auto maker = DeltaMaker<TIMER>(group.get(), 1000);
 
-    maker.template make<rs_dep_add     >("dep-add" ,    "Dependent adds (RS limit)",  128);
-    maker.template make<rs_dep_add4    >("dep-add4",    "Inependent adds (? limit)",  128);
-    maker.template make<rs_dep_imul    >("dep-imul",    "Dependent imuls (RS limit)", 128);
-    maker.template make<rs_split_stores>("split-store", "Split stores (SB limit)",    128);
-    maker.template make<rs_dep_fsqrt>   ("fsqrt",       "Dependent fqrt (RS limit)",  128);
+    makei(rs_dep_add     , maker, "dep-add" ,    "Dependent adds (RS limit)",  128);
+    makei(rs_dep_add4    , maker, "dep-add4",    "Inependent adds (? limit)",  128);
+    makei(rs_dep_imul    , maker, "dep-imul",    "Dependent imuls (RS limit)", 128);
+    makei(rs_split_stores, maker, "split-store", "Split stores (SB limit)",    128);
+    makei(rs_dep_fsqrt   , maker, "fsqrt",       "Dependent fqrt (RS limit)",  128);
 
     // a macro to call maker.make on test that mix fsqrt and antoher op in a variery of ratios
-#define MAKE_FSQRT_OP(z, n, op) maker.template make<rs_fsqrt_ ## op ## n>("fsqrt-" #op "-" #n, \
+#define MAKE_FSQRT_OP(z, n, op) makei(rs_fsqrt_ ## op ## n, maker, "fsqrt-" #op "-" #n, \
         "fsqrt:" #op " in 1:" #n " ratio", 32);
 
     BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_FSQRT_OP, nop)
@@ -68,18 +86,18 @@ void register_rstalls(GroupList& list) {
     BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_FSQRT_OP, add_padd)
     BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_FSQRT_OP, load_dep)
 
-#define MAKE_LOAD_OP(z, n, op) maker.template make<rs_load_ ## op ## n>("load-" #op "-" #n, \
+#define MAKE_LOAD_OP(z, n, op) makei(rs_load_ ## op ## n, maker, "load-" #op "-" #n, \
         "load:" #op " in 1:" #n " ratio", 32);
 
     BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_LOAD_OP, nop)
     BOOST_PP_REPEAT_FROM_TO(0, MAX_RATIO, MAKE_LOAD_OP, add)
 
-#define MAKE_LOADCHAIN(z, n, _) maker.template make<rs_loadchain ## n>("loadchain-" #n, \
+#define MAKE_LOADCHAIN(z, n, _) makei(rs_loadchain ## n, maker, "loadchain-" #n, \
         "loadchain: " #n " loads", 32);
 
     BOOST_PP_REPEAT_FROM_TO(0, 120, MAKE_LOADCHAIN, _)
 
-#define MAKE_STOREBUF(z, n, _) maker.template make<rs_storebuf ## n>("storebuf-" #n, \
+#define MAKE_STOREBUF(z, n, _) makei(rs_storebuf ## n, maker, "storebuf-" #n, \
         "storebuf: " #n " stores", 32);
 
     BOOST_PP_REPEAT_FROM_TO(0, 80, MAKE_STOREBUF, _)

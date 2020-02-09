@@ -57,7 +57,7 @@ void register_cpp(GroupList& list) {
     list.push_back(cpp_group);
 
     {
-        auto maker = DeltaMaker<TIMER>(cpp_group.get()).useLoopDelta(true);
+        auto maker = DeltaMaker<TIMER>(cpp_group.get()).useLoopDelta();
 
         DIV_REG_X(DIV_REG)
 

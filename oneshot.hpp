@@ -34,7 +34,7 @@ template <typename TIMER, int samples>
 struct OneshotAlgo {
     using delta_t    = typename TIMER::delta_t;
     using raw_result = std::array<delta_t, samples>;
-    using raw_f =  raw_result (size_t loop_count, void *arg);
+    using raw_f =  raw_result(*)(size_t loop_count, void *arg);
 
     template <bench2_f METHOD, bench2_f WARM_ONCE, bench2_f WARM_EVERY>
     static raw_result bench(size_t loop_count, void *arg) {
@@ -95,7 +95,7 @@ private:
 //    using baseline_f = void (*)(uint32_t, void*);
 
     uint32_t loop_count;
-    raw_f* raw_func;
+    raw_f raw_func;
     void*  func_addr;
     arg_provider_t arg_provider;
     overhead_f overhead_func;
@@ -111,7 +111,7 @@ public:
     OneshotBench(
             BenchArgs args,
             uint32_t loop_count,
-            raw_f* raw_func,
+            raw_f raw_func,
             void* func_addr,
             arg_provider_t arg_provider,
             overhead_f overhead_func) :
@@ -248,7 +248,7 @@ public:
             uint32_t ops_per_invocation,
             const arg_provider_t& arg_provider = null_provider)
     {
-        typename ALGO::raw_f *f = ALGO::template bench<METHOD, WARM_ONCE, WARM_EVERY>;
+        typename ALGO::raw_f f = ALGO::template bench<METHOD, WARM_ONCE, WARM_EVERY>;
         make2(this->make_args(id, description, ops_per_invocation), f, (void *)METHOD, arg_provider);
     }
 
@@ -276,7 +276,7 @@ public:
 private:
     void make2(
             const BenchArgs& args,
-            typename ALGO::raw_f* f,
+            typename ALGO::raw_f f,
             void* f_addr,
             const arg_provider_t& arg_provider = null_provider)
     {

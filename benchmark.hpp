@@ -68,14 +68,7 @@ struct BenchArgs {
             taglist_t tags,
             featurelist_t features,
             uint32_t ops_per_loop
-            ) :
-    parent{parent},
-    id{id},
-    description{description},
-    tags{tags},
-    features{features},
-    ops_per_loop{ops_per_loop}
-    {}
+            );
 };
 
 /** the max width for the description for any benchmark - longer will cause jagged tables */
@@ -251,7 +244,7 @@ protected:
     using raw_result = typename ALGO::raw_result;
 
     size_t loop_count;
-    raw_f  *raw_func;
+    raw_f  raw_func;
     arg_provider_t arg_provider;
 
 protected:
@@ -268,8 +261,8 @@ protected:
 
 public:
 
-    BenchTemplate(BenchArgs args, size_t loop_count, raw_f *raw_func, arg_provider_t arg_provider) : BenchmarkBase(std::move(args)),
-    loop_count{loop_count}, raw_func{raw_func}, arg_provider{arg_provider} {}
+    BenchTemplate(BenchArgs args, size_t loop_count, raw_f raw_func, arg_provider_t arg_provider) : BenchmarkBase(std::move(args)),
+    loop_count{loop_count}, raw_func{raw_func}, arg_provider{std::move(arg_provider)} {}
 
 
     virtual TimingResult run(const TimerInfo& ti) override {
@@ -325,7 +318,7 @@ struct DeltaAlgo {
     using raw_result = DeltaRaw<delta_t, total_samples>;
     using one_result = typename raw_result::one_result;
 
-    typedef raw_result (raw_f)(size_t loop_count, void *arg);
+    using raw_f      = raw_result (*)(size_t loop_count, void *arg);
 
     template <bench2_f BENCH_METHOD>
     static raw_result delta_loop_bench(size_t loop_count, void *arg) {
@@ -430,21 +423,24 @@ public:
  * to include (i.e., it is possible to create "sparse" benchmarks where the code under test is surrounded
  * by code that shouldn't contribute to the result).
  */
-template <typename TIMER>
+template <typename TIMER, bool use_loop_delta = false>
 class DeltaMaker : public MakerBase<TIMER, DeltaMaker<TIMER>> {
 public:
 
     using this_t = DeltaMaker<TIMER>;
     using base_t = MakerBase<TIMER, DeltaMaker<TIMER>>;
 
-    DeltaMaker(const DeltaMaker& ) = default;
+    template <bool uld>
+    DeltaMaker(const DeltaMaker<TIMER, uld>& rhs) : base_t{rhs} {
+        // if DeltaMaker has state we need to fix the copy ctor, etc
+        static_assert(sizeof(this_t) == sizeof(base_t), "DeltaMaker shouldn't have state");
+    }
+
     DeltaMaker(BenchmarkGroup* parent, uint32_t loop_count = default_loop_count) :
-        base_t(parent, loop_count), use_loop_delta(false) {}
+        base_t(parent, loop_count) {}
 
     static constexpr uint32_t default_loop_count = 10000;
     static constexpr int                 samples =    33;
-
-    bool use_loop_delta;
 
     /**
      * Makes a benchmark with the given BASE_METHOD and BENCH_METHOD, and adds it to the group associated with
@@ -468,7 +464,7 @@ public:
             uint32_t ops_per_loop,
             const arg_provider_t& arg_provider = null_provider)
     {
-        typename BenchTemplate<TIMER, DeltaAlgo<TIMER>>::raw_f *f;
+        typename BenchTemplate<TIMER, DeltaAlgo<TIMER>>::raw_f f;
         if (use_loop_delta) {
             f = DeltaAlgo<TIMER>::template delta_loop_bench<BENCH_METHOD>;
         } else {
@@ -481,9 +477,8 @@ public:
      * loop_count iterations, and once with loop_count * 2 iterations, and taking the delta. This is as opposted to
      * the default which runs two different bench methods.
      */
-    DeltaMaker useLoopDelta(bool use_loop_delta_) {
-        DeltaMaker ret(*this);
-        ret.use_loop_delta = use_loop_delta_;
+    DeltaMaker<TIMER, true> useLoopDelta() {
+        DeltaMaker<TIMER, true> ret(*this);
         return ret;
     }
 };

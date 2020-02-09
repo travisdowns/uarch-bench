@@ -110,15 +110,15 @@ dist-clean: clean $(CLEAN_TARGETS)
 # $(filter-out $(OBJECTS), main.o)
 
 # link all object files except main.o into unit-test
-UNIT_OBJECTS := $(filter-out main.o, $(OBJECTS)) 
-unit-test: unit-test.o unit-test-main.o $(UNIT_OBJECTS) 
+UNIT_OBJECTS := $(filter-out main.o, $(OBJECTS))
+unit-test: unit-test.o unit-test-main.o $(UNIT_OBJECTS)
 	$(CXX) $^         $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o $@
 
 uarch-bench: $(OBJECTS) $(EXTRA_DEPS)
 	$(CXX) $(OBJECTS) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o $@
 # the next two lines are only to print out the size of the binary for diagnostic purposes, feel free to omit them
 	@wc -c uarch-bench | awk '{print "binary size: " $$1/1000 "KB"}'
-	@size uarch-bench --format=SysV | egrep '\.text|\.eh_frame|\.rodata|^section'
+	@size uarch-bench --format=SysV | egrep '\.text|\.eh_frame|\.rodata|\.debug_info|\.debug_loc|^section'
 
 util/seqtest: util/seqtest.o
 
@@ -143,7 +143,7 @@ libpfc-clean:
 
 ifeq ($(USE_PERF_TIMER),1)
 # jevents handling - we just assume jevents depends on all .c or .h files in the root directory
-# which doesn't catch stuff in the examples dir (for example), but that's probably fine 
+# which doesn't catch stuff in the examples dir (for example), but that's probably fine
 $(JEVENTS_LIB): $(JEVENTS_DIR)/*.[ch]
 	$(MAKE) -C $(JEVENTS_DIR)
 
@@ -164,9 +164,9 @@ $(PFM_LIBDIR)/libpfm.so:
 
 libpfm4-clean:
 	$(MAKE) -C $(PFM_DIR) clean
-	
+
 LOCAL_MK = $(wildcard local.mk)
-	
+
 # https://stackoverflow.com/a/3892826/149138
 dummy.rebuild: Makefile config.mk $(LOCAL_MK)
 	touch $@

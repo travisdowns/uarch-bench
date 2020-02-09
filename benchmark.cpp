@@ -10,6 +10,22 @@
 
 using namespace std;
 
+BenchArgs::BenchArgs(
+            const BenchmarkGroup* parent,
+            const std::string& id,
+            const std::string& description,
+            taglist_t tags,
+            featurelist_t features,
+            uint32_t ops_per_loop
+            ) :
+    parent{parent},
+    id{id},
+    description{description},
+    tags{tags},
+    features{features},
+    ops_per_loop{ops_per_loop}
+    {}
+
 arg_provider_t constant(void *value) {
     return [=]{ return value; };
 }
