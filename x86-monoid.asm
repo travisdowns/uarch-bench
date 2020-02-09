@@ -1,7 +1,7 @@
 ; monoid tests go here because they are slow to compile, so we don't want them in the main x86_methods.asm
 ; file which gets compiled often
 
-%include "x86_helpers.asm"
+%include "x86-helpers.asm"
 
 nasm_util_assert_boilerplate
 thunk_boilerplate

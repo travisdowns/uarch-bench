@@ -1,4 +1,4 @@
-%include "x86_helpers.asm"
+%include "x86-helpers.asm"
 
 nasm_util_assert_boilerplate
 thunk_boilerplate
