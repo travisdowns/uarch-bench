@@ -1,1 +1,0 @@
-This stable version of the nasm binary is here in uarch-bench only for the benefit of TravisCI which has an old nasm version that can't compile AVX-512.

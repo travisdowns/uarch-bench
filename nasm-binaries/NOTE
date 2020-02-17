@@ -1,0 +1,10 @@
+These nasm binaries are downloaded from:
+
+https://www.nasm.us/pub/nasm/releasebuilds
+
+If no nasm binary is found on the current system, an up to date version
+is used from this directory. The other versions are used in CI for testing
+compatibility with various nasm versions.
+
+The binaries are extracted from the ./rpms directory (not under source control)
+using the rpm-extract.sh script.

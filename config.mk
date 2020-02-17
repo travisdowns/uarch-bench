@@ -41,13 +41,17 @@ BACKWARD_HAS_DW ?= 0
 # set DEBUG to 1 to enable various debugging checks
 DEBUG ?= 0
 
+ifdef ASM
+$(info using specified nasm: $(nasm))
+else
 # The assembler to use, we used to support yasm also but as of issue #63 we only support nasm
 ifeq (, $(shell which nasm))
 $(info using local nasm)
-ASM ?= ./nasm-2.13.03/nasm
+ASM ?= ./nasm-binaries/linux/nasm-2.13.03-0.fc24
 else
 $(info using system nasm)
 ASM ?= nasm
+endif
 endif
 
 ifeq ($(DEBUG),1)

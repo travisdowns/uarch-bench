@@ -63,3 +63,6 @@ local.mk
 
 # hotspot error dumps
 hs_err_pid*.log
+
+# nasm rpms
+/nasm-binaries/rpms
