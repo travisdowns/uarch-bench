@@ -1,5 +1,6 @@
+version: ~> 1.0
 language: cpp
-sudo: false
+os: linux
 dist: xenial
 branches:
   except:
@@ -19,12 +20,7 @@ env:
 
 cache: ccache
 
-# the anchors element doesn't do anything but itself except define some anchors to be used later as aliases
-anchors:
-  - &unit_command ./unit-test
-  - &uarch_command ./uarch-bench --test-tag=~slow
-
-matrix:
+jobs:
   include:
       # clang-5.0 is the default installed on travis VMs
     - compiler: clang-default
@@ -124,7 +120,6 @@ matrix:
           - clang++-8
     - compiler: gcc-6-kmod
       # this matrix entry builds the full kernel module
-      sudo: required
       env: TRUE_CC=gcc-6 TRUE_CXX=g++-6 LIBPFC_TARGET="libpfc.so pfc.ko"
       addons:
         apt:
