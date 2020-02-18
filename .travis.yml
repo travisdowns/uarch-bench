@@ -125,7 +125,7 @@ matrix:
     - compiler: gcc-6-kmod
       # this matrix entry builds the full kernel module
       sudo: required
-      env: TRUE_CC=gcc-6 TRUE_CXX=g++-6
+      env: TRUE_CC=gcc-6 TRUE_CXX=g++-6 LIBPFC_TARGET="libpfc.so pfc.ko"
       addons:
         apt:
           sources:
@@ -136,11 +136,7 @@ matrix:
           - g++-6
       script:
           - sudo apt-get install -y linux-headers-$(uname -r)
-          - set -e && echo "CC is ${CC}, CXX is ${CXX}" && ${CC} --version && ${CXX} --version && uname -r
-          - make
-          - lscpu
-          - *unit_command
-          - *uarch_command
+          - ./scripts/travis-run.sh
 
 before_install:
 # Travis will set CC and CXX after the env commands specified in the matrix are run, overwriting whatever
