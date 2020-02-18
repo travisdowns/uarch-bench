@@ -9,7 +9,6 @@ branches:
 addons:
   apt:
     sources: &default_sources
-      - ubuntu-toolchain-r-test
     packages: &default_pacakges
 
 env:
