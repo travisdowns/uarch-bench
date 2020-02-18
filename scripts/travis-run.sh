@@ -6,10 +6,10 @@ set -euo pipefail
 
 echo "CC is ${CC-unset}, CXX is ${CXX-unset}"
 [[ -z ${CC+x}  ]] ||  ${CC} --version
-[[ -z ${CCX+x} ]] || ${CCX} --version
+[[ -z ${CXX+x} ]] || ${CXX} --version
 ccache -s
 ccache -z
-make LIBPFC_TARGET=libpfc.so
+make
 ccache -s
 lscpu
 ./unit-test

@@ -135,7 +135,7 @@ util/seqtest: util/seqtest.o
 libpfc/pfc.ko: libpfc/libpfc.so
 
 libpfc/libpfc.so libpfc/pfc.ko:
-	@echo "Buiding libpfc target $(LIBPFC_TARGET)"
+	@echo "Buiding libpfc targets: $(LIBPFC_TARGET)"
 	$(MAKE) -C libpfc $(LIBPFC_TARGET)
 
 libpfc-clean:

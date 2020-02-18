@@ -15,7 +15,7 @@ env:
   global:
 # fix clang complaining about unused command line args with ccache, see http://peter.eisentraut.org/blog/2014/12/01/ccache-and-clang-part-3/
     - CCACHE_CPP2=yes
-
+    - LIBPFC_TARGET=libpfc.so
 
 cache: ccache
 
