@@ -211,5 +211,3 @@ define_bench rep_movsb
 
     add     rsp, 1024
     ret
-
-
