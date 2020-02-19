@@ -84,6 +84,10 @@ bench2_f vzsse_diffreg;
 bench2_f movd_xmm;
 bench2_f movd_ymm;
 
+bench2_f rep_movsb;
+
+bench2_f movd_rep;
+
 bench2_f adc_chain32;
 bench2_f adc_chain64;
 
@@ -305,6 +309,15 @@ void register_misc(GroupList& list) {
 
         maker.template make<movd_xmm>("movd-xmm", "roundtrip mov + vpor xmm", 100);
         maker.template make<movd_ymm>("movd-ymm", "roundtrip mov + vpor ymm", 100);
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/repm", "repm");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 100);
+        maker = maker.useLoopDelta();
+
+        maker.template make<rep_movsb>("stosb", "stosb to 1024 byte region", 100);
     }
 
 #endif // #if !UARCH_BENCH_PORTABLE
