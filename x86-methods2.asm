@@ -1,3 +1,4 @@
+
 %include "x86-helpers.asm"
 
 nasm_util_assert_boilerplate
@@ -194,4 +195,21 @@ define_bench movd_ymm
     dec rdi
     jnz .top
     ret
+
+
+define_bench rep_movsb
+    sub rsp, 1024
+    mov r8, rdi
+.top:
+%rep 100
+    mov ecx, 1024
+    mov rdi, rsp
+    rep stosb
+%endrep
+    dec r8
+    jnz .top
+
+    add     rsp, 1024
+    ret
+
 
