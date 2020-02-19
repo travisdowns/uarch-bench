@@ -37,7 +37,7 @@ jobs:
     - compiler: nasm-test
       env: TRUE_CC=gcc TRUE_CXX=g++ PIE=
       script:
-        - ./scripts/travis-run.sh
+        - ./scripts/travis-build.sh
         - ./scripts/test-nasm.sh
     - compiler: gcc-4.9
       env: TRUE_CC=gcc-4.9 TRUE_CXX=g++-4.9 PIE=

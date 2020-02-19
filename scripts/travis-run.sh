@@ -4,13 +4,7 @@
 
 set -euo pipefail
 
-echo "CC is ${CC-unset}, CXX is ${CXX-unset}"
-[[ -z ${CC+x}  ]] ||  ${CC} --version
-[[ -z ${CXX+x} ]] || ${CXX} --version
-ccache -s
-ccache -z
-make
-ccache -s
+scripts/travis-build.sh
 lscpu
 ./unit-test
 ./uarch-bench --test-tag=~slow
