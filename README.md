@@ -41,6 +41,10 @@ You need some C++ compiler like `g++` or `clang++`, but if you are interested in
     sudo apt-get install nasm
     sudo apt-get install msr-tools
 
+### NASM
+
+The minimum required version of nasm is 2.12, for AVX-512 support (stricly speaking, some later version of nasm 2.11, e.g., nasm-2.11.08 also work). If you don't have nasm installed, a suitable version (on Linux) is used automatically from the included `/nasm-binaries` directory.
+
 ## Building
 
 This project has submodules, so it is best cloned with the `--recursive` flag to pull all the submodules as well:

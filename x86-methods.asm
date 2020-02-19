@@ -648,7 +648,7 @@ ret
 
 ; a series of AVX (REX-encoded) 128-bit stores to the same location, passed as the second parameter
 define_bench store128_any
-vpxor xmm0, xmm0
+vpxor xmm0, xmm0, xmm0
 .top:
 times 128 vmovdqu [rsi], xmm0
 dec rdi
@@ -657,7 +657,7 @@ ret
 
 ; a series of AVX (REX-encoded) 256-bit stores to the same location, passed as the second parameter
 define_bench store256_any
-vpxor xmm0, xmm0
+vpxor xmm0, xmm0, xmm0
 .top:
 times 128 vmovdqu [rsi], ymm0
 dec rdi
@@ -666,7 +666,7 @@ ret
 
 ; a series of AVX512 512-bit stores to the same location, passed as the second parameter
 define_bench store512_any
-vpxorq zmm16, zmm16
+vpxorq zmm16, zmm16, zmm16
 .top:
 times 128 vmovdqu64 [rsi], zmm16
 dec rdi
