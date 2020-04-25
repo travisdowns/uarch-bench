@@ -34,6 +34,10 @@ bench2_f alu_load_6_6;
 
 bench2_f sameloc_pointer_chase;
 bench2_f sameloc_pointer_chase_complex;
+bench2_f sameloc_pointer_chase_fs;
+bench2_f sameloc_pointer_chase_fs2;
+bench2_f sameloc_pointer_chase_fs3;
+bench2_f sameloc_pointer_chase_complex_fs;
 bench2_f rdtsc_bench;
 bench2_f rdtscp_bench;
 }
@@ -74,6 +78,8 @@ void register_default(GroupList& list) {
 
     maker.template make<sameloc_pointer_chase>         ("pointer-chase-simple", "Simple addressing pointer chase",  128);
     maker.template make<sameloc_pointer_chase_complex> ("pointer-chase-complex","Complex addressing pointer chase",  128);
+    maker.template make<sameloc_pointer_chase_fs>         ("pointer-chase-simple-fs", "Simple pointer chase FS override",  128);
+    maker.template make<sameloc_pointer_chase_complex_fs> ("pointer-chase-complex-fs","Complex pointer chase FS override",  128);
     maker.template make<rdtsc_bench> ("rdtsc","back-to-back rdtsc throughput",  128);
     maker.template make<rdtscp_bench> ("rdtscp","back-to-back rdtscp throughput",  128);
 

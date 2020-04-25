@@ -328,11 +328,12 @@ define_single_op rdtscp_bench,rdtscp
 ; %1 name suffix
 ; %2 load expression (don't include [])
 ; %3 offset if any to apply to pointer and load expression
-%macro make_spc 3
+%macro make_spc 4
 define_bench sameloc_pointer_chase%1
 or rcx, -1
 inc rcx ; rcx is zero but this is just a fancy way of doing it to defeat zero-idiom recognition
 lea rax, [rsp - 8 - %3]
+%4
 push rax
 .top:
 times 128 mov rax, [%2 + %3]
@@ -342,8 +343,10 @@ pop rax
 ret
 %endmacro
 
-make_spc ,rax,0
-make_spc _complex,rax + rcx * 8,4096
+make_spc ,rax,0,{}
+make_spc _complex,rax + rcx * 8,4096,{}
+make_spc _fs,fs:rax,0,{sub rax, [fs:0]}
+make_spc _complex_fs,fs:rax + rcx * 8,4096,{sub rax, [fs:0]}
 
 ; https://stackoverflow.com/q/52351397
 define_bench sameloc_pointer_chase_diffpage
