@@ -66,3 +66,5 @@ hs_err_pid*.log
 
 # nasm rpms
 /nasm-binaries/rpms
+
+.vscode
