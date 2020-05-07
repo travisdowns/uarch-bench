@@ -523,6 +523,9 @@ template <typename TIMER>
 void register_default(GroupList& list);
 
 template <typename TIMER>
+void register_matt(GroupList& list);
+
+template <typename TIMER>
 void register_misc(GroupList& list);
 
 template <typename TIMER>
