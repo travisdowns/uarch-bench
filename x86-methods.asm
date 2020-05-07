@@ -1394,6 +1394,8 @@ mov     rdx, [rsi + region.size]
 mov     rsi, [rsi + region.start]
 
 xor     eax, eax
+mov     r8, 0
+;vpcmpeqd   ymm0, ymm0, ymm0
 vpxor   ymm0, ymm0, ymm0
 
 .top:
@@ -1416,8 +1418,8 @@ jnz .top
 ret
 %endmacro
 
-define_bandwidth  4,{mov      [rcx + offset], eax},store
-define_bandwidth  8,{mov      [rcx + offset], rax},store
+define_bandwidth  4,{mov      [rcx + offset], r8d},store
+define_bandwidth  8,{mov      [rcx + offset], r8 },store
 define_bandwidth 16,{vmovdqa  [rcx + offset],xmm0},store
 define_bandwidth 32,{vmovdqa  [rcx + offset],ymm0},store
 define_bandwidth 64,{vmovdqa64[rcx + offset],zmm0},store

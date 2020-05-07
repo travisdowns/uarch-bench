@@ -35,8 +35,6 @@ bench2_f alu_load_6_6;
 bench2_f sameloc_pointer_chase;
 bench2_f sameloc_pointer_chase_complex;
 bench2_f sameloc_pointer_chase_fs;
-bench2_f sameloc_pointer_chase_fs2;
-bench2_f sameloc_pointer_chase_fs3;
 bench2_f sameloc_pointer_chase_complex_fs;
 bench2_f rdtsc_bench;
 bench2_f rdtscp_bench;
