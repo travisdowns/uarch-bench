@@ -6,7 +6,6 @@
 
 #include "benchmark.hpp"
 #include "util.hpp"
-#include "boost/preprocessor/repetition/repeat_from_to.hpp"
 
 #define BUF_SIZE (64*1024)
 static char buf[BUF_SIZE];
@@ -27,24 +26,24 @@ void __clear_mov_reg(void *addr)
 		: "[dst]"(addr), [zero] "r" (0UL));
 }
 
-HEDLEY_NEVER_INLINE __attribute__((noclone))
-static long BM_mov_reg(uint64_t iters, void *arg) {
+HEDLEY_NEVER_INLINE
+long BM_mov_reg(uint64_t iters, void *arg) {
 	do {
 		__clear_mov_reg(buf);
     } while (--iters);
     return 0;
 }
 
-HEDLEY_NEVER_INLINE __attribute__((noclone))
-static long BM_mov_imm(uint64_t iters, void *arg) {
+HEDLEY_NEVER_INLINE
+long BM_mov_imm(uint64_t iters, void *arg) {
 	do {
 		__clear_mov_imm(buf);
     } while (--iters);
     return 0;
 }
 
-HEDLEY_NEVER_INLINE __attribute__((noclone))
-static long BM_mov_reg_inline(uint64_t iters, void *arg) {
+HEDLEY_NEVER_INLINE
+long BM_mov_reg_inline(uint64_t iters, void *arg) {
 	do {
         long __d0;
         asm volatile("movq %[zero],(%[dst])\n"
@@ -54,8 +53,8 @@ static long BM_mov_reg_inline(uint64_t iters, void *arg) {
     return 0;
 }
 
-HEDLEY_NEVER_INLINE __attribute__((noclone))
-static long BM_mov_imm_inline(uint64_t iters, void *arg) {
+HEDLEY_NEVER_INLINE
+long BM_mov_imm_inline(uint64_t iters, void *arg) {
 	do {
 	        long __d0;
 	        asm volatile("movq $0,(%[dst])\n"
