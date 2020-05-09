@@ -526,6 +526,9 @@ template <typename TIMER>
 void register_matt(GroupList& list);
 
 template <typename TIMER>
+void register_cacheline_branch(GroupList& list);
+
+template <typename TIMER>
 void register_misc(GroupList& list);
 
 template <typename TIMER>
