@@ -3,6 +3,8 @@
 # Some parts based on http://notepad2.blogspot.com/2014/11/a-script-to-turn-off-intel-cpu-turbo.html
 
 set -e
+unset LANG
+unset ${!LC_*}
 
 export VENDOR_ID=$(lscpu | grep 'Vendor ID' | egrep -o '[^ ]*$')
 export MODEL_NAME=$(lscpu | grep 'Model name' | sed -n 's/Model name:\s*\(.*\)$/\1/p')
