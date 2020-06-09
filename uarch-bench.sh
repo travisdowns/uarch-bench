@@ -3,12 +3,21 @@
 # Some parts based on http://notepad2.blogspot.com/2014/11/a-script-to-turn-off-intel-cpu-turbo.html
 
 set -e
+unset LANG
+unset ${!LC_*}
 
+in_vm=$(lscpu | sed -n '/^Virtualization type:/{s@[^:]\+:[[:blank:]]\+@@;s@^none$@Dom0@;p}')
 export VENDOR_ID=$(lscpu | grep 'Vendor ID' | egrep -o '[^ ]*$')
 export MODEL_NAME=$(lscpu | grep 'Model name' | sed -n 's/Model name:\s*\(.*\)$/\1/p')
-export SCALING_DRIVER=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver)
-export SCALING_GOVERNOR=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
-export NO_TURBO_FILE="/sys/devices/system/cpu/intel_pstate/no_turbo"
+
+SCALING_DRIVER=
+SCALING_GOVERNOR=
+NO_TURBO_FILE=
+if [[ -z "${in_vm}" ]]; then
+	SCALING_DRIVER=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver)
+	SCALING_GOVERNOR=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+	NO_TURBO_FILE="/sys/devices/system/cpu/intel_pstate/no_turbo"
+fi
 
 function check_msrtools_installed {
 	if [[ -z $(which rdmsr) ]]; then
@@ -34,6 +43,7 @@ original_state=$(get_turbo_state_string)
 original_no_turbo=0
 
 function restore_no_turbo {
+	[[ -n "${in_vm}" ]] && return 0
 	if [ -e $NO_TURBO_FILE ]; then
 
 		NO_TURBO=$original_no_turbo
@@ -64,6 +74,7 @@ function restore_no_turbo {
 }
 
 function check_no_turbo {
+	[[ -n "${in_vm}" ]] && return 0
 	if [ -e $NO_TURBO_FILE ]; then
 
 		NO_TURBO=$(cat "$NO_TURBO_FILE")
@@ -96,12 +107,13 @@ function check_no_turbo {
 	fi
 }
 
+lscpu | grep -E '^(Hypervisor vendor:|Virtualization type:)' --color=never || :
 echo "Driver: $SCALING_DRIVER, governor: $SCALING_GOVERNOR" 
 echo -e "Vendor ID: $VENDOR_ID\nModel name: $MODEL_NAME"
 
 ############### Adjust the scaling governor to 'performance' to avoid sub-nominal clocking ##########
 
-if [[ "$SCALING_GOVERNOR" != "performance" ]]; then
+if [[ -n "$SCALING_GOVERNOR" ]] && [[ "$SCALING_GOVERNOR" != "performance" ]]; then
 	original_governor=$SCALING_GOVERNOR
 	echo -n "Changing scaling_governor to performance: "
 	if ! sudo -n true 2>/dev/null; then echo ""; fi # write a newline if we are about to prompt for sudo
@@ -131,7 +143,7 @@ fi
 restore_no_turbo
 
 # restore the cpu governor if we changed it
-if [[ $original_governor ]]; then
+if [[ -n "$original_governor" ]]; then
 	echo -n "Reverting cpufreq governor to $original_governor: "
 	sudo sh -c "echo $original_governor > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
 	if [[ $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor) == "$original_governor" ]]; then
