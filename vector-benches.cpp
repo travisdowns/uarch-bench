@@ -1,7 +1,7 @@
 /*
- * default_benches.cpp
+ * vector-benches.cpp
  *
- * Various "default" benchmarks.
+ * Benchmarks relating to SSE and AVX instructions.
  */
 
 #include "benchmark.hpp"
@@ -16,15 +16,19 @@ bench2_f bypass_vmovupd_latency;
 bench2_f bypass_movd_latency;
 bench2_f bypass_movq_latency;
 
-bench2_f vector_load_load_lat_movdqu_0;
-bench2_f vector_load_load_lat_vmovdqu_0;
-bench2_f vector_load_load_lat_lddqu_0;
-bench2_f vector_load_load_lat_vlddqu_0;
+bench2_f vector_load_load_lat_movdqu_0_xmm;
+bench2_f vector_load_load_lat_vmovdqu_0_xmm;
+bench2_f vector_load_load_lat_lddqu_0_xmm;
+bench2_f vector_load_load_lat_vlddqu_0_xmm;
+bench2_f vector_load_load_lat_vmovdqu_0_ymm;
+bench2_f vector_load_load_lat_vmovdqu32_0_zmm;
 
-bench2_f vector_load_load_lat_movdqu_63;
-bench2_f vector_load_load_lat_vmovdqu_63;
-bench2_f vector_load_load_lat_lddqu_63;
-bench2_f vector_load_load_lat_vlddqu_63;
+bench2_f vector_load_load_lat_movdqu_63_xmm;
+bench2_f vector_load_load_lat_vmovdqu_63_xmm;
+bench2_f vector_load_load_lat_lddqu_63_xmm;
+bench2_f vector_load_load_lat_vlddqu_63_xmm;
+bench2_f vector_load_load_lat_vmovdqu_63_ymm;
+bench2_f vector_load_load_lat_vmovdqu32_63_zmm;
 
 
 }
@@ -33,44 +37,41 @@ template <typename TIMER>
 void register_vector(GroupList& list) {
 #if !UARCH_BENCH_PORTABLE
     {
-        std::shared_ptr<BenchmarkGroup> vector_group = std::make_shared<BenchmarkGroup>("vector/bypass", "Vector unit bypass latency");
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("vector/bypass", "Vector unit bypass latency");
+        list.push_back(group);
 
-        using default_maker = StaticMaker<TIMER>;
+        auto maker = DeltaMaker<TIMER>(group.get(), 100000);
 
-        auto benches = std::vector<Benchmark> {
-            default_maker::template make_bench<bypass_vmovdqa_latency>(vector_group.get(), "movdqa", "movdqa [mem] -> paddb latency", 1, []{ return nullptr; }, 100000),
-                    default_maker::template make_bench<bypass_vmovdqu_latency>(vector_group.get(), "movdqu", "movdqu [mem] -> paddb latency", 1, []{ return nullptr; }, 100000),
-                    default_maker::template make_bench<bypass_vmovups_latency>(vector_group.get(), "movups", "movups [mem] -> paddb latency", 1, []{ return nullptr; }, 100000),
-                    default_maker::template make_bench<bypass_vmovupd_latency>(vector_group.get(), "movupd", "movupd [mem] -> paddb latency", 1, []{ return nullptr; }, 100000),
+        maker.template make<bypass_vmovdqa_latency>("movdqa", "movdqa [mem] -> paddb latency", 1);
+        maker.template make<bypass_vmovdqu_latency>("movdqu", "movdqu [mem] -> paddb latency", 1);
+        maker.template make<bypass_vmovups_latency>("movups", "movups [mem] -> paddb latency", 1);
+        maker.template make<bypass_vmovupd_latency>("movupd", "movupd [mem] -> paddb latency", 1);
 
-                    default_maker::template make_bench<bypass_movd_latency>(vector_group.get(), "movd",   "movq rax,xmm0 -> xmm0,rax lat", 1, []{ return nullptr; }, 100000),
-                    default_maker::template make_bench<bypass_movq_latency>(vector_group.get(), "movq",   "movq rax,xmm0 -> xmm0,rax lat", 1, []{ return nullptr; }, 100000)
-        };
+        maker.template make<bypass_movd_latency>("movd",   "movq rax,xmm0 -> xmm0,rax lat", 1);
+        maker.template make<bypass_movq_latency>("movq",   "movq rax,xmm0 -> xmm0,rax lat", 1);
 
-        vector_group->add(benches);
-        list.push_back(vector_group);
     }
 
     {
-        std::shared_ptr<BenchmarkGroup> vector_group = std::make_shared<BenchmarkGroup>("vector/load-load", "Vector load-load latency");
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("vector/load-load", "Vector load-load latency");
+        list.push_back(group);
 
-        using default_maker = StaticMaker<TIMER>;
+        auto maker = DeltaMaker<TIMER>(group.get(), 100000).setFeatures({AVX2});
+        auto m512  = maker.setFeatures({AVX512F});
 
-        auto benches = std::vector<Benchmark> {
-            default_maker::template make_bench< vector_load_load_lat_movdqu_0>(vector_group.get(),  "movdqu-aligned",    "aligned  movdqu load lat", 1, []{ return nullptr; }, 100000),
-            default_maker::template make_bench<vector_load_load_lat_vmovdqu_0>(vector_group.get(), "vmovdqu-aligned",   "aligned vmovdqu load lat", 1, []{ return nullptr; }, 100000),
-            default_maker::template make_bench<  vector_load_load_lat_lddqu_0>(vector_group.get(),   "lddqu-aligned",     "aligned   lddqu load lat", 1, []{ return nullptr; }, 100000),
-            default_maker::template make_bench< vector_load_load_lat_vlddqu_0>(vector_group.get(),  "vlddqu-aligned",    "aligned  vlddqu load lat", 1, []{ return nullptr; }, 100000),
+        maker.template make< vector_load_load_lat_movdqu_0_xmm  >(  "movdqu-aligned"    ,    "aligned  movdqu xmm load lat", 1);
+        maker.template make<vector_load_load_lat_vmovdqu_0_xmm  >( "vmovdqu-aligned"    ,    "aligned vmovdqu xmm load lat", 1);
+        maker.template make<  vector_load_load_lat_lddqu_0_xmm  >(   "lddqu-aligned"    ,    "aligned   lddqu xmm load lat", 1);
+        maker.template make< vector_load_load_lat_vlddqu_0_xmm  >(  "vlddqu-aligned"    ,    "aligned  vlddqu xmm load lat", 1);
+        maker.template make<vector_load_load_lat_vmovdqu_0_ymm  >( "vmovdqu-aligned-ymm",    "aligned vmovdqu ymm load lat", 1);
+        m512 .template make<vector_load_load_lat_vmovdqu32_0_zmm>( "vmovdqu-aligned-zmm",    "aligned vmovdqu zmm load lat", 1);
 
-            default_maker::template make_bench< vector_load_load_lat_movdqu_63>(vector_group.get(),  "movdqu-misaligned",  "misaligned  movdqu load lat", 1, []{ return nullptr; }, 100000),
-            default_maker::template make_bench<vector_load_load_lat_vmovdqu_63>(vector_group.get(), "vmovdqu-misaligned", "misaligned vmovdqu load lat", 1, []{ return nullptr; }, 100000),
-            default_maker::template make_bench<  vector_load_load_lat_lddqu_63>(vector_group.get(),   "lddqu-misaligned",   "misaligned   lddqu load lat", 1, []{ return nullptr; }, 100000),
-            default_maker::template make_bench< vector_load_load_lat_vlddqu_63>(vector_group.get(),  "vlddqu-misaligned",  "misaligned  vlddqu load lat", 1, []{ return nullptr; }, 100000),
-
-        };
-
-        vector_group->add(benches);
-        list.push_back(vector_group);
+        maker.template make< vector_load_load_lat_movdqu_63_xmm   >( "movdqu-misaligned"    , "misaligned  movdqu xmm load lat", 1);
+        maker.template make<vector_load_load_lat_vmovdqu_63_xmm   >("vmovdqu-misaligned"    , "misaligned vmovdqu xmm load lat", 1);
+        maker.template make<  vector_load_load_lat_lddqu_63_xmm   >(  "lddqu-misaligned"    , "misaligned   lddqu xmm load lat", 1);
+        maker.template make< vector_load_load_lat_vlddqu_63_xmm   >( "vlddqu-misaligned"    , "misaligned  vlddqu xmm load lat", 1);
+        maker.template make<vector_load_load_lat_vmovdqu_63_ymm   >("vmovdqu-misaligned-ymm", "misaligned vmovdqu ymm load lat", 1);
+        m512 .template make<vector_load_load_lat_vmovdqu32_63_zmm>("vmovdqu-misaligned-zmm", "misaligned vmovdqu zmm load lat", 1);
     }
 
 #endif // #if !UARCH_BENCH_PORTABLE

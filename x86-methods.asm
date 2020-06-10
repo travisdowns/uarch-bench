@@ -2736,8 +2736,11 @@ dec     rdi
 jnz     .top
 ret
 
-%macro vector_load_load_lat 2
-define_bench vector_load_load_lat_%1_%2
+; %1 load instruction
+; %2 offset relative to 64-byte boundary
+; %3 (default: xmm) register to load into
+%macro vector_load_load_lat 2-3 xmm
+define_bench vector_load_load_lat_%1_%2_%3
 push    rbp
 vzeroupper
 mov     rbp, rsp
@@ -2750,8 +2753,8 @@ vmovdqu [rsp + 32], ymm0
 vmovdqu [rsp + 64], ymm0
 vmovdqu [rsp + 96], ymm0
 .top:
-%1      xmm0, [rsp + rax + %2] ; 6 cycles
-vmovq   rax, xmm0         ; 2 cycles
+%1      %{3}0, [rsp + rax + %2]   ; 6 cycles
+vmovq   rax, xmm0                 ; 2 cycles
 dec     rdi
 jnz     .top
 mov     rsp, rbp
@@ -2759,15 +2762,18 @@ pop     rbp
 ret
 %endmacro
 
-vector_load_load_lat   movdqu,  0
-vector_load_load_lat   vmovdqu, 0
-vector_load_load_lat   lddqu,   0
-vector_load_load_lat   vlddqu,  0
-vector_load_load_lat   movdqu,  63
-vector_load_load_lat   vmovdqu, 63
-vector_load_load_lat   lddqu,   63
-vector_load_load_lat   vlddqu,  63
-
+vector_load_load_lat movdqu   ,  0
+vector_load_load_lat vmovdqu  ,  0
+vector_load_load_lat vmovdqu  ,  0, ymm
+vector_load_load_lat vmovdqu32,  0, zmm
+vector_load_load_lat lddqu    ,  0
+vector_load_load_lat vlddqu   ,  0
+vector_load_load_lat movdqu   , 63
+vector_load_load_lat vmovdqu  , 63
+vector_load_load_lat vmovdqu  , 63, ymm
+vector_load_load_lat vmovdqu32, 63, zmm
+vector_load_load_lat lddqu    , 63
+vector_load_load_lat vlddqu   , 63
 
 
 
