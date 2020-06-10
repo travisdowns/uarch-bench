@@ -41,9 +41,6 @@ align 64
     pop_callee_saved
     ret
 
-
-
-
 %macro fw_define_start 1
 define_bench %1
     push rbp
@@ -116,3 +113,66 @@ fw_define_start fw_write_split_read_both
     vmovq    xmm0, rax
 %endrep
 fw_define_end
+
+
+; write a null NT line then one extra
+;
+; %1 size of store in bytes
+; %2 full instruction to use
+; %3 0 or 1
+;    0: normal full line write
+;    1: extra write per line
+%macro define_nt_extra 3
+%assign BITSIZE (%1 * 8)
+%if %3 == 0
+define_bench nt_normal_ %+ BITSIZE
+%else
+define_bench nt_extra_ %+ BITSIZE
+%endif
+
+mov     rdx, [rsi + region.size]
+mov     rsi, [rsi + region.start]
+
+xor         eax, eax
+mov         r8, -1
+vpcmpeqd    ymm0, ymm0, ymm0
+
+.top:
+mov     rax, rdx
+mov     rcx, rsi
+
+.inner:
+%assign offset 0
+%rep (64 / %1)
+%2
+%assign offset (offset + %1)
+%endrep
+
+%if %3 != 0
+%assign offset 0
+%rep 5
+%2
+%assign offset ((offset + %1) % 64)
+%endrep
+%endif
+
+%undef offset ; needed to prevent offset from being expanded wrongly in the macro invocations below
+add     rcx, 64
+sub     rax, 64
+jge      .inner
+
+dec rdi
+jnz .top
+ret
+%endmacro
+
+%macro define_nt_both 2
+define_nt_extra %1, {%2}, 0
+define_nt_extra %1, {%2}, 1
+%endmacro
+
+define_nt_both  4, {movnti   [rcx + offset],  r8d}
+define_nt_both  8, {movnti   [rcx + offset],  r8 }
+define_nt_both 16, {vmovntdq [rcx + offset], xmm0}
+define_nt_both 32, {vmovntdq [rcx + offset], ymm0}
+define_nt_both 64, {vmovntdq [rcx + offset], zmm0}

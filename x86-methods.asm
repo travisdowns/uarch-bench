@@ -1387,16 +1387,19 @@ ret
 ; %1 size of store in bytes
 ; %2 full instruction to use
 ; %3 prefix for benchmark name
-%macro define_bandwidth 3
-%assign BITSIZE (%1*8)
+%macro define_bandwidth 3-4
+%if %0 == 3
+    %assign BITSIZE (%1 * 8)
+%else
+    %assign BITSIZE (%4 * 8)
+%endif
 define_bench %3_bandwidth_ %+ BITSIZE
 mov     rdx, [rsi + region.size]
 mov     rsi, [rsi + region.start]
 
-xor     eax, eax
-mov     r8, 0
-;vpcmpeqd   ymm0, ymm0, ymm0
-vpxor   ymm0, ymm0, ymm0
+xor         eax, eax
+mov         r8, -1
+vpcmpeqd    ymm0, ymm0, ymm0
 
 .top:
 mov     rax, rdx
@@ -1418,11 +1421,25 @@ jnz .top
 ret
 %endmacro
 
-define_bandwidth  4,{mov      [rcx + offset], r8d},store
-define_bandwidth  8,{mov      [rcx + offset], r8 },store
-define_bandwidth 16,{vmovdqa  [rcx + offset],xmm0},store
-define_bandwidth 32,{vmovdqa  [rcx + offset],ymm0},store
-define_bandwidth 64,{vmovdqa64[rcx + offset],zmm0},store
+define_bandwidth  4,{mov       [rcx + offset], r8d},store
+define_bandwidth  8,{mov       [rcx + offset], r8 },store
+define_bandwidth 16,{vmovdqa   [rcx + offset],xmm0},store
+define_bandwidth 32,{vmovdqa   [rcx + offset],ymm0},store
+define_bandwidth 64,{vmovdqa64 [rcx + offset],zmm0},store
+
+define_bandwidth  4,{movnti   [rcx + offset], r8d},nt_store
+define_bandwidth  8,{movnti   [rcx + offset], r8 },nt_store
+define_bandwidth 16,{vmovntdq [rcx + offset],xmm0},nt_store
+define_bandwidth 32,{vmovntdq [rcx + offset],ymm0},nt_store
+define_bandwidth 64,{vmovntdq [rcx + offset],zmm0},nt_store
+
+; store only a parital line, by calling with macro with a 2x larger
+; size than the store's true size, meaning only every other element
+; is written
+define_bandwidth  8,{movnti   [rcx + offset], r8d},nt_store_partial,4
+define_bandwidth 16,{movnti   [rcx + offset], r8 },nt_store_partial,8
+define_bandwidth 32,{vmovntdq [rcx + offset],xmm0},nt_store_partial,16
+define_bandwidth 64,{vmovntdq [rcx + offset],ymm0},nt_store_partial,32
 
 define_bandwidth  4,{mov        r8d, [rcx + offset]},load
 define_bandwidth  8,{mov        r8 , [rcx + offset]},load
