@@ -120,7 +120,8 @@ uarch-bench: $(OBJECTS) $(EXTRA_DEPS)
 	@wc -c uarch-bench | awk '{print "binary size: " $$1/1000 "KB"}'
 	@size uarch-bench --format=SysV | egrep '\.text|\.eh_frame|\.rodata|\.debug_info|\.debug_loc|^section'
 
-util/seqtest: util/seqtest.o libpfc/libpfc.so $(PFM_LIBDIR)/libpfm.so
+util/seqtest: util/seqtest.o $(JEVENTS_LIB)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -std=c++11 $^ -o $@
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c -std=c11 -o $@ $<
