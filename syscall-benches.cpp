@@ -2,9 +2,10 @@
  * Test syscall/sysenter etc overhead.
  */
 
-#include <unistd.h>
+#include <sched.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
+#include <unistd.h>
 
 #include "benchmark.hpp"
 #include "util.hpp"
@@ -62,6 +63,23 @@ long notexist_syscall(uint64_t iters, void *arg) {
     return 0;
 }
 
+long getcpu_syscall(uint64_t iters, void *arg) {
+    unsigned cpu, total = 0;
+    while (iters-- > 0) {
+        // may be implemented in vDSO
+        total += getcpu(&cpu, nullptr);
+    }
+    return total;
+}
+
+long call_sched_getcpu(uint64_t iters, void *arg) {
+    unsigned cpu, total = 0;
+    while (iters-- > 0) {
+        total += sched_getcpu();
+    }
+    return total;
+}
+
 #define BUFSIZE (1u << 25)
 
 template <typename TIMER>
@@ -75,8 +93,11 @@ void register_syscall(GroupList& list) {
         maker.template make<getuid_glibc>             ("getuid-glibc",     "getuid() glibc call",           1);
         maker.template make<getuid_syscall>           ("getuid-syscall",   "getuid using syscall()",        1);
         maker.template make<getpid_syscall>           ("getpid-syscall",   "getpid using syscall()",        1);
-        maker.template make<close999>                 ("close-999",         "close() on a non-existent FD", 1);
+        maker.template make<close999>                 ("close-999",        "close() on a non-existent FD", 1);
+        maker.template make<getcpu_syscall>           ("getcpu-syscall",   "getcpu syscall (maybe VDSO)",   1);
         maker.template make<notexist_syscall>         ("notexist-syscall", "non-existent syscall",          1);
+        maker.template make<call_sched_getcpu>        ("sched_getcpu",     "sched_getcpu",                  1);
+
 #if !UARCH_BENCH_PORTABLE
         maker.template make<syscall_asm>              ("getuid-asm",       "getuid direct syscall",         1, constant<SYS_getuid>);
         maker.template make<syscall_asm>              ("notexist-asm",     "non-existent direct syscall",   1, constant<123456>);
