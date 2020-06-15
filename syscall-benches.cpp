@@ -63,6 +63,11 @@ long notexist_syscall(uint64_t iters, void *arg) {
     return 0;
 }
 
+// courtesy of https://stackoverflow.com/questions/35944030
+// lets this compiled with a dummy getcpu if it doesn't exist
+template<typename T>
+int getcpu(T, const void*) { return 0; }
+
 long getcpu_syscall(uint64_t iters, void *arg) {
     unsigned cpu, total = 0;
     while (iters-- > 0) {
@@ -73,7 +78,7 @@ long getcpu_syscall(uint64_t iters, void *arg) {
 }
 
 long call_sched_getcpu(uint64_t iters, void *arg) {
-    unsigned cpu, total = 0;
+    unsigned total = 0;
     while (iters-- > 0) {
         total += sched_getcpu();
     }
