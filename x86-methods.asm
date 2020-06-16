@@ -612,6 +612,23 @@ pop rbp
 ret
 
 
+; repeated inc [eax]
+define_bench inc_rmw
+xor eax, eax
+.top:
+times 128 inc DWORD [rsp - 4]
+dec rdi
+jnz .top
+ret
+
+; repeated add [eax], 1
+define_bench add_rmw
+xor eax, eax
+.top:
+times 128 add DWORD [rsp - 4], 1
+dec rdi
+jnz .top
+ret
 
 ; a series of stores to the same location
 define_bench store_same_loc

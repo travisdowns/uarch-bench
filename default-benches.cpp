@@ -19,6 +19,8 @@ bench2_f dep_pushpop;
 bench2_f indep_pushpop;
 bench2_f div_64_64;
 bench2_f idiv_64_64;
+bench2_f inc_rmw;
+bench2_f add_rmw;
 
 bench2_f nop1_128;
 bench2_f nop2_128;
@@ -60,6 +62,8 @@ void register_default(GroupList& list) {
     maker.template make<indep_pushpop>    ("indep-push-pop", "Independent push/pop chain",  128);
     maker.template make<div_64_64>        ("64-bit div", "64-bit dependent div 1/1 = 1",  128);
     maker.template make<idiv_64_64>       ("64-bit idiv","64-bit dependent idiv 1/1 = 1",  128);
+    maker.template make<inc_rmw>          ("inc-rmw", "same location inc [mem]",  128);
+    maker.template make<add_rmw>          ("add-rmw", "same location add [mem], 1",  128);
 
     // tests to test the maximum CPU width for a variety of easy instruction mixes
     maker.template make<nop1_128> ("1-byte nops",  "128 consecutive 1-byte nops",  128);
