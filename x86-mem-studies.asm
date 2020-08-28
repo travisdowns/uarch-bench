@@ -48,7 +48,8 @@ define_bench %1
     and rsp, -64
     sub rsp, 64
 
-    mov rcx, rsp
+    lea rcx, [rsp + 10]
+    sub rcx, 10
     mov eax, 1
     vpcmpeqd xmm0, xmm0, xmm0
     jmp .top
@@ -76,6 +77,13 @@ fw_define_start fw_write_read_rcx
 %rep 100
     mov [rcx], rax
     mov rax, [rcx]
+%endrep
+fw_define_end
+
+fw_define_start fw_write_read_rcx4
+%rep 100
+    mov [rcx], rax
+    times 4 mov rax, [rcx]
 %endrep
 fw_define_end
 

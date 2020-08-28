@@ -16,6 +16,7 @@ bench2_f replay_crossing;
 
 bench2_f fw_write_read;
 bench2_f fw_write_read_rcx;
+bench2_f fw_write_read_rcx4;
 bench2_f fw_write_readx;
 bench2_f fw_split_write_read;
 bench2_f fw_split_write_read_chained;
@@ -71,6 +72,7 @@ void register_mem_studies(GroupList& list) {
 #define DEF_FW(name) maker.template make<name>(#name, #name, 100);
         DEF_FW(fw_write_read);
         DEF_FW(fw_write_read_rcx);
+        DEF_FW(fw_write_read_rcx4);
         DEF_FW(fw_write_readx);
         DEF_FW(fw_split_write_read);
         DEF_FW(fw_split_write_read_chained);
