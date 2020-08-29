@@ -80,10 +80,27 @@ fw_define_start fw_write_read_rcx
 %endrep
 fw_define_end
 
-fw_define_start fw_write_read_rcx4
+; %1 the number of reads following the write
+%macro define_fw_write_read_rcxX 1
+fw_define_start fw_write_read_rcx%1
 %rep 100
     mov [rcx], rax
-    times 4 mov rax, [rcx]
+    times %1 mov rax, [rcx]
+%endrep
+fw_define_end
+%endmacro
+
+define_fw_write_read_rcxX 2
+define_fw_write_read_rcxX 3
+define_fw_write_read_rcxX 4
+define_fw_write_read_rcxX 5
+
+
+
+fw_define_start fw_write_read_rcx4s
+%rep 100
+    times 4 mov [rcx], rax
+    mov rax, [rcx]
 %endrep
 fw_define_end
 
