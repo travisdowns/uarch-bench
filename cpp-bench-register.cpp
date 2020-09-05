@@ -28,11 +28,24 @@ template <bench2_f F, typename M>
 void make_strided_stores(M& maker, size_t data_size) {
     std::string prefix = std::to_string(data_size * 8);
     mem_args samelocargs{(char *)aligned_ptr(64, 1024), 0, 0};
-    maker.  setLoopCount(10000).
+    mem_args crossingargs{(char *)aligned_ptr(64, 1024) + 63, 0, 0};
+
+    // aligned same-location stores
+    maker.setLoopCount(10000).
                         template make<F>(prefix + "-sameloc-stores",
                         string_format("%2zu bit stores to same location          ", data_size * 8),
                         1,
                         [=]{ return new mem_args(samelocargs); });
+
+    // cache line split same-location stores (except byte stores, which never cross)
+    if (data_size != 1) {
+        maker.setLoopCount(10000).
+                            template make<F>(prefix + "-sameloc-split-stores",
+                            string_format("%2zu bit cl split stores to same location ", data_size * 8),
+                            1,
+                            [=]{ return new mem_args(crossingargs); });
+    }
+
     for (size_t stride : {1, 2, 4, 8, 16, 32, 64, 128}) {
         for (size_t kib : {4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048}) {
             size_t region_bytes = kib * 1024;
