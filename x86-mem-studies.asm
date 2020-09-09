@@ -46,7 +46,7 @@ define_bench %1
     push rbp
     mov  rbp, rsp
     and rsp, -64
-    sub rsp, 64
+    sub rsp, 128
 
     lea rcx, [rsp + 10]
     sub rcx, 10
@@ -70,6 +70,14 @@ fw_define_start fw_write_read
 %rep 100
     mov [rsp], rax
     mov rax, [rsp]
+%endrep
+fw_define_end
+
+; a fully aligned forward, but which splits a cache line
+fw_define_start fw_write_read_cl_split
+%rep 100
+    mov [rsp + 63], rax
+    mov rax, [rsp + 63]
 %endrep
 fw_define_end
 

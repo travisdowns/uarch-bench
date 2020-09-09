@@ -15,6 +15,7 @@ extern "C" {
 bench2_f replay_crossing;
 
 bench2_f fw_write_read;
+bench2_f fw_write_read_cl_split;
 bench2_f fw_write_read_rcx;
 bench2_f fw_write_read_rcx2;
 bench2_f fw_write_read_rcx3;
@@ -73,8 +74,11 @@ void register_mem_studies(GroupList& list) {
         list.push_back(group);
         auto maker = DeltaMaker<TIMER>(group.get(), 10 * 1000);
 
-#define DEF_FW(name) maker.template make<name>(#name, #name, 100);
+#define DEF_FW2(fn, id, desc) maker.template make<fn>(id, desc, 100);
+#define DEF_FW(name)  DEF_FW2(name, #name, #name)
+
         DEF_FW(fw_write_read);
+        DEF_FW2(fw_write_read_cl_split, "fw_write_read_cl_split", "Cacheline split forwarding");
         DEF_FW(fw_write_read_rcx);
         DEF_FW(fw_write_read_rcx2);
         DEF_FW(fw_write_read_rcx3);
