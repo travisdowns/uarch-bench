@@ -44,10 +44,21 @@ static inline int64_t nanos() {
 void *new_huge_ptr(size_t size);
 
 /**
- * Return a pointer to a region of the of the given size and alignment. The same region is repeated REUSED.
+ * Return a pointer to a NEWLY ALLOCATED memory region of at least size, aligned to the given alignment.
+ *
+ * The returned pointer is freed by passing it to free().
+ */
+void *new_aligned_pointer(size_t size, size_t alignment);
+
+/**
+ * Return a pointer to a single static region of the of the given size and alignment.
+ * The same global region is REUSED for all calls to this function, so it is only appropriate
+ * for temporary use within a test.
  */
 void *aligned_ptr(size_t base_alignment, size_t required_size, bool set_zero = false);
 void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misalignment);
+
+
 
 /*
  * Given a printf-style format and args, return the formatted string as a std::string.

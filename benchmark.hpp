@@ -28,13 +28,37 @@
 #define NO_STACK_PROTECTOR
 #endif
 
+struct arg_provider_t {
+    std::function<void *()> maker;
+    std::function<void(void *)> deleter;
 
-typedef std::function<void *()> arg_provider_t;
+    void * make() const { return maker(); }
+    void free(void *arg) const { if (deleter) deleter(arg); }
+
+    template <typename M>
+    arg_provider_t(M maker) : maker{std::move(maker)} {}
+
+    template <typename M, typename D>
+    arg_provider_t(M maker, D deleter) : maker{std::move(maker)}, deleter{std::move(deleter)} {}
+};
 
 /** always provides the given value */
 arg_provider_t constant(void *value);
 
 extern const arg_provider_t null_provider;
+
+
+/**
+ * Create an arg provider that returns a poitner to a copy of the given object
+ * allocated on the heap, and whose deleter frees the object.
+ */
+template <typename T>
+arg_provider_t arg_object(T obj) {
+    return arg_provider_t{
+        [=](){ return static_cast<void *>(new T(obj)); },
+        [](void *p){ delete static_cast<T *>(p); },
+    };
+}
 
 /**
  * Empty bench2_f function that can be inlined, so it will generally be optimized away completely at
@@ -250,8 +274,10 @@ protected:
 protected:
 
     raw_result get_raw() {
-        void *arg = arg_provider();
-        return raw_func(loop_count, arg);
+        void *arg = arg_provider.make();
+        auto ret = raw_func(loop_count, arg);
+        arg_provider.free(arg);
+        return ret;
     }
 
     TimingResult handle_raw(const raw_result& raw, const TimerInfo& ti) {

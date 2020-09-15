@@ -147,8 +147,10 @@ public:
     }
 
     virtual void runAndPrintInner(Context& c) override {
-        void *arg = arg_provider();
+        void *arg = arg_provider.make();
         raw_result raw = raw_func(loop_count, arg);
+        arg_provider.free(arg);
+
         removeOverhead(c, raw);
         printHeader(c);
         for (int i = 0; i < samples; i++) {

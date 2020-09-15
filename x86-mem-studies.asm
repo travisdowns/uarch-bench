@@ -73,7 +73,7 @@ fw_define_start fw_write_read
 %endrep
 fw_define_end
 
-; a fully aligned forward, but which splits a cache line
+; an exactly overlapping forward, but which splits a cache line
 fw_define_start fw_write_read_cl_split
 %rep 100
     mov [rsp + 63], rax

@@ -79,6 +79,15 @@ void *storage_ptr = 0;
 volatile int zero = 0;
 bool storage_init = false;
 
+void *new_aligned_pointer(size_t size, size_t alignment) {
+    void *ptr;
+    int result = posix_memalign(&ptr, alignment, size);
+    if (result) {
+        throw std::runtime_error("posix_memalign failed");
+    }
+    return ptr;
+}
+
 void *new_huge_ptr(size_t size) {
     void *ptr;
     int result = posix_memalign(&ptr, TWO_MB, size + TWO_MB);
