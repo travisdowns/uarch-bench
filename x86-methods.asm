@@ -2877,19 +2877,38 @@ ud2
 
 ; parallel loads with large stride (across pages, defeating prefetcher)
 %macro parallel_miss_macro 1
-xor     edx, edx
+    xor     eax, eax
+    xor     edx, edx
+    push    0
+    jmp     .top
+    align 64
+
 .top:
-mov     eax, DWORD [rsi + rdx]
-%1
-add     rdx, STRIDE
-and     rdx, MASK
-dec     rdi
-jnz     .top
-ret
+    mov     eax, DWORD [rsi + rdx]
+    %1
+    add     rdx, STRIDE
+    and     rdx, MASK
+    dec     rdi
+    jnz     .top
+
+    pop     rax
+    ret
 %endmacro
 
 define_bench parallel_misses
 parallel_miss_macro nop
+
+define_bench add_misses
+parallel_miss_macro {add [rsp], rax}
+
+define_bench lockadd_misses
+parallel_miss_macro {lock add [rsp], rax}
+
+define_bench xadd_misses
+parallel_miss_macro {xadd [rsp], rax}
+
+define_bench lockxadd_misses
+parallel_miss_macro {lock xadd [rsp], rax}
 
 define_bench lfenced_misses
 parallel_miss_macro lfence

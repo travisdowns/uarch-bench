@@ -38,6 +38,16 @@ bench2_f nt_extra_32;
 bench2_f nt_extra_64;
 bench2_f nt_extra_128;
 bench2_f nt_extra_256;
+
+bench2_f parallel_misses;
+bench2_f add_misses;
+bench2_f lockadd_misses;
+bench2_f xadd_misses;
+bench2_f lockxadd_misses;
+bench2_f lfenced_misses;
+bench2_f mfenced_misses;
+bench2_f sfenced_misses;
+
 }
 
 template <bench2_f F, typename M>
@@ -93,7 +103,6 @@ void register_mem_studies(GroupList& list) {
     }
 
     // nt stores
-
     {
         std::shared_ptr<BenchmarkGroup> group =
                 std::make_shared<BenchmarkGroup>("studies/nt-stores", "NT stores");
@@ -117,6 +126,30 @@ void register_mem_studies(GroupList& list) {
         MAKE_NT(64)
         MAKE_NT(128)
         MAKE_NT(256)
+    }
+
+
+    {
+        // determine the effect of fencing and LOCKed instructions on load misses
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/fencing", "Fencing benches");
+        list.push_back(group);
+
+        constexpr size_t BUFSIZE = (1u << 25);
+
+        auto aligned_buf = [](){ return aligned_ptr(4096, BUFSIZE); };
+        auto maker = DeltaMaker<TIMER>(group.get()).setLoopCount(BUFSIZE / UB_CACHE_LINE_SIZE).setTags({"slow"});
+
+#define MAKE_FENCE(name) maker.template make<name>(#name, #name, 1, aligned_buf);
+
+        MAKE_FENCE(parallel_misses)
+        MAKE_FENCE(add_misses)
+        MAKE_FENCE(lockadd_misses)
+        MAKE_FENCE(xadd_misses)
+        MAKE_FENCE(lockxadd_misses)
+        MAKE_FENCE(mfenced_misses)
+        MAKE_FENCE(sfenced_misses)
+        MAKE_FENCE(lfenced_misses)
+
     }
 
 #endif  // #if !UARCH_BENCH_PORTABLE
