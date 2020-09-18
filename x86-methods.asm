@@ -2876,16 +2876,17 @@ ud2
 %define MASK   (SIZE - 1)
 
 ; parallel loads with large stride (across pages, defeating prefetcher)
-%macro parallel_miss_macro 1
+%macro parallel_miss_macro_full 2
     xor     eax, eax
+    mov     ecx, 1
     xor     edx, edx
     push    0
     jmp     .top
     align 64
 
 .top:
-    mov     eax, DWORD [rsi + rdx]
     %1
+    %2
     add     rdx, STRIDE
     and     rdx, MASK
     dec     rdi
@@ -2895,29 +2896,57 @@ ud2
     ret
 %endmacro
 
-define_bench parallel_misses
-parallel_miss_macro nop
+%macro define_parallel_load_miss 1
+parallel_miss_macro_full {mov ecx, DWORD [rsi + rdx]},{%1}
+%endmacro
 
-define_bench add_misses
-parallel_miss_macro {add [rsp], rax}
+%macro define_parallel_store_miss 1
+parallel_miss_macro_full {mov DWORD [rsi + rdx], ecx},{%1}
+%endmacro
 
-define_bench lockadd_misses
-parallel_miss_macro {lock add [rsp], rax}
+; %1 bench name, benches will be named 'name' and 'name_store'
+; %2 payload instruction
+%macro define_parallel_both_miss 2
+define_bench %1
+define_parallel_load_miss {%2}
 
-define_bench xadd_misses
-parallel_miss_macro {xadd [rsp], rax}
+define_bench %1_store
+define_parallel_store_miss {%2}
+%endmacro
 
-define_bench lockxadd_misses
-parallel_miss_macro {lock xadd [rsp], rax}
+; interleaved benches, which interleave vanilla load misses with
+; a payload instruction
+define_parallel_both_miss parallel_misses,nop
 
-define_bench lfenced_misses
-parallel_miss_macro lfence
+define_parallel_both_miss add_misses,{add [rsp], rax}
 
-define_bench mfenced_misses
-parallel_miss_macro mfence
+define_parallel_both_miss lockadd_misses,{lock add [rsp], rax}
 
-define_bench sfenced_misses
-parallel_miss_macro sfence
+define_parallel_both_miss xadd_misses,{xadd [rsp], rax}
+
+define_parallel_both_miss lockxadd_misses,{lock xadd [rsp], rax}
+
+define_parallel_both_miss lfenced_misses,lfence
+
+define_parallel_both_miss mfenced_misses,mfence
+
+define_parallel_both_miss sfenced_misses,sfence
+
+define_parallel_both_miss sfenced_misses2x,{times 2 sfence}
+
+; solo benches, with only a single op for every location
+define_bench add_fencesolo
+parallel_miss_macro_full {add [rsi + rdx], rax},{}
+
+define_bench lockadd_fencesolo
+parallel_miss_macro_full {lock add [rsi + rdx], rax},{}
+
+define_bench xadd_fencesolo
+parallel_miss_macro_full {xadd [rsi + rdx], rax},{}
+
+define_bench lockxadd_fencesolo
+parallel_miss_macro_full {lock xadd [rsi + rdx], rax},{}
+
 
 %macro syscall_123456 0
 mov     eax, 123456
@@ -2925,7 +2954,7 @@ syscall
 %endmacro
 
 define_bench syscall_misses
-parallel_miss_macro syscall_123456
+define_parallel_load_miss syscall_123456
 
 %macro syscall_123456_lfence 0
 lfence
@@ -2933,8 +2962,7 @@ syscall_123456
 %endmacro
 
 define_bench syscall_misses_lfence
-parallel_miss_macro syscall_123456_lfence
-
+define_parallel_load_miss syscall_123456_lfence
 
 ud2
 

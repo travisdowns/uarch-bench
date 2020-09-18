@@ -47,6 +47,22 @@ bench2_f lockxadd_misses;
 bench2_f lfenced_misses;
 bench2_f mfenced_misses;
 bench2_f sfenced_misses;
+bench2_f sfenced_misses2x;
+
+bench2_f parallel_misses_store;
+bench2_f add_misses_store;
+bench2_f lockadd_misses_store;
+bench2_f xadd_misses_store;
+bench2_f lockxadd_misses_store;
+bench2_f lfenced_misses_store;
+bench2_f mfenced_misses_store;
+bench2_f sfenced_misses_store;
+bench2_f sfenced_misses2x_store;
+
+bench2_f add_fencesolo;
+bench2_f lockadd_fencesolo;
+bench2_f xadd_fencesolo;
+bench2_f lockxadd_fencesolo;
 
 }
 
@@ -139,16 +155,28 @@ void register_mem_studies(GroupList& list) {
         auto aligned_buf = [](){ return aligned_ptr(4096, BUFSIZE); };
         auto maker = DeltaMaker<TIMER>(group.get()).setLoopCount(BUFSIZE / UB_CACHE_LINE_SIZE).setTags({"slow"});
 
-#define MAKE_FENCE(name) maker.template make<name>(#name, #name, 1, aligned_buf);
+#define MAKE_INTERLEAVED(name,op) \
+        maker.template make<name>(#name, "Interleaved load  misses and " #op, 1, aligned_buf); \
+        maker.template make<name##_store>(#name "_store", "Interleaved store misses and " #op, 1, aligned_buf); \
 
-        MAKE_FENCE(parallel_misses)
-        MAKE_FENCE(add_misses)
-        MAKE_FENCE(lockadd_misses)
-        MAKE_FENCE(xadd_misses)
-        MAKE_FENCE(lockxadd_misses)
-        MAKE_FENCE(mfenced_misses)
-        MAKE_FENCE(sfenced_misses)
-        MAKE_FENCE(lfenced_misses)
+        // these interleave a vanilla miss with the payload instruction (which doesn't miss)
+        MAKE_INTERLEAVED(parallel_misses , nop);
+        MAKE_INTERLEAVED(add_misses      , add);
+        MAKE_INTERLEAVED(lockadd_misses  , lock add);
+        MAKE_INTERLEAVED(xadd_misses     , xadd);
+        MAKE_INTERLEAVED(lockxadd_misses , lock xadd);
+        MAKE_INTERLEAVED(mfenced_misses  , mfence);
+        MAKE_INTERLEAVED(lfenced_misses  , lfence);
+        MAKE_INTERLEAVED(sfenced_misses  , sfence);
+        MAKE_INTERLEAVED(sfenced_misses2x, 2x sfence);
+
+#define MAKE_SOLO(name,op) maker.template make<name>(#name, "Solo " #op " that miss", 1, aligned_buf)
+
+
+        MAKE_SOLO(add_fencesolo, adds);
+        MAKE_SOLO(lockadd_fencesolo, lock adds);
+        MAKE_SOLO(xadd_fencesolo, xadds);
+        MAKE_SOLO(lockxadd_fencesolo, lock xadds);
 
     }
 
