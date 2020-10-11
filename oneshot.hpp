@@ -90,21 +90,11 @@ private:
     using raw_result = typename ALGO::raw_result;
     using raw_f      = typename ALGO::raw_f;
 
-
-//    using baseline   = typename TIMER::delta_t;
-//    using baseline_f = void (*)(uint32_t, void*);
-
     uint32_t loop_count;
     raw_f raw_func;
     void*  func_addr;
     arg_provider_t arg_provider;
     overhead_f overhead_func;
-
-    /*
-     * If true, we try to subtract out the measurement overhead by subtracting from the measured metric
-     * values the same metric from an empty benchmark.
-     */
-//    bool remove_overhead;
 
 public:
 
