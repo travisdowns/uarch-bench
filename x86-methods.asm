@@ -2876,7 +2876,7 @@ ud2
 %define MASK   (SIZE - 1)
 
 ; parallel loads with large stride (across pages, defeating prefetcher)
-%macro parallel_miss_macro_full 2
+%macro parallel_miss_macro_full 2-3 {}
     xor     eax, eax
     mov     ecx, 1
     xor     edx, edx
@@ -2887,6 +2887,7 @@ ud2
 .top:
     %1
     %2
+    %3
     add     rdx, STRIDE
     and     rdx, MASK
     dec     rdi
@@ -2896,22 +2897,22 @@ ud2
     ret
 %endmacro
 
-%macro define_parallel_load_miss 1
-parallel_miss_macro_full {mov ecx, DWORD [rsi + rdx]},{%1}
+%macro define_parallel_load_miss 1-2 {}
+parallel_miss_macro_full {mov ecx, DWORD [rsi + rdx]},{%1},{%2}
 %endmacro
 
-%macro define_parallel_store_miss 1
-parallel_miss_macro_full {mov DWORD [rsi + rdx], ecx},{%1}
+%macro define_parallel_store_miss 1-2 {}
+parallel_miss_macro_full {mov DWORD [rsi + rdx], ecx},{%1},{%2}
 %endmacro
 
 ; %1 bench name, benches will be named 'name' and 'name_store'
 ; %2 payload instruction
-%macro define_parallel_both_miss 2
+%macro define_parallel_both_miss 2-3 {}
 define_bench %1
-define_parallel_load_miss {%2}
+define_parallel_load_miss {%2},{%3}
 
 define_bench %1_store
-define_parallel_store_miss {%2}
+define_parallel_store_miss {%2},{%3}
 %endmacro
 
 ; interleaved benches, which interleave vanilla load misses with
@@ -2933,6 +2934,8 @@ define_parallel_both_miss mfenced_misses,mfence
 define_parallel_both_miss sfenced_misses,sfence
 
 define_parallel_both_miss sfenced_misses2x,{times 2 sfence}
+
+define_parallel_both_miss sfence_lfence_misses,sfence,lfence
 
 ; solo benches, with only a single op for every location
 define_bench add_fencesolo

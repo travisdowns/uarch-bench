@@ -48,6 +48,7 @@ bench2_f lfenced_misses;
 bench2_f mfenced_misses;
 bench2_f sfenced_misses;
 bench2_f sfenced_misses2x;
+bench2_f sfence_lfence_misses;
 
 bench2_f parallel_misses_store;
 bench2_f add_misses_store;
@@ -58,6 +59,7 @@ bench2_f lfenced_misses_store;
 bench2_f mfenced_misses_store;
 bench2_f sfenced_misses_store;
 bench2_f sfenced_misses2x_store;
+bench2_f sfence_lfence_misses_store;
 
 bench2_f add_fencesolo;
 bench2_f lockadd_fencesolo;
@@ -169,6 +171,8 @@ void register_mem_studies(GroupList& list) {
         MAKE_INTERLEAVED(lfenced_misses  , lfence);
         MAKE_INTERLEAVED(sfenced_misses  , sfence);
         MAKE_INTERLEAVED(sfenced_misses2x, 2x sfence);
+        MAKE_INTERLEAVED(sfence_lfence_misses, s & lfence);
+
 
 #define MAKE_SOLO(name,op) maker.template make<name>(#name, "Solo " #op " that miss", 1, aligned_buf)
 
