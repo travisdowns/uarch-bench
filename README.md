@@ -10,22 +10,22 @@ A fine-grained micro-benchmark intended to investigate micro-architectural detai
 
 ## Purpose
 
-The uarch-bench project is a collection of micro-benchmarks that try to stress certain microarchitectural features of modern CPUs and a framework for writing such benchmarks. Using [libpfc](https://github.com/obilaniu/libpfc) you can accurately track the value of Intel performance counters across the benchmarked region - often with precision of a single cycle.
+The uarch-bench project is a collection of micro-benchmarks that try to stress certain micro-architectural features of modern CPUs and a framework for writing such benchmarks. Using [libpfc](https://github.com/obilaniu/libpfc) you can accurately track the value of Intel performance counters across the benchmarked region - often with precision of a single cycle.
 
-At the moment it supports only x86, using mosty assembly and a few C++ benchmarks. In the future, I'd like to have more C or C++ benchmarks, allowing coverage (in prinicple) of more platforms (non-x86 assembly level benchmarks are also welcome). Of course, for any non-asm benchmark, it is possible that the compiler makes a transformation that invalidates the intent of the benchmark. You could detect this as a large difference between the C/C++ and asm scores.
+At the moment it supports only x86, using mostly assembly and a few C++ benchmarks. In the future, I'd like to have more C or C++ benchmarks, allowing coverage (in principle) of more platforms (non-x86 assembly level benchmarks are also welcome). Of course, for any non-asm benchmark, it is possible that the compiler makes a transformation that invalidates the intent of the benchmark. You could detect this as a large difference between the C/C++ and assembly scores.
 
-Of course, these have all the pitfalls of any microbenchmark and are not really intended to be a simple measure of the overall 
+Of course, these have all the pitfalls of any microbenchmark and are not really intended to be a simple measure of the overall
 performance of any CPU architecture. Rather they are mostly useful to:
 
-1. Suss out changes between architectures. Often there are changes to particular microarchitectural feature that can be exposed 
-via benchmarks of specific features. For example, you might be able to understand something about the behavior of the store buffer based on tests that excercise store-to-load forwarding. 
-2. Understand low-level performance of various approaches to guide implemenation of highly-tuned algorithms. For the vast
+1. Suss out changes between architectures. Often there are changes to particular micro-architectural feature that can be exposed
+via benchmarks of specific features. For example, you might be able to understand something about the behavior of the store buffer based on tests that exercise store-to-load forwarding.
+2. Understand low-level performance of various approaches to guide implementation of highly-tuned algorithms. For the vast
 majority of typical development tasks, the very low level information provided by these benches is essentially useless in
 providing any guidance about performance. For some very specific tasks, such as highly-tuned C or C++ methods or hand-written
 assembly, it might be useful to characterize the performance of, for example, the relative costs of aligned and unaligned accesses, or whatever.
 3. Satisfy curiosity for those who care about this stuff and to collect the results from various architectures.
-4. Provide a simple, standard way to quickly do one-off tests of some small assembly or C/C++ level idioms. Often the 
-test itself is a few lines of code, but the cost is in all the infrastructure: implementing the timing code, converting measurements to cycles, removing outliers, running the tests for various parameters, reporting the results, whatever. This 
+4. Provide a simple, standard way to quickly do one-off tests of some small assembly or C/C++ level idioms. Often the
+test itself is a few lines of code, but the cost is in all the infrastructure: implementing the timing code, converting measurements to cycles, removing outliers, running the tests for various parameters, reporting the results, whatever. This
 project aims to implement that infrastructure and make it easy to add your own tests (not complete!).
 
 
@@ -36,21 +36,21 @@ and one could even imagine a world with [OSX support](https://github.com/travisd
 
 ## Prerequisites
 
-You need some C++ compiler like `g++` or `clang++`, but if you are interested in this project, you probably already have that. Beyond that, you need `nasm` and perhaps `msr-tools` on Intel platforms (used to as a backup method to disable turbo-boost if you aren't using `intel_pstate` driver). On Debian-like systems, this should do it: 
+You need some C++ compiler like `g++` or `clang++`, but if you are interested in this project, you probably already have that. Beyond that, you need `nasm` and perhaps `msr-tools` on Intel platforms (used to as a backup method to disable turbo-boost if you aren't using `intel_pstate` driver). On Debian-like systems, this should do it:
 
     sudo apt-get install nasm
     sudo apt-get install msr-tools
 
 ### NASM
 
-The minimum required version of nasm is 2.12, for AVX-512 support (stricly speaking, some later version of nasm 2.11, e.g., nasm-2.11.08 also work). If you don't have nasm installed, a suitable version (on Linux) is used automatically from the included `/nasm-binaries` directory.
+The minimum required version of nasm is 2.12, for AVX-512 support (strictly speaking, some later version of nasm 2.11, e.g., nasm-2.11.08 also work). If you don't have nasm installed, a suitable version (on Linux) is used automatically from the included `/nasm-binaries` directory.
 
 ## Building
 
 This project has submodules, so it is best cloned with the `--recursive` flag to pull all the submodules as well:
 
     git clone --recursive https://github.com/travisdowns/uarch-bench
-    
+
 If you've already cloned it without `--recursive`, this should pull in the submodules:
 
     git submodule update --init
