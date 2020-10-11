@@ -17,10 +17,12 @@ bench2_f store_same_loc;
 bench2_f store64_disjoint;
 bench2_f dep_pushpop;
 bench2_f indep_pushpop;
+bench2_f call_empty;
 bench2_f div_64_64;
 bench2_f idiv_64_64;
 bench2_f inc_rmw;
 bench2_f add_rmw;
+bench2_f add_rmw2;
 
 bench2_f nop1_128;
 bench2_f nop2_128;
@@ -60,10 +62,12 @@ void register_default(GroupList& list) {
     maker.template make<store64_disjoint> ("disjoint-stores", "Disjoint location stores",  128);
     maker.template make<dep_pushpop>      ("dep-push-pop", "Dependent push/pop chain",  128);
     maker.template make<indep_pushpop>    ("indep-push-pop", "Independent push/pop chain",  128);
+    maker.template make<call_empty>       ("call-empty", "Back-to-back call of empty function", 16);
     maker.template make<div_64_64>        ("64-bit div", "64-bit dependent div 1/1 = 1",  128);
     maker.template make<idiv_64_64>       ("64-bit idiv","64-bit dependent idiv 1/1 = 1",  128);
     maker.template make<inc_rmw>          ("inc-rmw", "same location inc [mem]",  128);
     maker.template make<add_rmw>          ("add-rmw", "same location add [mem], 1",  128);
+    maker.template make<add_rmw2>         ("add-rmw2","multiple add [mem], 1",  16);
 
     // tests to test the maximum CPU width for a variety of easy instruction mixes
     maker.template make<nop1_128> ("1-byte nops",  "128 consecutive 1-byte nops",  128);

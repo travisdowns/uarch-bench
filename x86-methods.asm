@@ -630,6 +630,36 @@ dec rdi
 jnz .top
 ret
 
+; repeated add [eax], 1
+define_bench add_rmw2
+xor eax, eax
+.top:
+%rep 16
+add DWORD [rsp + rax -  4], 1
+times 4 lea rcx, [rcx + 0]
+;add DWORD [rsp -  8], 1
+;add DWORD [rsp - 12], 1
+;add DWORD [rsp - 16], 1
+;add DWORD [rsp - 20], 1
+%endrep
+dec rdi
+jnz .top
+ret
+
+
+align 64
+totally_empty:
+ret
+
+; repeated empty calls
+define_bench call_empty
+xor eax, eax
+.top:
+times 16 call totally_empty
+dec rdi
+jnz .top
+ret
+
 ; a series of stores to the same location
 define_bench store_same_loc
 xor eax, eax
