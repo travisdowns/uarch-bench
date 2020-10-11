@@ -543,16 +543,22 @@ public:
 
 
 template <typename TIMER>
-void register_loadstore(GroupList& list);
+void register_cacheline_branch(GroupList& list);
+
+template <typename TIMER>
+void register_call(GroupList& list);
+
+template <typename TIMER>
+void register_cpp(GroupList& list);
 
 template <typename TIMER>
 void register_default(GroupList& list);
 
 template <typename TIMER>
-void register_matt(GroupList& list);
+void register_loadstore(GroupList& list);
 
 template <typename TIMER>
-void register_cacheline_branch(GroupList& list);
+void register_matt(GroupList& list);
 
 template <typename TIMER>
 void register_misc(GroupList& list);
@@ -561,22 +567,16 @@ template <typename TIMER>
 void register_mem(GroupList& list);
 
 template <typename TIMER>
-void register_cpp(GroupList& list);
-
-template <typename TIMER>
-void register_vector(GroupList& list);
-
-template <typename TIMER>
-void register_call(GroupList& list);
-
-template <typename TIMER>
 void register_oneshot(GroupList& list);
+
+template <typename TIMER>
+void register_rstalls(GroupList& list);
 
 template <typename TIMER>
 void register_syscall(GroupList& list);
 
 template <typename TIMER>
-void register_rstalls(GroupList& list);
+void register_vector(GroupList& list);
 
 void printResultHeader(Context& c, const TimerInfo& ti);
 
