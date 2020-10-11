@@ -541,6 +541,8 @@ public:
     }
 };
 
+template <typename TIMER>
+void register_branch(GroupList& list);
 
 template <typename TIMER>
 void register_cacheline_branch(GroupList& list);

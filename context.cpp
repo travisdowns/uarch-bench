@@ -44,18 +44,19 @@ GroupList make_benches() {
 
     GroupList groupList;
 
+    register_branch<TIMER>(groupList);
+    register_cacheline_branch<TIMER>(groupList);
+    register_call<TIMER>(groupList);
+    register_cpp<TIMER>(groupList);
     register_default<TIMER>(groupList);
     register_loadstore<TIMER>(groupList);
     register_matt<TIMER>(groupList);
-    register_cacheline_branch<TIMER>(groupList);
-    register_mem<TIMER>(groupList);
     register_misc<TIMER>(groupList);
-    register_cpp<TIMER>(groupList);
-    register_vector<TIMER>(groupList);
-    register_call<TIMER>(groupList);
+    register_mem<TIMER>(groupList);
     register_oneshot<TIMER>(groupList);
     register_syscall<TIMER>(groupList);
     register_rstalls<TIMER>(groupList);
+    register_vector<TIMER>(groupList);
 
     return groupList;
 }
