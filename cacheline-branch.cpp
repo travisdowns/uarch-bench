@@ -67,7 +67,7 @@ template <typename TIMER>
 void register_cacheline_branch(GroupList& list) {
     std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("misc/cacheline_branch", "Cacheline crossing branch");
 
-    auto maker = DeltaMaker<TIMER>(group.get(), 100 * 1000);
+    auto maker = DeltaMaker<TIMER>(group.get(), 100 * 1000).setTags({"slow"});
 
     maker.template make<cacheline_branch_slow>("cacheline_branch_slow",  "cacheline_branch_slow", 1);
     maker.template make<cacheline_branch_fast>("cacheline_branch_fast",  "cacheline_branch_fast", 1);

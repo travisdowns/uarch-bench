@@ -125,7 +125,7 @@ void register_mem_studies(GroupList& list) {
         std::shared_ptr<BenchmarkGroup> group =
                 std::make_shared<BenchmarkGroup>("studies/nt-stores", "NT stores");
         list.push_back(group);
-        auto maker = DeltaMaker<TIMER>(group.get(), 10);
+        auto maker = DeltaMaker<TIMER>(group.get(), 10).setTags({"slow"});
         auto maker_avx2   = maker.setFeatures({AVX2});
 
         const size_t kib = 32 * 1024; // 128 MiB

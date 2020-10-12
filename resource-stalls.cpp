@@ -64,7 +64,7 @@ void register_rstalls(GroupList& list) {
     std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/resource-stalls", "Test RESOURCE_STALLS events");
     list.push_back(group);
 
-    auto maker = DeltaMaker<TIMER>(group.get(), 1000);
+    auto maker = DeltaMaker<TIMER>(group.get(), 1000).setTags({"slow"});
 
     makei(rs_dep_add     , maker, "dep-add" ,    "Dependent adds (RS limit)",  128);
     makei(rs_dep_add4    , maker, "dep-add4",    "Inependent adds (? limit)",  128);

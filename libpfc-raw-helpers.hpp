@@ -16,14 +16,15 @@
 
 extern "C" {
 /**
- * libpfc raw functions implement this function and result the results in result (passed in rdx)
+ * libpfc raw functions implement this function and store their timing results in result,
+ * which is passed in rdx (the LibpfcNow* argument)
  * [rdx +  0] <-- INST_RETIRED.ANY
  * [rdx +  8] <-- CPU_CLK_UNHALTED.THREAD (aka clock cycles)
  * [rdx + 16] <-- CPU_CLK_UNHALTED.REF_TSC
  * [rdx + 24] <-- programmable counter 1
  * ...
  */
-typedef void (libpfc_raw1)(size_t loop_count, void *arg, LibpfcNow* results);
+using libpfc_raw1 = void(size_t loop_count, void *arg, LibpfcNow* results);
 
 libpfc_raw1 raw_rdpmc0_overhead;
 libpfc_raw1 raw_rdpmc4_overhead;
