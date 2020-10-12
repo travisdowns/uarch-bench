@@ -25,7 +25,10 @@ void register_specific(BenchmarkGroup* oneshot) {}
 #if USE_LIBPFC
 
 extern "C" {
-    libpfc_raw1 store_raw_libpfc;
+libpfc_raw1 store_raw_libpfc;
+libpfc_raw1 oneshot_6adds;
+libpfc_raw1 oneshot_11adds;
+libpfc_raw1 oneshot_loadadds;
 }
 
 volatile int store_sink;
@@ -34,6 +37,10 @@ void oneshot_store_test(size_t loop_count, void *arg, LibpfcNow* results) {
     store_raw_libpfc(loop_count, nullptr, results);
 }
 
+
+/**
+ * These tests are only run if --timer=libpfc is used.
+ */
 template <>
 void register_specific<LibpfcTimer>(BenchmarkGroup* oneshot) {
     constexpr int samples = 10;
@@ -42,6 +49,16 @@ void register_specific<LibpfcTimer>(BenchmarkGroup* oneshot) {
     maker.
     withOverhead(libpfc_raw_overhead_adapt<raw_rdpmc4_overhead>("raw_rdpmc4")).
     make_raw<libpfc_raw_adapt<samples, oneshot_store_test>>("raw-store", "raw store benchmark", 1);
+
+    // these are a another variant of testing the same effect
+    // described in the la_load and la_lea tests - see the asm
+    // for those methods for details
+    auto add6overhead = libpfc_raw_overhead_adapt<oneshot_6adds>("oneshot_6adds");
+    maker.withOverhead(add6overhead).
+            make_raw<libpfc_raw_adapt<samples, oneshot_11adds>>("11-adds", "11 adds", 1);
+
+    maker.withOverhead(add6overhead).
+            make_raw<libpfc_raw_adapt<samples, oneshot_loadadds>>("loadadds", "load + 6 adds", 1);
 }
 
 #endif  // USE_LIBPFC

@@ -30,6 +30,9 @@ extern "C" {
 JMP_FORWARD_X(DECLARE_FORWARD)
 IND_FORWARD_X(DECLARE_FORWARD)
 bench2_f define_indirect_variable;
+
+bench2_f la_load;
+bench2_f la_lea;
 }
 
 template <typename TIMER>
@@ -53,6 +56,9 @@ void register_branch(GroupList& list) {
 
     default_maker.template make<define_indirect_variable> \
         ("define_indirect_variable", "indirect variable", 1);
+
+    default_maker.template make<la_load>("load-alloc", "Load rename/alloc latency", 1);
+    default_maker.template make<la_lea>("lea-alloc", "LEA rename/alloc latency", 1);
 
 #endif // #if !UARCH_BENCH_PORTABLE
 }

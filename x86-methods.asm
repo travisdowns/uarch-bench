@@ -2824,46 +2824,6 @@ vector_load_load_lat vlddqu   , 63
 
 
 
-define_bench raw_rdpmc0_overhead
-assert_eq rdi, 0
-assert_eq rsi, 0
-mov     r8, rdx
-readpmc0_start
-readpmc0_end
-store_pfcnow0 r8
-ret
-
-define_bench raw_rdpmc4_overhead
-assert_eq rdi, 0
-assert_eq rsi, 0
-mov     r8, rdx
-readpmc4_start
-readpmc4_end
-store_pfcnow4 r8
-ret
-
-
-; store loop with raw rdpmc calls
-define_bench store_raw_libpfc
-; loop count should be 1 since we don't have a loop here
-assert_eq rdi, 1
-sub     rsp, 128
-mov     r8, rdx
-readpmc4_start
-.top:
-%assign offset 0
-%rep 100
-mov     [rsp], BYTE 42
-;sfence
-%assign offset offset+1
-%endrep
-readpmc4_end
-store_pfcnow4 r8
-add     rsp, 128
-ret
-
-
-
 define_bench syscall_asm
 .top:
 mov eax, esi

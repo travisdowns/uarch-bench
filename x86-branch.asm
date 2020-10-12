@@ -126,12 +126,12 @@ align 64
 .before:
 
     mov rdx, rdi
-    and rdx, 63
+    and rdx, 127
     lea rdx, [rax + rdx * 2]
     jmp rdx
 
 .nops:
-    times 64 nop2
+    times 128 nop2
 
     dec rdi
     jnz .top
@@ -140,3 +140,85 @@ align 64
 %endmacro
 
 define_indirect_variable 0
+
+; ALIGNMODE p6,nojmp
+
+%define LAT_BODY_SIZE 64
+%define LAT_BODY_COUNT_LG2 3
+%define LAT_BODY_COUNT (1 << LAT_BODY_COUNT_LG2)
+
+; %1 1st instruction
+; %2 2nd instruction
+%macro lat_body 2
+    ; chaining instructions
+    %1
+    %2
+    ; do the LCG
+    imul    rdx, rax ; x*a
+    add     rdx, rcx ; + c
+    mov      r8, rdx
+    shr      r8, 45  ; high bits have much longer cycles
+    and     r8d, (LAT_BODY_COUNT - 1)
+    imul     r8, LAT_BODY_SIZE
+    lea      r8, [r8 + .top]
+    dec     rdi
+    cmovz    r8, r11 ; jump to end when rdi == 0
+    jmp      r8
+%endmacro
+
+; %1 name suffix
+; %2 fist payload instruction
+; %3 fist payload instruction
+%macro define_load_alloc 3
+define_bench la_%1
+    push 0
+    xor r10d, r10d
+    lea r11, [rel .end]
+    mov rax, 6364136223846793005
+    mov ecx, 1
+    mov rdx, rax
+
+    jmp .top
+
+align 64
+.top:
+%rep LAT_BODY_COUNT
+    lat_body {%2},{%3}
+ALIGN 64
+%endrep
+.end:
+    pop rax
+    ret
+
+%assign GAP (.end - .top)
+%assign GAPPER (GAP / LAT_BODY_COUNT)
+%if GAP != LAT_BODY_SIZE * LAT_BODY_COUNT
+%error wrong LAT BODY SIZE (LAT_BODY_SIZE) vs GAPPER
+%endif
+%undef GAP
+%undef GAPPER
+
+%endmacro
+
+; See this tweet from Rivet Amber
+; https://twitter.com/rivet_amber/status/1312141314629148673
+;
+; The idea is that IACA shows that load instructions take an extra 3 cycles (4 total)
+; from allocation until when they can be dispatched.
+;
+; We test this by setting up a test that jumps around randomly using indirect branches
+; between 8 identical blocks. This will mispredict with a rate of 87.5% (7/8) and we
+; use the misprediction to ensure that allocation starts fresh every time, and we put
+; two 'payload' instrucitons as the first two in each block, and include them in the dep
+; chain leading to the next branch mispredict. In particular, they modify (but don't
+; actually change the value) of rdx which is contains the state of the rng and is used
+; to calculate the next jump address.
+;
+; We have two variants of this test with differnet payload: one with a load+add and a nop,
+; and one with two lea instructions. Nominally, both add 6 cycles to the latency chain (5
+; cycles for the load + 1 for the add, and 3 + 3 for the two LEAs), so if the measured
+; performacne is the same, we conclude that load don't have this additional allocation time.
+;
+; On Skylake, I find that both run in the same time, indicating no additional allocation time.
+define_load_alloc load,{add rdx, [rsp + r10]},{nop5}
+define_load_alloc lea,{lea rdx, [rdx + r10 - 1]},{lea rdx, [rdx + r10 + 1]}

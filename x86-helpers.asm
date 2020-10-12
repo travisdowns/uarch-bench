@@ -41,12 +41,8 @@ or      rax, rdx
 ; with this approach. So it is best to compare not against a totally empty function, but against
 ; one with a few instructions, with the method-under-test also having those few instructions.
 ;
-; In the absence of a properly designed "delta" test, we hack around this issue by ensuring that even
-; the empty test has at least one instruction in the "body" between the two innermost lfence instructions.
-; You can see that below with the lfence being before the final movq.
 %macro readpmc0_start_nofence 0
 rdpmc64  0x40000001
-lfence ; not last, see above
 movq    xmm0, rax
 %endmacro
 
@@ -56,12 +52,13 @@ movq    rdx, xmm0
 sub     rax, rdx
 %endmacro
 
-; the readpmcN functions read the PFCNOW_CLK (cycles) couunter, as well
+; the readpmcN functions read the PFCNOW_CLK (cycles) counter, as well
 ; as N user-programmable counters
 %macro readpmc0_start 0
 mfence
 lfence
 readpmc0_start_nofence
+lfence
 %endmacro
 
 %macro readpmc0_end 0
