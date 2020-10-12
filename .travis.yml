@@ -34,6 +34,8 @@ jobs:
             - libc++1
     - compiler: gcc-default
       env: TRUE_CC=gcc TRUE_CXX=g++
+    - compiler: gcc-default # runs all the tests except slow ones
+      env: TRUE_CC=gcc TRUE_CXX=g++ TEST_TAG=~slow
     - compiler: nasm-test
       env: TRUE_CC=gcc TRUE_CXX=g++
       script:
