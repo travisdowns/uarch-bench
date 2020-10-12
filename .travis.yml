@@ -33,9 +33,9 @@ jobs:
             - libc++abi1
             - libc++1
     - compiler: gcc-default
-      env: TRUE_CC=gcc TRUE_CXX=g++ PIE=
+      env: TRUE_CC=gcc TRUE_CXX=g++
     - compiler: nasm-test
-      env: TRUE_CC=gcc TRUE_CXX=g++ PIE=
+      env: TRUE_CC=gcc TRUE_CXX=g++
       script:
         - ./scripts/travis-build.sh
         - ./scripts/test-nasm.sh
