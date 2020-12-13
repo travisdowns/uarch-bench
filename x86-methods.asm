@@ -2822,7 +2822,36 @@ vector_load_load_lat vmovdqu32, 63, zmm
 vector_load_load_lat lddqu    , 63
 vector_load_load_lat vlddqu   , 63
 
+; check if a p1 scalar op can concurrently execute
+; when p01 are fused (1 cycle per iter if yes)
+define_bench p01_fusion_p1
+vpternlogd  zmm0, zmm0, zmm0, 0xff
+.top:
+%rep 100
+    vpord   zmm1, zmm0, zmm0  ; p05
+    vpord   zmm1, zmm0, zmm0  ; p05
+    imul    eax, ecx, 1       ; p1
+%endrep
+    dec     rdi
+    jnz     .top              ; p6
+    ret
 
+; check if a p0 scalar op can concurrently execute
+; when p01 are fused (1 cycle per iter if yes)
+; since there aren't any strictly p0 scalar ops that
+; I can find we use p06 rorx and use two of them:
+; 1 cycle/iter is only possible if p0 can be used
+; by the rorx
+define_bench p01_fusion_p0
+vpternlogd  zmm0, zmm0, zmm0, 0xff
+.top:
+%rep 100
+    times 2 vpord   zmm1, zmm0, zmm0  ; p05
+    times 2 rorx    eax, ecx, 1       ; p06
+%endrep
+    dec     rdi
+    jnz     .top
+    ret
 
 define_bench syscall_asm
 .top:

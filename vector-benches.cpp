@@ -30,6 +30,8 @@ bench2_f vector_load_load_lat_vlddqu_63_xmm;
 bench2_f vector_load_load_lat_vmovdqu_63_ymm;
 bench2_f vector_load_load_lat_vmovdqu32_63_zmm;
 
+bench2_f p01_fusion_p1;
+bench2_f p01_fusion_p0;
 
 }
 
@@ -72,6 +74,17 @@ void register_vector(GroupList& list) {
         maker.template make< vector_load_load_lat_vlddqu_63_xmm   >( "vlddqu-misaligned"    , "misaligned  vlddqu xmm load lat", 1);
         maker.template make<vector_load_load_lat_vmovdqu_63_ymm   >("vmovdqu-misaligned-ymm", "misaligned vmovdqu ymm load lat", 1);
         m512 .template make<vector_load_load_lat_vmovdqu32_63_zmm>("vmovdqu-misaligned-zmm", "misaligned vmovdqu zmm load lat", 1);
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("vector/misc", "Miscellaneous vector benches");
+        list.push_back(group);
+
+        auto maker = DeltaMaker<TIMER>(group.get(), 1000).setFeatures({AVX2});
+        auto m512  = maker.setFeatures({AVX512F});
+
+        m512.template make<p01_fusion_p1>("p01-fusion-p1", "check that scalar ops go to p1", 100);
+        m512.template make<p01_fusion_p0>("p01-fusion-p0", "check that scalar ops go to p0", 100);
     }
 
 #endif // #if !UARCH_BENCH_PORTABLE
