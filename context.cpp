@@ -48,6 +48,7 @@ GroupList make_benches() {
     register_cacheline_branch<TIMER>(groupList);
     register_call<TIMER>(groupList);
     register_cpp<TIMER>(groupList);
+    register_decode<TIMER>(groupList);
     register_default<TIMER>(groupList);
     register_loadstore<TIMER>(groupList);
     register_matt<TIMER>(groupList);

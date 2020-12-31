@@ -554,6 +554,9 @@ template <typename TIMER>
 void register_cpp(GroupList& list);
 
 template <typename TIMER>
+void register_decode(GroupList& list);
+
+template <typename TIMER>
 void register_default(GroupList& list);
 
 template <typename TIMER>

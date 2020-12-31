@@ -1,7 +1,7 @@
 /*
- * default_benches.cpp
- *
- * Various "default" benchmarks.
+ * Miscellaneous benchmarks.
+ * 
+ * A dumping ground, really.
  */
 
 #include "benchmark.hpp"
@@ -108,9 +108,6 @@ bench2_f decode_monoid3;
 bench2_f weird_store_mov;
 bench2_f weird_store_xor;
 
-// bench2_f quadratic;
-BOOST_PP_REPEAT_FROM_TO(35, 47, DECL_BENCH2, quadratic)
-BOOST_PP_REPEAT_FROM_TO(48, 50, DECL_BENCH2, quadratic)
 }
 
 
@@ -123,7 +120,6 @@ void register_misc(GroupList& list) {
     using default_maker = StaticMaker<TIMER>;
 
     const uint32_t iters = 10*1000;
-    const size_t decode_ops = 50400/2;
 
     auto maker = DeltaMaker<TIMER>(misc_group.get(), iters);
     auto makerbmi1 = maker.setFeatures({BMI1}).setLoopCount(3 * 1000 * 1000);
@@ -191,36 +187,12 @@ void register_misc(GroupList& list) {
         default_maker::template make_bench<adc_chain64>(misc_group.get(), "adc-chain64", "adc add chain 64-bit", 1000,
                 []{ return nullptr; }, 10000),
 
-        // legacy (MITE) decode tests
-        default_maker::template make_bench<decode33334>(misc_group.get(),   "decode33334", "Decode 3-3-3-3-4 byte nops", decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode33333>(misc_group.get(),   "decode33333", "Decode 3-3-3-3-3 byte nops", decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode16x1>(misc_group.get(),    "decode16x1",  "Decode 16x1 byte nops",      decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode8x2>(misc_group.get(),     "decode8x2",   "Decode 8x2 byte nops",       decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode4x4>(misc_group.get(),     "decode4x4",   "Decode 4x4 byte nops",       decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode664>(misc_group.get(),     "decode664",   "Decode 6-6-4 byte nops",     decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode88>(misc_group.get(),      "decode88",    "Decode 8-8 byte nops",       decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode8833334>(misc_group.get(), "decode8833334", "Decode 8-8-3-3-3-3-4 byte nops",     decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode884444>(misc_group.get(),  "decode884444",  "Decode 8-8-4-4-4-4 byte nops",     decode_ops, null_provider, 1000),
-        default_maker::template make_bench<decode_monoid>(misc_group.get(),  "decode-monoid",  "Decode 33334x10, 556x10 blocks", 3200, null_provider, 1000),
-        default_maker::template make_bench<decode_monoid2>(misc_group.get(),  "decode-monoid2",  "monoid2", 9000, null_provider, 1000),
-        default_maker::template make_bench<decode_monoid3>(misc_group.get(),  "decode-monoid3",  "monoid3", 9000, null_provider, 1000),
-
         // case where when using the LSD, a loop with 2 stores apparently takes an extra cycle
         // Reported by Alexander Monakov in https://github.com/travisdowns/bimodal-performance/issues/4
         default_maker::template make_bench<weird_store_mov>(misc_group.get(), "weird-store-mov", "Store LSD weirdness, mov 0", 1000,
                 []{ return nullptr; }, 10000),
         default_maker::template make_bench<weird_store_xor>(misc_group.get(), "weird-store-xor", "Store LSD weirdness, xor zero", 1000,
                 []{ return nullptr; }, 10000),
-
-        // shows that a loop split by a 64-byte boundary takes at least 2 cycles, probably because the DSB can deliever
-        // from only one set per cycle
-#define MAKE_QUAD(z, n, _) \
-        default_maker::template make_bench<quadratic ## n>(misc_group.get(), "quad" #n, "nested loops offset: " #n, 1000, \
-                [=]{ return aligned_ptr(4, 1024 * sizeof(uint32_t)); }, 1000),
-
-        BOOST_PP_REPEAT_FROM_TO(35, 37, MAKE_QUAD, ignore)
-        BOOST_PP_REPEAT_FROM_TO(48, 50, MAKE_QUAD, ignore)
-
     };
 
     misc_group->add(benches);
