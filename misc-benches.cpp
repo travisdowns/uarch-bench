@@ -6,7 +6,6 @@
 
 #include "benchmark.hpp"
 #include "util.hpp"
-#include "boost/preprocessor/repetition/repeat_from_to.hpp"
 
 extern "C" {
 /* misc benches */
@@ -90,20 +89,6 @@ bench2_f movd_rep;
 
 bench2_f adc_chain32;
 bench2_f adc_chain64;
-
-bench2_f decode33334;
-bench2_f decode33333;
-bench2_f decode16x1;
-bench2_f decode8x2;
-bench2_f decode4x4;
-bench2_f decode664;
-bench2_f decode88;
-bench2_f decode871;
-bench2_f decode8833334;
-bench2_f decode884444;
-bench2_f decode_monoid;
-bench2_f decode_monoid2;
-bench2_f decode_monoid3;
 
 bench2_f weird_store_mov;
 bench2_f weird_store_xor;
