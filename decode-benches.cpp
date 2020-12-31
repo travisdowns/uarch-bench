@@ -26,6 +26,10 @@ bench2_f decode_monoid;
 bench2_f decode_monoid2;
 bench2_f decode_monoid3;
 
+bench2_f decode_complex_211;
+bench2_f decode_complex_2111;
+bench2_f decode_complex_21111;
+
 // bench2_f quadratic;
 BOOST_PP_REPEAT_FROM_TO(35, 47, DECL_BENCH2, quadratic)
 BOOST_PP_REPEAT_FROM_TO(48, 50, DECL_BENCH2, quadratic)
@@ -57,6 +61,17 @@ void register_decode(GroupList& list) {
     maker.template make<decode_monoid2>("decode-monoid2",  "monoid2", 9000);
     maker.template make<decode_monoid3>("decode-monoid3",  "monoid3", 9000);
 
+
+    // these tests use a complex instruction (2 uops) to test the patterns that can be decoded
+    // in 1 cycle. If the decoder cannot decode the entire sequence (e.g., 2111 is 4 instructions with
+    // 2, 1, 1, 1 uops each) it will take 2 cycles, otherwise less (with the exact amount usually depending
+    // on the rename limit of 4).
+#define DEFINE_DECODE_COMPLEX(suffix) maker.setLoopCount(10000).template make<decode_complex_##suffix> \
+        ("decode_complex_" #suffix, "decode_complex_" #suffix, 200)
+
+    DEFINE_DECODE_COMPLEX(211);
+    DEFINE_DECODE_COMPLEX(2111);
+    DEFINE_DECODE_COMPLEX(21111);
 
     // shows that a loop split by a 64-byte boundary takes at least 2 cycles, probably because the DSB can deliever
     // from only one set per cycle
