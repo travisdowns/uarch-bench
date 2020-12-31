@@ -29,6 +29,9 @@ bench2_f decode_monoid3;
 bench2_f decode_complex_211;
 bench2_f decode_complex_2111;
 bench2_f decode_complex_21111;
+bench2_f decode_complex_31;
+bench2_f decode_complex_311;
+bench2_f decode_complex_3111;
 
 // bench2_f quadratic;
 BOOST_PP_REPEAT_FROM_TO(35, 47, DECL_BENCH2, quadratic)
@@ -72,6 +75,10 @@ void register_decode(GroupList& list) {
     DEFINE_DECODE_COMPLEX(211);
     DEFINE_DECODE_COMPLEX(2111);
     DEFINE_DECODE_COMPLEX(21111);
+
+    DEFINE_DECODE_COMPLEX(31);
+    DEFINE_DECODE_COMPLEX(311);
+    DEFINE_DECODE_COMPLEX(3111);
 
     // shows that a loop split by a 64-byte boundary takes at least 2 cycles, probably because the DSB can deliever
     // from only one set per cycle
