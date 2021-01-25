@@ -13,6 +13,8 @@ extern "C" {
 /* misc benches */
 
 bench2_f decode33334;
+bench2_f decode333322;
+bench2_f decode3333211;
 bench2_f decode33333;
 bench2_f decode16x1;
 bench2_f decode8x2;
@@ -51,13 +53,15 @@ void register_decode(GroupList& list) {
     auto maker = DeltaMaker<TIMER>(group.get(), 1000);
 
     // legacy (MITE) decode tests
-    maker.template make<decode33334>   ("decode33334", "Decode 3-3-3-3-4 byte nops", decode_ops);
-    maker.template make<decode33333>   ("decode33333", "Decode 3-3-3-3-3 byte nops", decode_ops);
-    maker.template make<decode16x1>    ("decode16x1",  "Decode 16x1 byte nops",      decode_ops);
-    maker.template make<decode8x2>     ("decode8x2",   "Decode 8x2 byte nops",       decode_ops);
-    maker.template make<decode4x4>     ("decode4x4",   "Decode 4x4 byte nops",       decode_ops);
-    maker.template make<decode664>     ("decode664",   "Decode 6-6-4 byte nops",     decode_ops);
-    maker.template make<decode88>      ("decode88",    "Decode 8-8 byte nops",       decode_ops);
+    maker.template make<decode33334>   ("decode33334",  "Decode 3-3-3-3-4 byte nops", decode_ops);
+    maker.template make<decode333322>  ("decode333322", "Decode 3-3-3-3-2-2 byte nops", decode_ops);
+    maker.template make<decode3333211> ("decode3333211","Decode 3-3-3-3-2-1-1 byte nops", decode_ops);
+    maker.template make<decode33333>   ("decode33333",  "Decode 3-3-3-3-3 byte nops", decode_ops);
+    maker.template make<decode16x1>    ("decode16x1",   "Decode 16x1 byte nops",      decode_ops);
+    maker.template make<decode8x2>     ("decode8x2",    "Decode 8x2 byte nops",       decode_ops);
+    maker.template make<decode4x4>     ("decode4x4",    "Decode 4x4 byte nops",       decode_ops);
+    maker.template make<decode664>     ("decode664",    "Decode 6-6-4 byte nops",     decode_ops);
+    maker.template make<decode88>      ("decode88",     "Decode 8-8 byte nops",       decode_ops);
     maker.template make<decode8833334> ("decode8833334", "Decode 8-8-3-3-3-3-4 byte nops",     decode_ops);
     maker.template make<decode884444>  ("decode884444",  "Decode 8-8-4-4-4-4 byte nops",     decode_ops);
     maker.template make<decode_monoid> ("decode-monoid",  "Decode 33334x10, 556x10 blocks", 3200);

@@ -37,6 +37,8 @@ ret
 %endmacro
 
 define_decode 33334,3,3,3,3,4
+define_decode 333322,3,3,3,3,2,2
+define_decode 3333211,3,3,3,3,2,1,1
 define_decode 33333,3,3,3,3,3
 define_decode 16x1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 define_decode 8x2,2,2,2,2,2,2,2,2
