@@ -215,9 +215,9 @@ void PerfTimer::init(Context &c) {
         struct perf_event_attr cycles_attr = {
             .type = PERF_TYPE_HARDWARE,
             .size = PERF_ATTR_SIZE_VER0,
-            .config = PERF_COUNT_HW_CPU_CYCLES,
-            .pinned = 1
+            .config = PERF_COUNT_HW_CPU_CYCLES
         };
+        cycles_attr.pinned = 1;
         if (rdpmc_open_attr(&cycles_attr, &ctx, nullptr)) {
             // maybe it failed because we try to get kernel cycles too, and perf_event_paranoid is >= 2
             // so try again excluding kernel to see if that works
