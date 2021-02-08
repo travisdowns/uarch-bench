@@ -30,11 +30,7 @@ jobs:
           # fetch-depth: 0 needed for libpfm4 whose clone fails otherwise
           fetch-depth: 0
       - run: lscpu
-      - run: >-
-          make -j4
-          CC=${{ matrix.c_compiler }}
-          CXX=${{ matrix.cpp_compiler }}
-          DEBUG=${{ matrix.debug }}
+      - run: make -j4 CC=${{ matrix.c_compiler }} CXX=${{ matrix.cpp_compiler }} DEBUG=${{ matrix.debug }}
       - run: ./unit-test
       - run: ./scripts/actions-test.sh
 
