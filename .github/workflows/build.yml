@@ -31,10 +31,10 @@ jobs:
           fetch-depth: 0
       - run: lscpu
       - run: >
-        make -j4
-        CC=${{ matrix.c_compiler }}
-        CXX=${{ matrix.cpp_compiler }}
-        DEBUG=${{ matrix.debug }}
+          make -j4
+          CC=${{ matrix.c_compiler }}
+          CXX=${{ matrix.cpp_compiler }}
+          DEBUG=${{ matrix.debug }}
       - run: ./unit-test
       - run: ./scripts/actions-test.sh
 
