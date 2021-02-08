@@ -1,0 +1,39 @@
+name: build
+on: [push]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, ubuntu-20.04]
+        cpp_compiler: [g++, g++-7, g++-8, g++-9, clang++, clang++-9]
+        tag: [matrix]
+        include:
+          - c_compiler: gcc
+          - debug: 0
+          - cpp_compiler: g++-7
+            c_compiler: gcc-7
+          - cpp_compiler: g++-8
+            c_compiler: gcc-8
+          - cpp_compiler: g++-9
+            c_compiler: gcc-9
+          - cpp_compiler: clang++
+            c_compiler: clang
+          - cpp_compiler: clang++-9
+            c_compiler: clang-9
+          - os: ubuntu-20.04
+            c_compiler: gcc
+            cpp_compiler: g++
+            debug: 1
+            tag: extra
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          # fetch-depth: 0 needed for libpfm4 whose clone fails otherwise
+          fetch-depth: 0
+      - run: lscpu
+      - run: make -j4 CC=${{ matrix.c_compiler }} CXX=${{ matrix.cpp_compiler }} DEBUG=${{ matrix.debug }}
+      - run: ./unit-test
+      - run: ./scripts/actions-test.sh
+
