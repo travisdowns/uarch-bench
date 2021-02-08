@@ -21,5 +21,7 @@ jobs:
             c_compiler: clang-9
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - run: make CC=${{ matrix.c_compiler }} CXX=${{ matrix.cpp_compiler }}
 
