@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: recursive
+          submodules: true
           fetch-depth: 0
       - run: make CC=${{ matrix.c_compiler }} CXX=${{ matrix.cpp_compiler }}
 

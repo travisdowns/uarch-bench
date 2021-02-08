@@ -9,5 +9,5 @@ echo "CC is ${CC-unset}, CXX is ${CXX-unset}"
 [[ -z ${CXX+x} ]] || ${CXX} --version
 ccache -s
 ccache -z
-make
+make -j4
 ccache -s
