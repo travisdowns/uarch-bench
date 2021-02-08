@@ -1,0 +1,25 @@
+name: build
+on: [push]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, ubuntu-20.04]
+        cpp_compiler: [g++, g++-7, g++-8, g++-9, clang++, clang++-9]
+        include:
+          - c_compiler: gcc
+          - cpp_compiler: g++-7
+            c_compiler: gcc-7
+          - cpp_compiler: g++-8
+            c_compiler: gcc-8
+          - cpp_compiler: g++-9
+            c_compiler: gcc-9
+          - cpp_compiler: clang++
+            c_compiler: clang
+          - cpp_compiler: clang++-9
+            c_compiler: clang-9
+    steps:
+      - uses: actions/checkout@v2
+      - run: make CC=${{ matrix.c_compiler }} CXX=${{ matrix.cpp_compiler }}
+
