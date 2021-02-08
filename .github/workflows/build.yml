@@ -25,6 +25,11 @@ jobs:
           submodules: true
           # fetch-depth: 0 needed for libpfm4 whose clone fails otherwise
           fetch-depth: 0
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ${{ matrix.os }}-${{ matrix.c_compiler }}
+      - run: lscpu
       - run: make -j4 CC=${{ matrix.c_compiler }} CXX=${{ matrix.cpp_compiler }}
       - run: ./unit-test
       - run: ./scripts/actions-test.sh
