@@ -7,9 +7,9 @@ jobs:
       matrix:
         os: [ubuntu-16.04, ubuntu-20.04]
         cpp_compiler: [g++, g++-7, g++-8, g++-9, clang++, clang++-9]
-        debug: [0]
         include:
           - c_compiler: gcc
+          - debug: 0
           - cpp_compiler: g++-7
             c_compiler: gcc-7
           - cpp_compiler: g++-8
