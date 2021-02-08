@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+          # fetch-depth: 0 needed for libpfm4 whose clone fails otherwise
           fetch-depth: 0
-      - run: make CC=${{ matrix.c_compiler }} CXX=${{ matrix.cpp_compiler }}
+      - run: make -j4 CC=${{ matrix.c_compiler }} CXX=${{ matrix.cpp_compiler }}
 
