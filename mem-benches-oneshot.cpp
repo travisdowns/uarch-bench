@@ -6,6 +6,8 @@
 
 #include "benchmark.hpp"
 #include "oneshot.hpp"
+
+#if !UARCH_BENCH_PORTABLE
 #include "libpfc-raw-helpers.hpp"
 #include "util.hpp"
 
@@ -84,7 +86,6 @@ long touch_warm(size_t iters, void *arg) {
 
 template <typename TIMER>
 void register_mem_oneshot(GroupList& list) {
-#if !UARCH_BENCH_PORTABLE
 
     {
         std::shared_ptr<BenchmarkGroup> oneshot = std::make_shared<OneshotGroup>("memory/touch-lines", "Touching cache lines");
@@ -149,8 +150,14 @@ void register_mem_oneshot(GroupList& list) {
 
     }
 
-#endif // #if !UARCH_BENCH_PORTABLE
 }
+
+#else // #if !UARCH_BENCH_PORTABLE
+
+template <typename TIMER>
+void register_mem_oneshot(GroupList& list) {}
+
+#endif
 
 #define REG_DEFAULT(CLOCK) template void register_mem_oneshot<CLOCK>(GroupList& list);
 

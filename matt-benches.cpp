@@ -7,6 +7,8 @@
 #include "benchmark.hpp"
 #include "util.hpp"
 
+#if !UARCH_BENCH_PORTABLE
+
 #define BUF_SIZE (64*1024)
 static char buf[BUF_SIZE];
 
@@ -78,9 +80,17 @@ void register_matt(GroupList& list) {
     list.push_back(group);
 }
 
+#else // #if !UARCH_BENCH_PORTABLE
+
+template <typename TIMER>
+void register_matt(GroupList& list) {}
+
+#endif
+
 #define REG_MATT(CLOCK) template void register_matt<CLOCK>(GroupList& list);
 
 ALL_TIMERS_X(REG_MATT)
+
 
 
 

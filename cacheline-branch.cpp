@@ -8,6 +8,8 @@
 #include "util.hpp"
 #include "boost/preprocessor/repetition/repeat_from_to.hpp"
 
+#if !UARCH_BENCH_PORTABLE
+
 // The store/add/dec/jnz encodes to 15 bytes, add 50 NOPs to split the
 // branch target and the branch across a 64-byte cacheline.
 #define NOPS \
@@ -73,6 +75,13 @@ void register_cacheline_branch(GroupList& list) {
     maker.template make<cacheline_branch_fast>("cacheline_branch_fast",  "cacheline_branch_fast", 1);
     list.push_back(group);
 }
+
+#else // #if !UARCH_BENCH_PORTABLE
+
+template <typename TIMER>
+void register_cacheline_branch(GroupList& list) {}
+
+#endif
 
 #define REG_CL_BRANCH(CLOCK) template void register_cacheline_branch<CLOCK>(GroupList& list);
 
