@@ -101,6 +101,18 @@ void register_cpp(GroupList& list) {
         make_strided_stores<strided_stores_4byte>(maker, 4);
         make_strided_stores<strided_stores_8byte>(maker, 8);
     }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/cpp/store-volatile", "Simple stores");
+        list.push_back(group);
+        auto maker        = DeltaMaker<TIMER>(group.get());
+
+        #define MAKE_GAP_BENCH(gap, gaptype, bits, bitstr) \
+            maker.template make<GAP_FN(gap, gaptype, bits)> \
+            (#bits "gap" #gap, bitstr " stores with " #gap " " #gaptype " gap", 1);
+
+        VS_GAP_GAP_X(MAKE_GAP_BENCH)
+    }
 }
 
 #define REG_DEFAULT(CLOCK) template void register_cpp<CLOCK>(GroupList& list);

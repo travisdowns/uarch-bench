@@ -215,7 +215,7 @@ long strided_stores(uint64_t iters, void *arg) {
     return (long)args.region[0];
 }
 
-long strided_stores_1byte(uint64_t iters, void *arg) {
+long strided_stores_1byte(uint64_t iters, void* arg) {
     return strided_stores<uint8_t>(iters, arg);
 }
 
@@ -226,6 +226,67 @@ long strided_stores_4byte(uint64_t iters, void *arg) {
 long strided_stores_8byte(uint64_t iters, void *arg) {
     return strided_stores<uint64_t>(iters, arg);
 }
+
+
+template <typename T, size_t S, size_t A>
+struct aligned_buf {
+    static constexpr size_t BUF_SIZE = sizeof(T) * S + A;
+    unsigned char buf[BUF_SIZE];
+    
+    T* get() {
+        void *p = buf;
+        auto sz = BUF_SIZE;
+        auto ret = std::align(A, S, p, sz);
+        assert(ret);
+        return (T*)ret;
+    }
+};
+
+
+
+/**
+ * When writing portable benchmarks, we don't get to specify exactly the assembly
+ * we want. Instead, we have to rely on various tricks to produce code that might
+ * otherwise be unnatural to the compiler.
+ * 
+ * Here, we want a series of stores with as few additional instructions in the loop
+ * as possible. Redundant stores will be happily eliminated by the compiler, and 
+ * not-provably redundant stores often require some addressing which might add 
+ * overhead. So we use volatile stores instead.
+ */
+template <size_t dist, typename type>
+HEDLEY_ALWAYS_INLINE
+long volatile_stores_bytes(uint64_t iters, void* arg) {
+    constexpr size_t UNROLL = 8;
+    static_assert(dist % sizeof(type) == 0, "must be able to convert dist (bytes) to an element gap");
+    constexpr auto gap = dist / sizeof(type); 
+
+    aligned_buf<type, 1 + UNROLL * dist, 64> buf;
+    volatile type * vptr = buf.get();
+
+    for (uint64_t i = 0; i < iters; i += UNROLL) {
+        for (size_t i = 0; i < UNROLL / 2; i++) {
+            vptr[0 * gap] = 1;
+            vptr[1 * gap] = 2;
+        }
+    }
+
+    return 0; 
+}
+
+/**
+ * Allows you to specify dist in type-sized elements instead of bytes.
+ */
+template <size_t dist, typename type>
+HEDLEY_ALWAYS_INLINE
+long volatile_stores_elems(uint64_t iters, void* arg) {
+    return volatile_stores_bytes<dist * sizeof(type), type>(iters, arg);
+}
+
+#define DEFINE_GAP(gap, gaptype, bits, ...) long GAP_FN(gap, gaptype, bits)(uint64_t iters, void* arg) \
+        { return volatile_stores_ ## gaptype<gap, uint ## bits ## _t>(iters, arg); }
+
+VS_GAP_GAP_X(DEFINE_GAP)
 
 long portable_add_chain(uint64_t itersu, void *arg) {
     using opt_control::modify;
