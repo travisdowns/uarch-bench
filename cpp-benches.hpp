@@ -55,6 +55,8 @@ bench2_f strided_stores_1byte;
 bench2_f strided_stores_4byte;
 bench2_f strided_stores_8byte;
 
+bench2_f volatile_stores_study;
+
 #define VS_GAP_LIST_X(fn, bits, bitstr) \
     fn( 0, elems, bits, bitstr)  \
     fn( 1, elems, bits, bitstr)  \
@@ -68,10 +70,27 @@ bench2_f strided_stores_8byte;
     VS_GAP_LIST_X(fn, 64, "64-bit")
 
 #define GAP_FN(gap, gaptype, bits) vs_ ## bits ## b_gap_ ## gap ## _ ## gaptype
-
 #define DECLARE_GAP_FNS(gap, gaptype, bits, ...) bench2_f GAP_FN(gap, gaptype, bits);
-
 VS_GAP_GAP_X(DECLARE_GAP_FNS)
+
+// arbitrary offset store study
+#define ARB_OFFSET_X(fn) \
+    fn(uint64_t, 0_0_0_0,    0, 0, 0, 0) \
+    fn(uint64_t, 0_1_0_1,    0, 1, 0, 1) \
+    fn(uint64_t, 0_2_4_6,    0, 2, 4, 6) \
+    fn(uint64_t, 0_xxx,      0, 0, 0, 1) \
+    fn(uint32_t, 0_1_0_1,    0, 1, 0, 1) \
+    fn(uint32_t, 0_2_4_6,    0, 2, 4, 6) \
+    fn(uint32_t, 0_16_0_16,  0, 16,  0, 16) \
+    fn(uint32_t, 0_16_16_16, 0, 16, 16, 16) \
+    fn(uint32_t, 0_16_17_18, 0, 16, 17, 18) \
+
+#define DECLARE_ARB_FNS(type, name, ...) bench2_f arb_offset_##type##_##name;
+ARB_OFFSET_X(DECLARE_ARB_FNS)
+
+bench2_f misaligned_stores_sameloc;
+bench2_f misaligned_stores_rolling;
+bench2_f misaligned_stores_twoloc;
 
 bench2_f crc8_bench;
 bench2_f sum_halves_bench;

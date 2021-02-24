@@ -9,6 +9,8 @@
 #include "hedley.h"
 #include "opt-control.hpp"
 #include "util.hpp"
+#include "boost/preprocessor/repetition/repeat.hpp"
+
 
 #include <cassert>
 #include <cinttypes>
@@ -242,7 +244,68 @@ struct aligned_buf {
     }
 };
 
+#define VS_STUDY_UNROLL 10
 
+/**
+ * Specific study for 64-bit writes on Graviton 2
+ */
+long volatile_stores_study(uint64_t iters, void* arg) {
+    // constexpr size_t gap = 1;
+    using type = uint64_t;
+
+    aligned_buf<type, 1024 * 128, 64> buf;
+    volatile type * vptr = buf.get();
+
+    for (uint64_t i = 0; i < iters; i += 4 * VS_STUDY_UNROLL) {
+        #define BODY(z, n, data) \
+                vptr[0] = 1;  \
+                vptr[8] = 1;  \
+                vptr[0] = 1;  \
+                vptr[8] = 1;  
+
+        BOOST_PP_REPEAT(VS_STUDY_UNROLL, BODY, _);
+        #undef BODY
+    }
+
+    return 0; 
+}
+
+template <typename T>
+HEDLEY_ALWAYS_INLINE
+void write_at_offsets(volatile T *p) {
+}
+
+template <typename T, size_t O, size_t... Os>
+HEDLEY_ALWAYS_INLINE
+void write_at_offsets(volatile T *p) {
+    p[O] = 1;
+    write_at_offsets<T, Os...>(p);
+}
+
+/**
+ * Specific study for 64-bit writes on Graviton 2
+ */
+template <typename type, size_t... Os>
+HEDLEY_ALWAYS_INLINE
+long volatile_stores_arb_offsets(uint64_t iters, void* arg) {
+
+    aligned_buf<type, 1024 * 16, 64> buf;
+    volatile type * vptr = buf.get();
+
+    for (uint64_t i = 0; i < iters; i += 2 * sizeof...(Os)) {
+        write_at_offsets<type, Os...>(vptr);
+        write_at_offsets<type, Os...>(vptr);
+    }
+
+    return 0; 
+}
+
+#define DEFINE_ARB_OFFSET(type, name, ...) \
+        long arb_offset_##type##_##name(uint64_t iters, void* arg) { \
+            return volatile_stores_arb_offsets<type, __VA_ARGS__>(iters, arg); \
+        }
+
+ARB_OFFSET_X(DEFINE_ARB_OFFSET)
 
 /**
  * When writing portable benchmarks, we don't get to specify exactly the assembly
@@ -287,6 +350,69 @@ long volatile_stores_elems(uint64_t iters, void* arg) {
         { return volatile_stores_ ## gaptype<gap, uint ## bits ## _t>(iters, arg); }
 
 VS_GAP_GAP_X(DEFINE_GAP)
+
+//////////////////////////////
+// Portable alignment tests //
+//////////////////////////////
+
+/**
+ * Repeatedly do a store to the same location at the given alignment
+ * within a 64-bit cache line.
+ */
+template <size_t roll> 
+HEDLEY_ALWAYS_INLINE
+long aligned_stores_helper(uint64_t iters, void* arg) {
+    using type = uint64_t;
+
+    aligned_buf<type, 1024, 128> buf;
+    volatile type * vptr = (type *)((char *)buf.get() + (size_t)arg);
+
+#define ALIGNED_STORES_UNROLL 16
+
+    for (uint64_t i = 0; i < iters; i += ALIGNED_STORES_UNROLL) {
+        #define BODY(z, n, data) vptr[n * roll] = 1;
+        BOOST_PP_REPEAT(ALIGNED_STORES_UNROLL, BODY, _);
+        #undef BODY
+    }
+
+    return 0; 
+}
+
+long misaligned_stores_sameloc(uint64_t iters, void* arg) {
+    return aligned_stores_helper<0>(iters, arg);
+}
+
+long misaligned_stores_rolling(uint64_t iters, void* arg) {
+    return aligned_stores_helper<1>(iters, arg);
+}
+
+/*
+ * Alternating stores to two misaligned locations: offset and
+ * 64 - offset.
+ * 
+ * Tests whether non-consecutive stores can coalesce (while 
+ * aligned_stores_sameloc tests if consecutive stores can).
+ */
+long misaligned_stores_twoloc(uint64_t iters, void* arg) {
+    using type = uint64_t;
+
+    aligned_buf<type, 1024, 128> buf;
+    auto offset = (size_t)arg;
+    volatile type * vptr0 = (type *)((char *)buf.get() + offset);
+    volatile type * vptr1 = (type *)((char *)buf.get() + 61 - offset);
+
+#define TWOLOC_STORES_UNROLL 8
+
+    for (uint64_t i = 0; i < iters; i += TWOLOC_STORES_UNROLL * 2) {
+        #define BODY(z, n, data) \
+                *vptr0 = 1; \
+                *vptr1 = 1;
+        BOOST_PP_REPEAT(TWOLOC_STORES_UNROLL, BODY, _);
+        #undef BODY
+    }
+
+    return 0; 
+}
 
 long portable_add_chain(uint64_t itersu, void *arg) {
     using opt_control::modify;

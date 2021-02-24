@@ -113,6 +113,43 @@ void register_cpp(GroupList& list) {
 
         VS_GAP_GAP_X(MAKE_GAP_BENCH)
     }
+
+    {
+        static_assert(sizeof(void *) == sizeof(size_t), "tunneling of size_t through void * isn't going to work");
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("memory/cpp/store-alignment", "Misaligned stores");
+        list.push_back(group);
+        auto maker        = DeltaMaker<TIMER>(group.get());
+
+        for (size_t offset = 0; offset <= 64; offset++) {
+            auto ostr = std::to_string(offset);
+            maker.template make<misaligned_stores_sameloc>("sameloc-offset-" + ostr,
+                "Same location stores with offset " + ostr, 1, constant((void *)offset));
+        }
+
+        for (size_t offset = 0; offset <= 64; offset++) {
+            auto ostr = std::to_string(offset);
+            maker.template make<misaligned_stores_rolling>("rolling-offset-" + ostr,
+                "1B stide overlapping stores offset " + ostr, 1, constant((void *)offset));
+        }
+
+        for (size_t offset = 0; offset <= 64; offset++) {
+            auto ostr = std::to_string(offset);
+            maker.template make<misaligned_stores_twoloc>("twoloc-offset-" + ostr,
+                "two missaligned stores offset " + ostr, 1, constant((void *)offset));
+        }
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/memory/store-volatile", "64-bit store study");
+        list.push_back(group);
+        auto maker        = DeltaMaker<TIMER>(group.get(), 100000);
+        maker.template make<volatile_stores_study>("64b", "64-bit store study", 1);
+
+        #define MAKE_ARB_BENCH(type, name, ...) maker.template make<arb_offset_##type##_##name> \
+                ("arb_" #type "_" #name, #type " stores with gaps " #name, 1);
+        ARB_OFFSET_X(MAKE_ARB_BENCH)
+    }
+    
 }
 
 #define REG_DEFAULT(CLOCK) template void register_cpp<CLOCK>(GroupList& list);
