@@ -330,17 +330,18 @@ define_single_op rdtscp_bench,rdtscp
 ; %3 offset if any to apply to pointer and load expression
 %macro make_spc 4
 define_bench sameloc_pointer_chase%1
-or rcx, -1
-inc rcx ; rcx is zero but this is just a fancy way of doing it to defeat zero-idiom recognition
-lea rax, [rsp - 8 - %3]
-%4
-push rax
+    or rcx, -1
+    inc rcx ; rcx is zero but this is just a fancy way of doing it to defeat zero-idiom recognition
+    lea rax, [rsp - 8 - %3]
+    %4
+    push rax
+    mfence ; defeat memory renaming
 .top:
-times 128 mov rax, [%2 + %3]
-dec rdi
-jnz .top
-pop rax
-ret
+    times 128 mov rax, [%2 + %3]
+    dec rdi
+    jnz .top
+    pop rax
+    ret
 %endmacro
 
 make_spc ,rax,0,{}
@@ -350,153 +351,158 @@ make_spc _complex_fs,fs:rax + rcx * 8,4096,{sub rax, [fs:0]}
 
 ; https://stackoverflow.com/q/52351397
 define_bench sameloc_pointer_chase_diffpage
-push rbp
-mov  rbp, rsp
-sub  rsp,  4096
-and  rsp, -4096 ; align rsp to page boundary
-lea rax, [rsp - 8]
-mov [rax + 16], rax
+    push rbp
+    mov  rbp, rsp
+    sub  rsp,  4096
+    and  rsp, -4096 ; align rsp to page boundary
+    lea rax, [rsp - 8]
+    mov [rax + 16], rax
+    mfence ; defeat memory renaming
 .top:
-times 128 mov rax, [rax + 16]
-dec rdi
-jnz .top
-mov rsp, rbp
-pop rbp
-ret
+    times 128 mov rax, [rax + 16]
+    dec rdi
+    jnz .top
+    mov rsp, rbp
+    pop rbp
+    ret
 
 ; https://stackoverflow.com/q/52351397
 define_bench sameloc_pointer_chase_alt
-push rbp
-mov  rbp, rsp
-sub  rsp,  4096
-and  rsp, -4096 ; align rsp to page boundary
-lea rax, [rsp - 8]
-mov [rax], rax
-mov [rax + 16], rax
+    push rbp
+    mov  rbp, rsp
+    sub  rsp,  4096
+    and  rsp, -4096 ; align rsp to page boundary
+    lea rax, [rsp - 8]
+    mov [rax], rax
+    mov [rax + 16], rax
+    mfence ; defeat memory renaming
 .top:
 %rep 64
-mov rax, [rax]
-mov rax, [rax + 16]
+    mov rax, [rax]
+    mov rax, [rax + 16]
 %endrep
-dec rdi
-jnz .top
-mov rsp, rbp
-pop rbp
-ret
+    dec rdi
+    jnz .top
+    mov rsp, rbp
+    pop rbp
+    ret
 
 ; put an ALU op in the pointer chase path
 define_bench sameloc_pointer_chase_alu
-lea rax, [rsp - 8]
-push rax
+    lea rax, [rsp - 8]
+    push rax
+    mfence ; defeat memory renaming
 .top:
 %rep 128
-mov rax, [rax]
-add rax, 0
+    mov rax, [rax]
+    add rax, 0
 %endrep
-dec rdi
-jnz .top
-pop rax
-ret
+    dec rdi
+    jnz .top
+    pop rax
+    ret
 
 ; put an ALU op in the pointer chase path
 define_bench sameloc_pointer_chase_alu2
-push rbp
-mov  rbp, rsp
+    push rbp
+    mov  rbp, rsp
 
-and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
-sub  rsp, 2048 + 4096
+    and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
+    sub  rsp, 2048 + 4096
 
-and rcx, 0 ; avoid zero idiom detection
-lea rax, [rsp - 8]
-push rax
-mov [rax + 2048], rax
+    and rcx, 0 ; avoid zero idiom detection
+    lea rax, [rsp - 8]
+    push rax
+    mov [rax + 2048], rax
+    mfence ; defeat memory renaming
 
 .top:
 %rep 128
-mov rax, [rax + 2048]
-mov rax, [rax]
-add rax, 0
+    mov rax, [rax + 2048]
+    mov rax, [rax]
+    add rax, 0
 %endrep
-dec rdi
-jnz .top
+    dec rdi
+    jnz .top
 
-mov rsp, rbp
-pop rbp
-
-ret
+    mov rsp, rbp
+    pop rbp
+    ret
 
 ; put an ALU op in the pointer chase path
 define_bench sameloc_pointer_chase_alu3
-push rbp
-mov  rbp, rsp
+    push rbp
+    mov  rbp, rsp
 
-and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
-sub  rsp, 2048 + 4096
+    and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
+    sub  rsp, 2048 + 4096
 
-and rcx, 0 ; avoid zero idiom detection
-lea rax, [rsp - 8]
-push rax
-mov [rax + 2048], rax
+    and rcx, 0 ; avoid zero idiom detection
+    lea rax, [rsp - 8]
+    push rax
+    mov [rax + 2048], rax
+    mfence ; defeat memory renaming
 
 .top:
 %rep 128
-mov rax, [rax + 2048]
-add rax, 0
-mov rax, [rax]
+    mov rax, [rax + 2048]
+    add rax, 0
+    mov rax, [rax]
 %endrep
-dec rdi
-jnz .top
+    dec rdi
+    jnz .top
 
-mov rsp, rbp
-pop rbp
-
-ret
+    mov rsp, rbp
+    pop rbp
+    ret
 
 
 ; do 8 parallel pointer chases to see if fast path (4-cycle) loads
 ; have a throughput restriction (e.g., only 1 per cycle)
 define_bench sameloc_pointer_chase_8way
-push rbp
-mov  rbp, rsp
+    push rbp
+    mov  rbp, rsp
 
-and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
+    and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
 
-push r12
-push r13
-push r14
-push r15
+    push r12
+    push r13
+    push r14
+    push r15
 
 %assign regn 8
 %rep 8
 %define reg r %+ regn
-lea reg, [rsp - 8]
-push reg
+    lea reg, [rsp - 8]
+    push reg
 %assign regn (regn + 1)
 %endrep
+
+    mfence ; defeat memory renaming
 
 .top:
 %rep 16
 %assign regn 8
 %rep 8
 %define reg r %+ regn
-mov reg, [reg]
+    mov reg, [reg]
 %assign regn (regn + 1)
 %endrep
 %endrep
-dec rdi
-jnz .top
+    dec rdi
+    jnz .top
 
-add rsp, 8 * 8
+    add rsp, 8 * 8
 
-pop r15
-pop r14
-pop r13
-pop r12
+    pop r15
+    pop r14
+    pop r13
+    pop r12
 
-mov rsp, rbp
-pop rbp
+    mov rsp, rbp
+    pop rbp
 
-ret
+    ret
 
 ; so we can treat r6 to r15 as a contiguous range
 %define r6 rsi
@@ -505,69 +511,71 @@ ret
 ; do 10 parallel pointer chases to see if slow path (5-cycle) loads
 ; have a throughput restriction (e.g., only 1 per cycle)
 define_bench sameloc_pointer_chase_8way5
-push rbp
-mov  rbp, rsp
+    push rbp
+    mov  rbp, rsp
 
-sub  rsp,  8192
-and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
+    sub  rsp,  8192
+    and  rsp, -4096  ; page align rsp to avoid inadvertent page crossing
 
-push r12
-push r13
-push r14
-push r15
+    push r12
+    push r13
+    push r14
+    push r15
 
-mov rcx, rdi ; because we need rdi and rsi as r6 and r7 with altreg
+    mov rcx, rdi ; because we need rdi and rsi as r6 and r7 with altreg
 
 %define offset 4096
 
 %assign regn 6
 %rep 10
 %define reg r %+ regn
-lea reg, [rsp - 8 - offset]
-push reg
+    lea reg, [rsp - 8 - offset]
+    push reg
 %assign regn (regn + 1)
 %endrep
+
+    mfence ; defeat memory renaming
 
 .top:
 %rep 16
 %assign regn 6
 %rep 10
 %define reg r %+ regn
-mov reg, [reg + offset]
+    mov reg, [reg + offset]
 %assign regn (regn + 1)
 %endrep
 %endrep
-dec rcx
-jnz .top
+    dec rcx
+    jnz .top
 
-add rsp, 10 * 8
+    add rsp, 10 * 8
 
-pop r15
-pop r14
-pop r13
-pop r12
+    pop r15
+    pop r14
+    pop r13
+    pop r12
 
-mov rsp, rbp
-pop rbp
+    mov rsp, rbp
+    pop rbp
 
-ret
+    ret
 
 ; do 10 parallel pointer chases, unrolled 10 times, where 9 out of the 10
 ; accesses on each change are 5-cycle and one is 4-cycle, to see if mixing
 ; 4 and 5-cycle operations slows things down
 define_bench sameloc_pointer_chase_8way45
-push rbp
-mov  rbp, rsp
+    push rbp
+    mov  rbp, rsp
 
-sub  rsp,  8192
-and  rsp, -8192  ; page align rsp to avoid inadvertent page crossing
+    sub  rsp,  8192
+    and  rsp, -8192  ; page align rsp to avoid inadvertent page crossing
 
-push r12
-push r13
-push r14
-push r15
+    push r12
+    push r13
+    push r14
+    push r15
 
-mov rcx, rdi
+    mov rcx, rdi
 
 %define offset 4096
 %define regcnt 10
@@ -575,11 +583,13 @@ mov rcx, rdi
 %assign regn (16 - regcnt)
 %rep regcnt
 %define reg r %+ regn
-lea reg, [rsp - 8]
-push reg
-mov [reg + offset], reg
+    lea reg, [rsp - 8]
+    push reg
+    mov [reg + offset], reg
 %assign regn (regn + 1)
 %endrep
+
+    mfence ; defeat memory renaming
 
 .top:
 %assign itr 0
@@ -588,28 +598,28 @@ mov [reg + offset], reg
 %rep regcnt
 %define reg r %+ regn
 %if (itr == (regn - (16 - regcnt)))
-mov reg, [reg]
+    mov reg, [reg]
 %else
-mov reg, [reg + offset]
+    mov reg, [reg + offset]
 %endif
 %assign regn (regn + 1)
 %endrep
 %assign itr (itr + 1)
 %endrep
-dec rcx
-jnz .top
+    dec rcx
+    jnz .top
 
-add rsp, regcnt * 8
+    add rsp, regcnt * 8
 
-pop r15
-pop r14
-pop r13
-pop r12
+    pop r15
+    pop r14
+    pop r13
+    pop r12
 
-mov rsp, rbp
-pop rbp
+    mov rsp, rbp
+    pop rbp
 
-ret
+    ret
 
 
 ; repeated inc [eax]
