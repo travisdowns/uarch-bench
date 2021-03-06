@@ -2303,18 +2303,16 @@ define_bench mov_elim_inc
     mov     eax, 1
     
 .top:
-    ; this variant has an inc in the chain
+    ; this variant alternates mov 
+    ; with add 1
     mov     rcx, rax
+    add     rcx, 1     
     mov     rdx, rcx
+    add     rdx, 1
     mov     rsi, rdx
-    mov      r8, rsi
-    mov      r9,  r8
-    mov     r10,  r9
-    mov     r11, r10
-    mov     rax, r11
-    inc     rax
-
-    times 8 nop
+    add     rsi, 1
+    mov     rax, rsi
+    add     rax, 1
 
     dec     rdi
     jne     .top
