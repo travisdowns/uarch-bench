@@ -41,17 +41,6 @@ jobs:
       script:
         - ./scripts/travis-build.sh
         - ./scripts/test-nasm.sh
-    - compiler: gcc-4.9
-      env: TRUE_CC=gcc-4.9 TRUE_CXX=g++-4.9 PIE=
-      addons:
-        apt:
-          sources:
-            - *default_sources
-            - ubuntu-toolchain-r-test
-          packages:
-            - *default_pacakges
-            - gcc-4.9
-            - g++-4.9
     - compiler: gcc-6
       env: TRUE_CC=gcc-6 TRUE_CXX=g++-6
       addons:
