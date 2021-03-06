@@ -2299,6 +2299,27 @@ define_bench mov_elim
     jne     .top
     ret
 
+define_bench mov_elim_inc
+    mov     eax, 1
+    
+.top:
+    ; this variant has an inc in the chain
+    mov     rcx, rax
+    mov     rdx, rcx
+    mov     rsi, rdx
+    mov      r8, rsi
+    mov      r9,  r8
+    mov     r10,  r9
+    mov     r11, r10
+    mov     rax, r11
+    inc     rax
+
+    times 8 nop
+
+    dec     rdi
+    jne     .top
+    ret
+
 ; https://news.ycombinator.com/item?id=15935283
 ; https://eli.thegreenplace.net/2013/12/03/intel-i7-loop-performance-anomaly
 define_bench loop_weirdness_fast
