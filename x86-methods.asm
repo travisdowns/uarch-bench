@@ -2279,6 +2279,25 @@ ret
 define_weird_store mov,{mov edi, 0}
 define_weird_store xor,{xor edi, edi}
 
+define_bench mov_elim
+    mov     eax, 1
+.top:
+    ; 8 chained mov, to test mov elimaintion
+    ; without elimination this sequence will
+    ; have latency 8 (looped carried), otherwise
+    ; less
+    mov     rcx, rax
+    mov     rdx, rcx
+    mov     rsi, rdx
+    mov      r8, rsi
+    mov      r9,  r8
+    mov     r10,  r9
+    mov     r11, r10
+    mov     rax, r11
+
+    dec     rdi
+    jne     .top
+    ret
 
 ; https://news.ycombinator.com/item?id=15935283
 ; https://eli.thegreenplace.net/2013/12/03/intel-i7-loop-performance-anomaly

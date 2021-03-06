@@ -93,6 +93,8 @@ bench2_f adc_chain64;
 bench2_f weird_store_mov;
 bench2_f weird_store_xor;
 
+bench2_f mov_elim;
+
 }
 
 
@@ -178,6 +180,8 @@ void register_misc(GroupList& list) {
                 []{ return nullptr; }, 10000),
         default_maker::template make_bench<weird_store_xor>(misc_group.get(), "weird-store-xor", "Store LSD weirdness, xor zero", 1000,
                 []{ return nullptr; }, 10000),
+
+        default_maker::template make_bench<mov_elim>(misc_group.get(), "mov-elim", "move elimination", 1)
     };
 
     misc_group->add(benches);
