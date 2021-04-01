@@ -24,6 +24,17 @@ bench2_f inc_rmw;
 bench2_f add_rmw;
 bench2_f add_rmw2;
 
+#define DEP_ADD_CHAIN_X(f) \
+    f(1) \
+    f(2) \
+    f(3) \
+    f(4) \
+    f(5)
+
+#define DECLARE_DEP_ADD_CHAIN(num) bench2_f dep_add_chain ## num;
+
+DEP_ADD_CHAIN_X(DECLARE_DEP_ADD_CHAIN)
+
 bench2_f nop1_128;
 bench2_f nop2_128;
 bench2_f xor_eax_128;
@@ -68,6 +79,13 @@ void register_default(GroupList& list) {
     maker.template make<inc_rmw>          ("inc-rmw", "same location inc [mem]",  128);
     maker.template make<add_rmw>          ("add-rmw", "same location add [mem], 1",  128);
     maker.template make<add_rmw2>         ("add-rmw2","multiple add [mem], 1",  16);
+
+    // add chain tests
+
+    #define MAKE_DEP_ADD_CHAIN(num) \
+            maker.template make<dep_add_chain ## num>  ("dep-add-chain" #num, #num " dependent add chain", 16);
+
+    DEP_ADD_CHAIN_X(MAKE_DEP_ADD_CHAIN)
 
     // tests to test the maximum CPU width for a variety of easy instruction mixes
     maker.template make<nop1_128> ("1-byte nops",  "128 consecutive 1-byte nops",  128);

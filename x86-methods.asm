@@ -51,6 +51,42 @@ dec rdi
 jnz .top
 ret
 
+%macro define_dep_add_chain 1
+define_bench dep_add_chain%1
+%if %1 > 5
+%error chain too big
+%endif
+    push rbx
+    xor eax, eax
+.top:
+%rep 16
+    add eax, 1
+%if %1 > 1
+    add ebx, 1
+%endif
+%if %1 > 2
+    add ecx, 1
+%endif
+%if %1 > 3
+    add edx, 1
+%endif
+%if %1 > 4
+    add rsi, 1
+%endif
+%endrep
+    dec rdi
+    jnz .top
+    pop rbx
+    ret
+%endmacro
+
+define_dep_add_chain 1
+define_dep_add_chain 2
+define_dep_add_chain 3
+define_dep_add_chain 4
+define_dep_add_chain 5
+
+
 define_bench dep_imul128_rax
 xor eax, eax
 .top:
