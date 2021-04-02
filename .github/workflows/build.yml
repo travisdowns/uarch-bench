@@ -28,6 +28,16 @@ jobs:
             debug: 1
             tag: extra
     steps:
+      - name: Install C Compiler
+        if: ${{ startsWith(matrix.c_compiler, 'gcc-') || startsWith(matrix.c_compiler, 'clang-') }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.c_compiler }}
+      - name: Install C++ Compiler
+        if: ${{ startsWith(matrix.cpp_compiler, 'g++-') || startsWith(matrix.cpp_compiler, 'clang++-') }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.cpp_compiler }}
       - uses: actions/checkout@v2
         with:
           submodules: true
