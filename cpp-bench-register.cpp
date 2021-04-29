@@ -149,6 +149,22 @@ void register_cpp(GroupList& list) {
                 ("arb_" #type "_" #name, #type " stores with gaps " #name, 1);
         ARB_OFFSET_X(MAKE_ARB_BENCH)
     }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("transcendental", "Timing math.h functions");
+        list.push_back(group);
+        auto maker        = DeltaMaker<TIMER>(group.get(), 100000);
+
+        #define MAKE_TRAN_BENCH(name) \
+                maker.template make<transcendental_##name>(#name, #name "(double x) throughput", 1);
+                
+        TRANSCENDENTAL_X(MAKE_TRAN_BENCH);
+
+        #define MAKE_TRAN_BENCH_LAT(name) \
+                maker.template make<transcendental_lat_##name>(#name "_latency", #name "(double x) latency", 1);
+                
+        TRANSCENDENTAL_X(MAKE_TRAN_BENCH_LAT);
+    }
     
 }
 

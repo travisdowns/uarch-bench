@@ -35,6 +35,16 @@ static void sink(T x) {
     __asm__ volatile ("" :: "r"(x) :);
 }
 
+HEDLEY_ALWAYS_INLINE
+static void sink(double x) {
+    __asm__ volatile ("" :: "x"(x) :);
+}
+
+HEDLEY_ALWAYS_INLINE
+static void sink(float x) {
+    __asm__ volatile ("" :: "x"(x) :);
+}
+
 /*
  * "modifying" a value instructs the compiler to produce the value, and
  * also that the value is changed after the call, i.e., that the value cannot
@@ -53,6 +63,24 @@ HEDLEY_ALWAYS_INLINE
 static void modify(T& x) {
     static_assert(std::is_arithmetic<T>::value, "types should be primitive");
     __asm__ volatile ("" :"+r"(x)::);
+}
+
+/**
+ * Specialization of modify for double to use the xmm
+ * register type (x86 specific).
+ */
+HEDLEY_ALWAYS_INLINE
+static void modify(double& x) {
+    __asm__ volatile (" " :"+x"(x)::);
+}
+
+/**
+ * Specialization of modify for float to use the xmm
+ * register type (x86 specific).
+ */
+HEDLEY_ALWAYS_INLINE
+static void modify(float& x) {
+    __asm__ volatile ("" :"+x"(x)::);
 }
 
 /*

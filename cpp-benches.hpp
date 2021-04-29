@@ -100,6 +100,15 @@ bench2_f mul_chain4_bench;
 bench2_f add_indirect;
 bench2_f add_indirect_shift;
 
+#define TRANSCENDENTAL_X(f) \
+    f(log)      \
+    f(exp)      \
+    f(pow)      \
+
+#define DECLARE_TRAN(name, ...) bench2_f transcendental_##name; bench2_f transcendental_lat_##name;
+TRANSCENDENTAL_X(DECLARE_TRAN)
+
+
 void* getLinkedList();
 
 #endif /* CPP_BENCHES_HPP_ */

@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstring>
 #include <limits>
+#include <cmath>
 #include <random>
 #include <vector>
 
@@ -603,6 +604,51 @@ long add_indirect(uint64_t iters, void *arg) {
 long add_indirect_shift(uint64_t iters, void *arg) {
     return add_indirect_f(iters, arg, add_indirect_shift_inner);
 }
+
+
+HEDLEY_ALWAYS_INLINE double log_helper(double x, double y) { return std::log(x); }
+HEDLEY_ALWAYS_INLINE double exp_helper(double x, double y) { return std::exp(x); }
+HEDLEY_ALWAYS_INLINE double pow_helper(double x, double y) { return std::pow(x, y); }
+
+template <typename F>
+long do_transcendental(uint64_t iters, void *arg, F helper) {
+    double x0 = 0.123;
+    double y0 = 0.456;
+    while (iters--) {
+        double x = x0, y = y0; 
+        opt_control::modify(x);
+        // opt_control::modify(y);
+        double r = helper(x, y);
+        // double r = std::log(x);
+        opt_control::sink(r);
+    }
+    return 0;
+}
+
+template <typename F>
+long do_transcendental_lat(uint64_t iters, void *arg, F helper) {
+    double x = 0.123;
+    double y = 0.456;
+    double z = 0.;
+    opt_control::modify(z);
+    while (iters--) {
+        double t = helper(x, y);
+        x += t * z; // no change to x, but makes x dependent on t, completing the chain
+        opt_control::sink(x);
+    }
+    return 0;
+}
+
+
+#define MAKE_TRAN(name)                           \
+long transcendental_##name(uint64_t iters, void *arg) {   \
+    return do_transcendental(iters, arg, name##_helper);  \
+} \
+long transcendental_lat_##name(uint64_t iters, void *arg) {   \
+    return do_transcendental_lat(iters, arg, name##_helper);  \
+}
+
+TRANSCENDENTAL_X(MAKE_TRAN)
 
 
 
