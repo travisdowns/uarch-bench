@@ -1,0 +1,2138 @@
+Hypervisor vendor:               KVM
+Virtualization type:             full
+Driver: , governor: 
+Vendor ID: AuthenticAMD
+Model name: AMD EPYC 7J13 64-Core Processor
+Using timer: clock
+Welcome to uarch-bench (509d737)
+Supported CPU features: SSE3 PCLMULQDQ SSSE3 FMA CX16 SSE4_1 SSE4_2 MOVBE POPCNT AES AVX RDRND TSC_ADJ BMI1 AVX2 BMI2 RDSEED ADX CLFLUSHOPT CLWB SHA
+Pinned to CPU 0
+Median CPU speed: 3.241 GHz
+Running benchmarks groups using timer clock
+
+** Running group branch/x86/indirect : Indirect branch benchmarks **
+                               Benchmark    Cycles     Nanos
+       20 uncond jumps by 8 then 8 bytes     20.98      6.47
+     20 uncond jumps by 16 then 16 bytes     20.98      6.47
+     20 uncond jumps by 32 then 32 bytes     20.98      6.47
+     20 uncond jumps by 64 then 64 bytes     20.98      6.47
+            20 indirect jumps by 8 bytes    303.64     93.67
+           20 indirect jumps by 16 bytes    303.46     93.62
+           20 indirect jumps by 32 bytes    302.67     93.37
+           20 indirect jumps by 64 bytes    302.67     93.37
+                       indirect variable     39.36     12.14
+               Load rename/alloc latency     30.84      9.52
+                LEA rename/alloc latency     28.98      8.94
+Finished in 154 ms (branch/x86/indirect)
+
+** Running group call : Call/ret benchmarks **
+                               Benchmark    Cycles     Nanos
+                      calls sparsed by 0      4.12      1.27
+                      calls sparsed by 1      4.18      1.29
+                      calls sparsed by 2      4.12      1.27
+                      calls sparsed by 3      4.25      1.31
+                      calls sparsed by 4      4.31      1.33
+                      calls sparsed by 5      5.00      1.54
+                      calls sparsed by 6      6.00      1.85
+                      calls sparsed by 7      6.99      2.16
+                      calls chained by 0      4.06      1.25
+                      calls chained by 1      4.06      1.25
+                      calls chained by 2      4.06      1.25
+                      calls chained by 3      4.06      1.25
+                     calls to pushpop fn      4.12      1.27
+                     calls to addrsp0 fn      4.12      1.27
+                     calls to addrsp8 fn      4.12      1.27
+Finished in 118 ms (call)
+
+** Running group cpp : Tests written in C++ **
+                               Benchmark    Cycles     Nanos
+Dependent    32b / 64b  inline divisions     12.99      4.01
+Independent  32b / 64b  inline divisions      6.99      2.16
+Dependent    64b / 64b  inline divisions     16.98      5.24
+Independent  64b / 64b  inline divisions      7.99      2.47
+Dependent   128b / 64b  inline divisions     14.99      4.62
+Independent 128b / 64b  inline divisions      7.00      2.16
+                gettimeofday() libc call    119.92     36.99
+                               crc8 loop      6.08      1.87
+        Sum 16-bit halves of array elems      2.85      0.88
+                    Four multiplications      4.05      1.25
+                 Chained multiplications      3.04      0.94
+       Chained multiplications, 4 chains      1.01      0.31
+               Indirect adds from memory      2.03      0.63
+       Indirect adds from memory, tricky      2.03      0.63
+                 Linked-list w/ sentinel      9.95      3.07
+                    Linked-list w/ count      9.99      3.08
+Finished in 9527 ms (cpp)
+
+** Running group memory/cpp/store : Strided stores **
+                               Benchmark    Cycles     Nanos
+ 8 bit stores to same location                0.58      0.18
+ 8 bit stores, stride   1, size    4 KiB      0.58      0.18
+ 8 bit stores, stride   1, size    8 KiB      0.58      0.18
+ 8 bit stores, stride   1, size   16 KiB      0.58      0.18
+ 8 bit stores, stride   1, size   32 KiB      0.58      0.18
+ 8 bit stores, stride   1, size   64 KiB      0.58      0.18
+ 8 bit stores, stride   1, size  128 KiB      0.58      0.18
+ 8 bit stores, stride   1, size  256 KiB      0.58      0.18
+ 8 bit stores, stride   1, size  512 KiB      0.59      0.18
+ 8 bit stores, stride   1, size 1024 KiB      0.60      0.18
+ 8 bit stores, stride   1, size 2048 KiB      0.60      0.18
+ 8 bit stores, stride   2, size    4 KiB      0.58      0.18
+ 8 bit stores, stride   2, size    8 KiB      0.58      0.18
+ 8 bit stores, stride   2, size   16 KiB      0.58      0.18
+ 8 bit stores, stride   2, size   32 KiB      0.58      0.18
+ 8 bit stores, stride   2, size   64 KiB      0.59      0.18
+ 8 bit stores, stride   2, size  128 KiB      0.58      0.18
+ 8 bit stores, stride   2, size  256 KiB      0.58      0.18
+ 8 bit stores, stride   2, size  512 KiB      0.59      0.18
+ 8 bit stores, stride   2, size 1024 KiB      0.60      0.18
+ 8 bit stores, stride   2, size 2048 KiB      0.60      0.19
+ 8 bit stores, stride   4, size    4 KiB      0.58      0.18
+ 8 bit stores, stride   4, size    8 KiB      0.58      0.18
+ 8 bit stores, stride   4, size   16 KiB      0.58      0.18
+ 8 bit stores, stride   4, size   32 KiB      0.58      0.18
+ 8 bit stores, stride   4, size   64 KiB      0.59      0.18
+ 8 bit stores, stride   4, size  128 KiB      0.59      0.18
+ 8 bit stores, stride   4, size  256 KiB      0.59      0.18
+ 8 bit stores, stride   4, size  512 KiB      0.60      0.19
+ 8 bit stores, stride   4, size 1024 KiB      0.60      0.19
+ 8 bit stores, stride   4, size 2048 KiB      0.61      0.19
+ 8 bit stores, stride   8, size    4 KiB      0.58      0.18
+ 8 bit stores, stride   8, size    8 KiB      0.58      0.18
+ 8 bit stores, stride   8, size   16 KiB      0.58      0.18
+ 8 bit stores, stride   8, size   32 KiB      0.59      0.18
+ 8 bit stores, stride   8, size   64 KiB      0.80      0.25
+ 8 bit stores, stride   8, size  128 KiB      0.80      0.25
+ 8 bit stores, stride   8, size  256 KiB      0.80      0.25
+ 8 bit stores, stride   8, size  512 KiB      0.82      0.25
+ 8 bit stores, stride   8, size 1024 KiB      0.83      0.26
+ 8 bit stores, stride   8, size 2048 KiB      0.66      0.20
+ 8 bit stores, stride  16, size    4 KiB      0.69      0.21
+ 8 bit stores, stride  16, size    8 KiB      0.69      0.21
+ 8 bit stores, stride  16, size   16 KiB      0.69      0.21
+ 8 bit stores, stride  16, size   32 KiB      0.69      0.21
+ 8 bit stores, stride  16, size   64 KiB      1.21      0.37
+ 8 bit stores, stride  16, size  128 KiB      1.21      0.37
+ 8 bit stores, stride  16, size  256 KiB      1.21      0.37
+ 8 bit stores, stride  16, size  512 KiB      1.24      0.38
+ 8 bit stores, stride  16, size 1024 KiB      1.24      0.38
+ 8 bit stores, stride  16, size 2048 KiB      1.23      0.38
+ 8 bit stores, stride  32, size    4 KiB      0.96      0.30
+ 8 bit stores, stride  32, size    8 KiB      0.99      0.31
+ 8 bit stores, stride  32, size   16 KiB      0.99      0.31
+ 8 bit stores, stride  32, size   32 KiB      1.00      0.31
+ 8 bit stores, stride  32, size   64 KiB      1.57      0.48
+ 8 bit stores, stride  32, size  128 KiB      1.58      0.49
+ 8 bit stores, stride  32, size  256 KiB      1.58      0.49
+ 8 bit stores, stride  32, size  512 KiB      1.64      0.51
+ 8 bit stores, stride  32, size 1024 KiB      1.66      0.51
+ 8 bit stores, stride  32, size 2048 KiB      1.66      0.51
+ 8 bit stores, stride  64, size    4 KiB      0.97      0.30
+ 8 bit stores, stride  64, size    8 KiB      0.96      0.30
+ 8 bit stores, stride  64, size   16 KiB      0.99      0.31
+ 8 bit stores, stride  64, size   32 KiB      1.01      0.31
+ 8 bit stores, stride  64, size   64 KiB      2.00      0.62
+ 8 bit stores, stride  64, size  128 KiB      2.01      0.62
+ 8 bit stores, stride  64, size  256 KiB      2.01      0.62
+ 8 bit stores, stride  64, size  512 KiB      2.36      0.73
+ 8 bit stores, stride  64, size 1024 KiB      2.72      0.84
+ 8 bit stores, stride  64, size 2048 KiB      2.59      0.80
+ 8 bit stores, stride 128, size    4 KiB      0.91      0.28
+ 8 bit stores, stride 128, size    8 KiB      0.97      0.30
+ 8 bit stores, stride 128, size   16 KiB      0.97      0.30
+ 8 bit stores, stride 128, size   32 KiB      1.00      0.31
+ 8 bit stores, stride 128, size   64 KiB      2.00      0.62
+ 8 bit stores, stride 128, size  128 KiB      2.05      0.63
+ 8 bit stores, stride 128, size  256 KiB      2.07      0.64
+ 8 bit stores, stride 128, size  512 KiB      2.07      0.64
+ 8 bit stores, stride 128, size 1024 KiB      4.18      1.29
+ 8 bit stores, stride 128, size 2048 KiB      4.30      1.33
+32 bit stores to same location                0.58      0.18
+32 bit cl split stores to same location       4.98      1.54
+32 bit stores, stride   1, size    4 KiB      0.70      0.22
+32 bit stores, stride   1, size    8 KiB      0.70      0.22
+32 bit stores, stride   1, size   16 KiB      0.71      0.22
+32 bit stores, stride   1, size   32 KiB      0.71      0.22
+32 bit stores, stride   1, size   64 KiB      0.71      0.22
+32 bit stores, stride   1, size  128 KiB      0.71      0.22
+32 bit stores, stride   1, size  256 KiB      0.71      0.22
+32 bit stores, stride   1, size  512 KiB      0.72      0.22
+32 bit stores, stride   1, size 1024 KiB      0.72      0.22
+32 bit stores, stride   1, size 2048 KiB      0.72      0.22
+32 bit stores, stride   2, size    4 KiB      0.59      0.18
+32 bit stores, stride   2, size    8 KiB      0.59      0.18
+32 bit stores, stride   2, size   16 KiB      0.59      0.18
+32 bit stores, stride   2, size   32 KiB      0.59      0.18
+32 bit stores, stride   2, size   64 KiB      0.59      0.18
+32 bit stores, stride   2, size  128 KiB      0.59      0.18
+32 bit stores, stride   2, size  256 KiB      0.59      0.18
+32 bit stores, stride   2, size  512 KiB      0.60      0.18
+32 bit stores, stride   2, size 1024 KiB      0.60      0.19
+32 bit stores, stride   2, size 2048 KiB      0.61      0.19
+32 bit stores, stride   4, size    4 KiB      0.58      0.18
+32 bit stores, stride   4, size    8 KiB      0.58      0.18
+32 bit stores, stride   4, size   16 KiB      0.58      0.18
+32 bit stores, stride   4, size   32 KiB      0.58      0.18
+32 bit stores, stride   4, size   64 KiB      0.59      0.18
+32 bit stores, stride   4, size  128 KiB      0.59      0.18
+32 bit stores, stride   4, size  256 KiB      0.59      0.18
+32 bit stores, stride   4, size  512 KiB      0.61      0.19
+32 bit stores, stride   4, size 1024 KiB      0.61      0.19
+32 bit stores, stride   4, size 2048 KiB      0.61      0.19
+32 bit stores, stride   8, size    4 KiB      0.58      0.18
+32 bit stores, stride   8, size    8 KiB      0.58      0.18
+32 bit stores, stride   8, size   16 KiB      0.58      0.18
+32 bit stores, stride   8, size   32 KiB      0.58      0.18
+32 bit stores, stride   8, size   64 KiB      0.61      0.19
+32 bit stores, stride   8, size  128 KiB      0.60      0.18
+32 bit stores, stride   8, size  256 KiB      0.59      0.18
+32 bit stores, stride   8, size  512 KiB      0.63      0.19
+32 bit stores, stride   8, size 1024 KiB      0.63      0.20
+32 bit stores, stride   8, size 2048 KiB      0.63      0.19
+32 bit stores, stride  16, size    4 KiB      0.58      0.18
+32 bit stores, stride  16, size    8 KiB      0.58      0.18
+32 bit stores, stride  16, size   16 KiB      0.58      0.18
+32 bit stores, stride  16, size   32 KiB      0.59      0.18
+32 bit stores, stride  16, size   64 KiB      1.21      0.37
+32 bit stores, stride  16, size  128 KiB      1.21      0.37
+32 bit stores, stride  16, size  256 KiB      1.21      0.37
+32 bit stores, stride  16, size  512 KiB      1.23      0.38
+32 bit stores, stride  16, size 1024 KiB      1.24      0.38
+32 bit stores, stride  16, size 2048 KiB      1.23      0.38
+32 bit stores, stride  32, size    4 KiB      0.96      0.30
+32 bit stores, stride  32, size    8 KiB      0.99      0.31
+32 bit stores, stride  32, size   16 KiB      0.99      0.31
+32 bit stores, stride  32, size   32 KiB      1.00      0.31
+32 bit stores, stride  32, size   64 KiB      1.57      0.48
+32 bit stores, stride  32, size  128 KiB      1.58      0.49
+32 bit stores, stride  32, size  256 KiB      1.58      0.49
+32 bit stores, stride  32, size  512 KiB      1.64      0.51
+32 bit stores, stride  32, size 1024 KiB      1.64      0.51
+32 bit stores, stride  32, size 2048 KiB      1.66      0.51
+32 bit stores, stride  64, size    4 KiB      0.97      0.30
+32 bit stores, stride  64, size    8 KiB      0.96      0.30
+32 bit stores, stride  64, size   16 KiB      0.99      0.31
+32 bit stores, stride  64, size   32 KiB      1.00      0.31
+32 bit stores, stride  64, size   64 KiB      2.00      0.62
+32 bit stores, stride  64, size  128 KiB      2.00      0.62
+32 bit stores, stride  64, size  256 KiB      2.01      0.62
+32 bit stores, stride  64, size  512 KiB      2.35      0.73
+32 bit stores, stride  64, size 1024 KiB      2.75      0.85
+32 bit stores, stride  64, size 2048 KiB      2.78      0.86
+32 bit stores, stride 128, size    4 KiB      0.92      0.28
+32 bit stores, stride 128, size    8 KiB      0.97      0.30
+32 bit stores, stride 128, size   16 KiB      0.96      0.30
+32 bit stores, stride 128, size   32 KiB      1.00      0.31
+32 bit stores, stride 128, size   64 KiB      2.01      0.62
+32 bit stores, stride 128, size  128 KiB      2.06      0.64
+32 bit stores, stride 128, size  256 KiB      2.05      0.63
+32 bit stores, stride 128, size  512 KiB      2.10      0.65
+32 bit stores, stride 128, size 1024 KiB      4.18      1.29
+32 bit stores, stride 128, size 2048 KiB      4.28      1.32
+64 bit stores to same location                0.58      0.18
+64 bit cl split stores to same location       4.98      1.54
+64 bit stores, stride   1, size    4 KiB      1.26      0.39
+64 bit stores, stride   1, size    8 KiB      1.26      0.39
+64 bit stores, stride   1, size   16 KiB      1.26      0.39
+64 bit stores, stride   1, size   32 KiB      1.26      0.39
+64 bit stores, stride   1, size   64 KiB      1.26      0.39
+64 bit stores, stride   1, size  128 KiB      1.26      0.39
+64 bit stores, stride   1, size  256 KiB      1.27      0.39
+64 bit stores, stride   1, size  512 KiB      1.27      0.39
+64 bit stores, stride   1, size 1024 KiB      1.27      0.39
+64 bit stores, stride   1, size 2048 KiB      1.27      0.39
+64 bit stores, stride   2, size    4 KiB      0.82      0.25
+64 bit stores, stride   2, size    8 KiB      0.82      0.25
+64 bit stores, stride   2, size   16 KiB      0.82      0.25
+64 bit stores, stride   2, size   32 KiB      0.83      0.25
+64 bit stores, stride   2, size   64 KiB      0.83      0.26
+64 bit stores, stride   2, size  128 KiB      0.83      0.26
+64 bit stores, stride   2, size  256 KiB      0.83      0.26
+64 bit stores, stride   2, size  512 KiB      0.83      0.26
+64 bit stores, stride   2, size 1024 KiB      0.84      0.26
+64 bit stores, stride   2, size 2048 KiB      0.84      0.26
+64 bit stores, stride   4, size    4 KiB      0.65      0.20
+64 bit stores, stride   4, size    8 KiB      0.65      0.20
+64 bit stores, stride   4, size   16 KiB      0.65      0.20
+64 bit stores, stride   4, size   32 KiB      0.65      0.20
+64 bit stores, stride   4, size   64 KiB      0.66      0.20
+64 bit stores, stride   4, size  128 KiB      0.65      0.20
+64 bit stores, stride   4, size  256 KiB      0.65      0.20
+64 bit stores, stride   4, size  512 KiB      0.66      0.20
+64 bit stores, stride   4, size 1024 KiB      0.67      0.21
+64 bit stores, stride   4, size 2048 KiB      0.67      0.21
+64 bit stores, stride   8, size    4 KiB      0.58      0.18
+64 bit stores, stride   8, size    8 KiB      0.58      0.18
+64 bit stores, stride   8, size   16 KiB      0.58      0.18
+64 bit stores, stride   8, size   32 KiB      0.58      0.18
+64 bit stores, stride   8, size   64 KiB      0.61      0.19
+64 bit stores, stride   8, size  128 KiB      0.60      0.18
+64 bit stores, stride   8, size  256 KiB      0.59      0.18
+64 bit stores, stride   8, size  512 KiB      0.62      0.19
+64 bit stores, stride   8, size 1024 KiB      0.63      0.19
+64 bit stores, stride   8, size 2048 KiB      0.63      0.20
+64 bit stores, stride  16, size    4 KiB      0.58      0.18
+64 bit stores, stride  16, size    8 KiB      0.58      0.18
+64 bit stores, stride  16, size   16 KiB      0.58      0.18
+64 bit stores, stride  16, size   32 KiB      0.59      0.18
+64 bit stores, stride  16, size   64 KiB      1.21      0.37
+64 bit stores, stride  16, size  128 KiB      1.20      0.37
+64 bit stores, stride  16, size  256 KiB      1.21      0.37
+64 bit stores, stride  16, size  512 KiB      1.23      0.38
+64 bit stores, stride  16, size 1024 KiB      1.23      0.38
+64 bit stores, stride  16, size 2048 KiB      1.24      0.38
+64 bit stores, stride  32, size    4 KiB      0.96      0.30
+64 bit stores, stride  32, size    8 KiB      0.99      0.31
+64 bit stores, stride  32, size   16 KiB      0.99      0.31
+64 bit stores, stride  32, size   32 KiB      1.00      0.31
+64 bit stores, stride  32, size   64 KiB      1.57      0.48
+64 bit stores, stride  32, size  128 KiB      1.57      0.49
+64 bit stores, stride  32, size  256 KiB      1.58      0.49
+64 bit stores, stride  32, size  512 KiB      1.64      0.51
+64 bit stores, stride  32, size 1024 KiB      1.64      0.51
+64 bit stores, stride  32, size 2048 KiB      1.64      0.51
+64 bit stores, stride  64, size    4 KiB      0.97      0.30
+64 bit stores, stride  64, size    8 KiB      0.96      0.30
+64 bit stores, stride  64, size   16 KiB      0.99      0.31
+64 bit stores, stride  64, size   32 KiB      1.00      0.31
+64 bit stores, stride  64, size   64 KiB      2.00      0.62
+64 bit stores, stride  64, size  128 KiB      2.01      0.62
+64 bit stores, stride  64, size  256 KiB      2.00      0.62
+64 bit stores, stride  64, size  512 KiB      2.34      0.72
+64 bit stores, stride  64, size 1024 KiB      2.77      0.85
+64 bit stores, stride  64, size 2048 KiB      2.76      0.85
+64 bit stores, stride 128, size    4 KiB      0.92      0.28
+64 bit stores, stride 128, size    8 KiB      0.97      0.30
+64 bit stores, stride 128, size   16 KiB      0.96      0.30
+64 bit stores, stride 128, size   32 KiB      1.00      0.31
+64 bit stores, stride 128, size   64 KiB      2.01      0.62
+64 bit stores, stride 128, size  128 KiB      2.05      0.63
+64 bit stores, stride 128, size  256 KiB      2.07      0.64
+64 bit stores, stride 128, size  512 KiB      2.10      0.65
+64 bit stores, stride 128, size 1024 KiB      4.18      1.29
+64 bit stores, stride 128, size 2048 KiB      4.28      1.32
+Finished in 2267 ms (memory/cpp/store)
+
+** Running group memory/cpp/store-volatile : Simple stores **
+                               Benchmark    Cycles     Nanos
+           8-bit stores with 0 elems gap      0.50      0.15
+           8-bit stores with 1 elems gap      0.50      0.15
+           8-bit stores with 2 elems gap      0.50      0.15
+          8-bit stores with 56 bytes gap      2.49      0.77
+          8-bit stores with 64 bytes gap      2.49      0.77
+          32-bit stores with 0 elems gap      0.50      0.15
+          32-bit stores with 1 elems gap      0.50      0.15
+          32-bit stores with 2 elems gap      0.50      0.15
+         32-bit stores with 56 bytes gap      1.00      0.31
+         32-bit stores with 64 bytes gap      0.99      0.31
+          64-bit stores with 0 elems gap      0.50      0.15
+          64-bit stores with 1 elems gap      0.50      0.15
+          64-bit stores with 2 elems gap      0.50      0.15
+         64-bit stores with 56 bytes gap      0.99      0.31
+         64-bit stores with 64 bytes gap      0.99      0.31
+Finished in 1 ms (memory/cpp/store-volatile)
+
+** Running group memory/cpp/store-alignment : Misaligned stores **
+                               Benchmark    Cycles     Nanos
+      Same location stores with offset 0      0.50      0.15
+      Same location stores with offset 1      0.50      0.15
+      Same location stores with offset 2      0.50      0.15
+      Same location stores with offset 3      0.50      0.15
+      Same location stores with offset 4      0.50      0.15
+      Same location stores with offset 5      0.50      0.15
+      Same location stores with offset 6      0.50      0.15
+      Same location stores with offset 7      0.50      0.15
+      Same location stores with offset 8      0.50      0.15
+      Same location stores with offset 9      0.50      0.15
+     Same location stores with offset 10      0.50      0.15
+     Same location stores with offset 11      0.50      0.15
+     Same location stores with offset 12      0.50      0.15
+     Same location stores with offset 13      0.50      0.15
+     Same location stores with offset 14      0.50      0.15
+     Same location stores with offset 15      0.50      0.15
+     Same location stores with offset 16      0.50      0.15
+     Same location stores with offset 17      0.50      0.15
+     Same location stores with offset 18      0.50      0.15
+     Same location stores with offset 19      0.50      0.15
+     Same location stores with offset 20      0.50      0.15
+     Same location stores with offset 21      0.50      0.15
+     Same location stores with offset 22      0.50      0.15
+     Same location stores with offset 23      0.50      0.15
+     Same location stores with offset 24      0.50      0.15
+     Same location stores with offset 25      4.98      1.54
+     Same location stores with offset 26      4.99      1.54
+     Same location stores with offset 27      4.98      1.54
+     Same location stores with offset 28      1.99      0.61
+     Same location stores with offset 29      4.98      1.54
+     Same location stores with offset 30      4.98      1.54
+     Same location stores with offset 31      4.98      1.54
+     Same location stores with offset 32      0.50      0.15
+     Same location stores with offset 33      0.50      0.15
+     Same location stores with offset 34      0.50      0.15
+     Same location stores with offset 35      0.50      0.15
+     Same location stores with offset 36      0.50      0.15
+     Same location stores with offset 37      0.50      0.15
+     Same location stores with offset 38      0.50      0.15
+     Same location stores with offset 39      0.50      0.15
+     Same location stores with offset 40      0.50      0.15
+     Same location stores with offset 41      0.50      0.15
+     Same location stores with offset 42      0.50      0.15
+     Same location stores with offset 43      0.50      0.15
+     Same location stores with offset 44      0.50      0.15
+     Same location stores with offset 45      0.50      0.15
+     Same location stores with offset 46      0.50      0.15
+     Same location stores with offset 47      0.50      0.15
+     Same location stores with offset 48      0.50      0.15
+     Same location stores with offset 49      0.50      0.15
+     Same location stores with offset 50      0.50      0.15
+     Same location stores with offset 51      0.50      0.15
+     Same location stores with offset 52      0.50      0.15
+     Same location stores with offset 53      0.50      0.15
+     Same location stores with offset 54      0.50      0.15
+     Same location stores with offset 55      0.50      0.15
+     Same location stores with offset 56      0.50      0.15
+     Same location stores with offset 57      4.98      1.54
+     Same location stores with offset 58      4.99      1.54
+     Same location stores with offset 59      4.98      1.54
+     Same location stores with offset 60      1.99      0.61
+     Same location stores with offset 61      4.98      1.54
+     Same location stores with offset 62      4.98      1.54
+     Same location stores with offset 63      4.99      1.54
+     Same location stores with offset 64      0.50      0.15
+    1B stide overlapping stores offset 0      0.50      0.15
+    1B stide overlapping stores offset 1      0.78      0.24
+    1B stide overlapping stores offset 2      0.78      0.24
+    1B stide overlapping stores offset 3      0.78      0.24
+    1B stide overlapping stores offset 4      0.75      0.23
+    1B stide overlapping stores offset 5      0.78      0.24
+    1B stide overlapping stores offset 6      0.78      0.24
+    1B stide overlapping stores offset 7      0.78      0.24
+    1B stide overlapping stores offset 8      0.50      0.15
+    1B stide overlapping stores offset 9      0.78      0.24
+   1B stide overlapping stores offset 10      0.78      0.24
+   1B stide overlapping stores offset 11      0.78      0.24
+   1B stide overlapping stores offset 12      0.75      0.23
+   1B stide overlapping stores offset 13      0.78      0.24
+   1B stide overlapping stores offset 14      0.78      0.24
+   1B stide overlapping stores offset 15      0.78      0.24
+   1B stide overlapping stores offset 16      0.50      0.15
+   1B stide overlapping stores offset 17      0.81      0.25
+   1B stide overlapping stores offset 18      0.81      0.25
+   1B stide overlapping stores offset 19      0.81      0.25
+   1B stide overlapping stores offset 20      0.75      0.23
+   1B stide overlapping stores offset 21      0.81      0.25
+   1B stide overlapping stores offset 22      0.81      0.25
+   1B stide overlapping stores offset 23      0.81      0.25
+   1B stide overlapping stores offset 24      0.50      0.15
+   1B stide overlapping stores offset 25      0.75      0.23
+   1B stide overlapping stores offset 26      0.75      0.23
+   1B stide overlapping stores offset 27      0.75      0.23
+   1B stide overlapping stores offset 28      0.75      0.23
+   1B stide overlapping stores offset 29      0.75      0.23
+   1B stide overlapping stores offset 30      0.75      0.23
+   1B stide overlapping stores offset 31      0.75      0.23
+   1B stide overlapping stores offset 32      0.50      0.15
+   1B stide overlapping stores offset 33      0.78      0.24
+   1B stide overlapping stores offset 34      0.78      0.24
+   1B stide overlapping stores offset 35      0.78      0.24
+   1B stide overlapping stores offset 36      0.75      0.23
+   1B stide overlapping stores offset 37      0.78      0.24
+   1B stide overlapping stores offset 38      0.78      0.24
+   1B stide overlapping stores offset 39      0.78      0.24
+   1B stide overlapping stores offset 40      0.50      0.15
+   1B stide overlapping stores offset 41      0.78      0.24
+   1B stide overlapping stores offset 42      0.78      0.24
+   1B stide overlapping stores offset 43      0.78      0.24
+   1B stide overlapping stores offset 44      0.75      0.23
+   1B stide overlapping stores offset 45      0.78      0.24
+   1B stide overlapping stores offset 46      0.78      0.24
+   1B stide overlapping stores offset 47      0.78      0.24
+   1B stide overlapping stores offset 48      0.50      0.15
+   1B stide overlapping stores offset 49      0.81      0.25
+   1B stide overlapping stores offset 50      0.81      0.25
+   1B stide overlapping stores offset 51      0.81      0.25
+   1B stide overlapping stores offset 52      0.75      0.23
+   1B stide overlapping stores offset 53      0.81      0.25
+   1B stide overlapping stores offset 54      0.81      0.25
+   1B stide overlapping stores offset 55      0.81      0.25
+   1B stide overlapping stores offset 56      0.50      0.15
+   1B stide overlapping stores offset 57      0.75      0.23
+   1B stide overlapping stores offset 58      0.75      0.23
+   1B stide overlapping stores offset 59      0.75      0.23
+   1B stide overlapping stores offset 60      0.75      0.23
+   1B stide overlapping stores offset 61      0.75      0.23
+   1B stide overlapping stores offset 62      0.75      0.23
+   1B stide overlapping stores offset 63      0.75      0.23
+   1B stide overlapping stores offset 64      0.50      0.15
+         two missaligned stores offset 0      2.98      0.92
+         two missaligned stores offset 1      2.98      0.92
+         two missaligned stores offset 2      2.99      0.92
+         two missaligned stores offset 3      2.99      0.92
+         two missaligned stores offset 4      2.98      0.92
+         two missaligned stores offset 5      2.49      0.77
+         two missaligned stores offset 6      2.49      0.77
+         two missaligned stores offset 7      2.49      0.77
+         two missaligned stores offset 8      2.49      0.77
+         two missaligned stores offset 9      2.49      0.77
+        two missaligned stores offset 10      2.49      0.77
+        two missaligned stores offset 11      2.49      0.77
+        two missaligned stores offset 12      2.49      0.77
+        two missaligned stores offset 13      2.49      0.77
+        two missaligned stores offset 14      2.49      0.77
+        two missaligned stores offset 15      2.49      0.77
+        two missaligned stores offset 16      2.49      0.77
+        two missaligned stores offset 17      2.49      0.77
+        two missaligned stores offset 18      2.49      0.77
+        two missaligned stores offset 19      2.49      0.77
+        two missaligned stores offset 20      2.49      0.77
+        two missaligned stores offset 21      2.49      0.77
+        two missaligned stores offset 22      2.49      0.77
+        two missaligned stores offset 23      2.49      0.77
+        two missaligned stores offset 24      2.49      0.77
+        two missaligned stores offset 25      2.49      0.77
+        two missaligned stores offset 26      2.50      0.77
+        two missaligned stores offset 27      2.49      0.77
+        two missaligned stores offset 28      2.49      0.77
+        two missaligned stores offset 29      2.49      0.77
+        two missaligned stores offset 30      4.99      1.54
+        two missaligned stores offset 31      4.99      1.54
+        two missaligned stores offset 32      2.49      0.77
+        two missaligned stores offset 33      2.49      0.77
+        two missaligned stores offset 34      2.49      0.77
+        two missaligned stores offset 35      2.49      0.77
+        two missaligned stores offset 36      2.49      0.77
+        two missaligned stores offset 37      2.49      0.77
+        two missaligned stores offset 38      2.49      0.77
+        two missaligned stores offset 39      2.50      0.77
+        two missaligned stores offset 40      2.49      0.77
+        two missaligned stores offset 41      2.49      0.77
+        two missaligned stores offset 42      2.49      0.77
+        two missaligned stores offset 43      2.49      0.77
+        two missaligned stores offset 44      2.49      0.77
+        two missaligned stores offset 45      2.49      0.77
+        two missaligned stores offset 46      2.50      0.77
+        two missaligned stores offset 47      2.50      0.77
+        two missaligned stores offset 48      2.49      0.77
+        two missaligned stores offset 49      2.49      0.77
+        two missaligned stores offset 50      2.49      0.77
+        two missaligned stores offset 51      2.49      0.77
+        two missaligned stores offset 52      2.49      0.77
+        two missaligned stores offset 53      2.49      0.77
+        two missaligned stores offset 54      2.49      0.77
+        two missaligned stores offset 55      2.49      0.77
+        two missaligned stores offset 56      2.49      0.77
+        two missaligned stores offset 57      2.99      0.92
+        two missaligned stores offset 58      2.99      0.92
+        two missaligned stores offset 59      2.99      0.92
+        two missaligned stores offset 60      2.98      0.92
+        two missaligned stores offset 61      2.99      0.92
+        two missaligned stores offset 62      3.49      1.08
+        two missaligned stores offset 63      3.49      1.08
+        two missaligned stores offset 64      2.99      0.92
+Finished in 36 ms (memory/cpp/store-alignment)
+
+** Running group studies/memory/store-volatile : 64-bit store study **
+                               Benchmark    Cycles     Nanos
+                      64-bit store study      1.07      0.33
+       uint64_t stores with gaps 0_0_0_0      0.51      0.16
+       uint64_t stores with gaps 0_1_0_1      0.51      0.16
+       uint64_t stores with gaps 0_2_4_6      0.51      0.16
+         uint64_t stores with gaps 0_xxx      0.51      0.16
+       uint32_t stores with gaps 0_1_0_1      0.50      0.15
+       uint32_t stores with gaps 0_2_4_6      0.50      0.15
+     uint32_t stores with gaps 0_16_0_16      1.00      0.31
+    uint32_t stores with gaps 0_16_16_16      0.50      0.15
+    uint32_t stores with gaps 0_16_17_18      0.50      0.15
+Finished in 7 ms (studies/memory/store-volatile)
+
+** Running group transcendental : Timing math.h functions **
+                               Benchmark    Cycles     Nanos
+                log(double x) throughput     84.43     26.05
+                exp(double x) throughput     78.92     24.35
+                pow(double x) throughput    132.67     40.93
+                   log(double x) latency     90.42     27.89
+                   exp(double x) latency     78.96     24.36
+                   pow(double x) latency    133.19     41.09
+Finished in 649 ms (transcendental)
+
+** Running group decode : Decode tests **
+                               Benchmark    Cycles     Nanos
+              Decode 3-3-3-3-4 byte nops      0.25      0.08
+            Decode 3-3-3-3-2-2 byte nops      0.25      0.08
+          Decode 3-3-3-3-2-1-1 byte nops      0.25      0.08
+              Decode 3-3-3-3-3 byte nops      0.25      0.08
+                   Decode 16x1 byte nops      0.25      0.08
+                    Decode 8x2 byte nops      0.25      0.08
+                    Decode 4x4 byte nops      0.25      0.08
+                  Decode 6-6-4 byte nops      0.34      0.10
+                    Decode 8-8 byte nops      0.51      0.16
+          Decode 8-8-3-3-3-3-4 byte nops      0.29      0.09
+            Decode 8-8-4-4-4-4 byte nops      0.34      0.10
+          Decode 33334x10, 556x10 blocks      1.07      0.33
+                                 monoid2      0.24      0.07
+                                 monoid3      0.24      0.07
+                      decode_complex_211      1.00      0.31
+                     decode_complex_2111      1.00      0.31
+                    decode_complex_21111      1.01      0.31
+                       decode_complex_31      0.50      0.15
+                      decode_complex_311      0.67      0.21
+                     decode_complex_3111      1.00      0.31
+                 nested loops offset: 35      1.02      0.31
+                 nested loops offset: 36      2.04      0.63
+                 nested loops offset: 48      2.02      0.62
+                 nested loops offset: 49      1.02      0.31
+Finished in 1160 ms (decode)
+
+** Running group basic : Basic Benchmarks **
+                               Benchmark    Cycles     Nanos
+                     Dependent add chain      1.00      0.31
+                   Independent add chain      0.25      0.08
+                  Dependent imul 64->128      3.01      0.93
+                   Dependent imul 64->64      3.01      0.93
+                Independent imul 64->128      1.00      0.31
+                 Independent imul 64->64      1.00      0.31
+                    Same location stores      0.50      0.15
+                Disjoint location stores      0.50      0.15
+                Dependent push/pop chain      1.00      0.31
+              Independent push/pop chain      1.00      0.31
+     Back-to-back call of empty function      4.12      1.27
+            64-bit dependent div 1/1 = 1     11.06      3.41
+           64-bit dependent idiv 1/1 = 1     11.07      3.41
+                 same location inc [mem]      1.00      0.31
+              same location add [mem], 1      1.00      0.31
+                   multiple add [mem], 1      1.01      0.31
+                   1 dependent add chain      1.00      0.31
+                   2 dependent add chain      1.00      0.31
+                   3 dependent add chain      1.00      0.31
+                   4 dependent add chain      1.01      0.31
+                   5 dependent add chain      1.27      0.39
+             128 consecutive 1-byte nops      0.17      0.05
+             128 consecutive 2-byte nops      0.17      0.05
+            128 consecutive xor eax, eax      0.17      0.05
+                         6 adds, 0 loads      0.25      0.08
+                         6 adds, 1 loads      0.21      0.07
+                         6 adds, 2 loads      0.19      0.06
+                         6 adds, 3 loads      0.19      0.06
+                         6 adds, 4 loads      0.20      0.06
+                         6 adds, 5 loads      0.19      0.06
+                         6 adds, 6 loads      0.17      0.05
+         Simple addressing pointer chase      4.03      1.24
+        Complex addressing pointer chase      5.03      1.55
+        Simple pointer chase FS override      5.03      1.55
+       Complex pointer chase FS override      5.03      1.55
+           back-to-back rdtsc throughput     36.33     11.21
+          back-to-back rdtscp throughput     69.71     21.51
+Finished in 2368 ms (basic)
+
+** Inverse throughput for load/16-bit **
+offset      0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+  0 :     1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+ 16 :     1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+ 32 :     1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+ 48 :     1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+
+** Inverse throughput for load/32-bit **
+offset      0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+  0 :     0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3
+ 16 :     0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3
+ 32 :     0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3
+ 48 :     0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.7  0.7  0.7
+
+** Inverse throughput for load/64-bit **
+offset      0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+  0 :     0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3
+ 16 :     0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3
+ 32 :     0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3
+ 48 :     0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.3  0.7  0.7  0.7  0.7  0.7  0.7  0.7
+
+** Inverse throughput for load/128-bit **
+offset      0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+  0 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 16 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 32 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 48 :     0.5  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+
+** Inverse throughput for load/256-bit **
+offset      0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+  0 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 16 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 32 :     0.5  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+ 48 :     1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+
+** Inverse throughput for store/16-bit **
+offset      0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+  0 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 16 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  5.0
+ 32 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 48 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  5.0
+
+** Inverse throughput for store/32-bit **
+offset      0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+  0 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 16 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  5.0  5.0  5.0
+ 32 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 48 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  5.0  5.0  5.0
+
+** Inverse throughput for store/64-bit **
+offset      0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+  0 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 16 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  5.0  5.0  5.0  2.0  5.0  5.0  5.0
+ 32 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5
+ 48 :     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  5.0  5.0  5.0  2.0  5.0  5.0  5.0
+
+** Inverse throughput for store/128-bit **
+offset      0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+  0 :     1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+ 16 :     1.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0
+ 32 :     1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+ 48 :     1.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0
+
+** Inverse throughput for store/256-bit **
+offset      0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+  0 :     1.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0
+ 16 :     2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0
+ 32 :     1.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0
+ 48 :     2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0  2.0  5.0  5.0  5.0
+
+** Running group misc/matt : From Twitter **
+                               Benchmark    Cycles     Nanos
+                              BM_mov_reg      1.03      0.32
+                              BM_mov_imm      1.00      0.31
+                       BM_mov_reg_inline      1.00      0.31
+                       BM_mov_imm_inline      1.00      0.31
+Finished in 4 ms (misc/matt)
+
+** Running group misc : Miscellaneous tests **
+                               Benchmark    Cycles     Nanos
+                         32-bit add-loop      2.02      0.62
+                         64-bit add-loop      2.02      0.62
+              Can port7 be used by loads      1.31      0.40
+                    Test micro-fused add      1.00      0.31
+                           Add-JO fusion      1.00      0.31
+                      adc reg, 0 latency      1.00      0.31
+                      adc reg, 1 latency      1.00      0.31
+                adc reg,zero-reg latency      1.00      0.31
+                   adc reg, 0 throughput      0.34      0.10
+                   adc reg, 1 throughput      0.34      0.10
+             adc reg,zero-reg throughput      0.34      0.10
+                            Flag merge 1      1.00      0.31
+                            Flag merge 2      1.00      0.31
+                            Flag merge 3      1.00      0.31
+                            Flag merge 4      1.00      0.31
+                            Flag merge 5      1.00      0.31
+                       Flag merge cmovbe      1.00      0.31
+                        Flag merge cmovc      1.00      0.31
+            Flag merge cmovbe (no merge)      1.00      0.31
+               Flag merge macro-fuse and      1.00      0.31
+                Suggested by David Schor      1.00      0.31
+           Double not-taken macro fusion      0.50      0.15
+              Double macro fusion (MITE)      0.57      0.18
+                          Tight dec loop      1.00      0.31
+                Tight dec loop taken jmp      2.00      0.62
+              Tight dec loop untaken jmp      1.00      0.31
+                     Loop weirdness fast      2.99      0.92
+                    adc add chain 32-bit      1.03      0.32
+                    adc add chain 64-bit      1.03      0.32
+              Store LSD weirdness, mov 0      2.01      0.62
+           Store LSD weirdness, xor zero      2.01      0.62
+                         8 chained moves      1.99      0.62
+                  8 chained movs and inc      3.99      1.23
+Finished in 1276 ms (misc)
+
+** Running group dendibakh : Fusion tests from dendibakh blog **
+                               Benchmark    Cycles     Nanos
+              Crosses 64-byte i-boundary    271.74     83.83
+             No cross 64-byte i-boundary    144.84     44.68
+                        Fused (original)      0.98      0.30
+                     Fused (simple addr)      1.08      0.33
+          Fused (add [reg + reg * 4], 1)      0.98      0.30
+                    Fused (add [reg], 1)      1.08      0.33
+                      Unfused (original)      0.98      0.30
+                         Fused summation      2.03      0.63
+                       Unfused summation      0.99      0.30
+Finished in 5 ms (dendibakh)
+
+** Running group bmi : BMI false-dependency tests **
+                               Benchmark    Cycles     Nanos
+                    dest-dependent tzcnt      0.50      0.15
+                    dest-dependent lzcnt      0.25      0.08
+                   dest-dependent popcnt      0.25      0.08
+Finished in 14 ms (bmi)
+
+** Running group misc/retpoline : retpoline tests **
+                               Benchmark    Cycles     Nanos
+             Dense retpoline call  pause     28.45      8.78
+             Dense retpoline call lfence     28.27      8.72
+               Dense indirect pred calls     23.60      7.28
+             Dense indirect unpred calls     19.62      6.05
+          Sparse retpo indep call  pause      0.00      0.00
+          Sparse retpo indep call lfence      0.02      0.01
+            Sparse retpo dep call  pause     17.24      5.32
+            Sparse retpo dep call lfence     17.09      5.27
+Finished in 797 ms (misc/retpoline)
+
+** Running group avx512 : AVX512 stuff **
+                               Benchmark    Cycles     Nanos
+                kreg-GP rountrip latency Skipped because hardware doesn't support required features: [AVX512F]
+    kreg-GP roundtrip + nonzeroing kxorb Skipped because hardware doesn't support required features: [AVX512F]
+       kreg-GP roundtrip + zeroing kxorb Skipped because hardware doesn't support required features: [AVX512F]
+         kreg-GP roundtrip + mov from GP Skipped because hardware doesn't support required features: [AVX512F]
+Finished in 0 ms (avx512)
+
+** Running group studies/vzeroall : VZEROALL weirdness **
+                               Benchmark    Cycles     Nanos
+                 vpaddq zmm0, zmm0, zmm0 Skipped because hardware doesn't support required features: [AVX512F]
+                 vpaddq zmm0, zmm1, zmm0 Skipped because hardware doesn't support required features: [AVX512F]
+                vpaddq zmm0, zmm16, zmm0 Skipped because hardware doesn't support required features: [AVX512F]
+   vpxor zmm16; vpaddq zmm0, zmm16, zmm0 Skipped because hardware doesn't support required features: [AVX512F]
+                 vpaddq ymm0, ymm0, ymm0      1.00      0.31
+                 vpaddq ymm0, ymm1, ymm0      1.00      0.31
+                 vpaddq xmm0, xmm0, xmm0      1.00      0.31
+                 vpaddq xmm0, xmm1, xmm0      1.00      0.31
+                        paddq xmm0, xmm0      1.00      0.31
+                        paddq xmm0, xmm1      1.00      0.31
+Finished in 65 ms (studies/vzeroall)
+
+** Running group studies/movd : movd weirdness **
+                               Benchmark    Cycles     Nanos
+                roundtrip mov + vpor xmm      7.03      2.17
+                roundtrip mov + vpor ymm    263.25     81.21
+Finished in 2923 ms (studies/movd)
+
+** Running group studies/repm : repm **
+                               Benchmark    Cycles     Nanos
+               stosb to 1024 byte region    139.90     43.16
+Finished in 15 ms (studies/repm)
+
+** Running group memory/load-parallel : Random(ish) parallel loads from fixed-size regions **
+                               Benchmark    Cycles     Nanos
+                    16-KiB parallel load      0.45      0.14
+                    24-KiB parallel load      0.45      0.14
+                    30-KiB parallel load      0.45      0.14
+                    31-KiB parallel load      0.45      0.14
+                    32-KiB parallel load      0.45      0.14
+                    33-KiB parallel load      0.45      0.14
+                    34-KiB parallel load      0.46      0.14
+                    35-KiB parallel load      0.47      0.14
+                    40-KiB parallel load      0.91      0.28
+                    48-KiB parallel load      2.02      0.62
+                    56-KiB parallel load      2.02      0.62
+                    64-KiB parallel load      2.02      0.62
+                    80-KiB parallel load      2.02      0.62
+                    96-KiB parallel load      2.02      0.62
+                   112-KiB parallel load      2.02      0.62
+                   128-KiB parallel load      2.02      0.62
+                   196-KiB parallel load      2.02      0.62
+                   252-KiB parallel load      2.02      0.62
+                   256-KiB parallel load      2.02      0.62
+                   260-KiB parallel load      0.45      0.14
+                   384-KiB parallel load      2.03      0.63
+                   512-KiB parallel load      2.27      0.70
+                  1024-KiB parallel load      2.83      0.87
+                  2048-KiB parallel load      2.29      0.71
+Finished in 3080 ms (memory/load-parallel)
+
+** Running group memory/store-parallel : Parallel stores to fixed-size regions **
+                               Benchmark    Cycles     Nanos
+                   16-KiB parallel store      1.01      0.31
+                   24-KiB parallel store      1.01      0.31
+                   30-KiB parallel store      1.01      0.31
+                   31-KiB parallel store      1.01      0.31
+                   32-KiB parallel store      1.01      0.31
+                   33-KiB parallel store      1.06      0.33
+                   34-KiB parallel store      1.26      0.39
+                   35-KiB parallel store      1.18      0.36
+                   40-KiB parallel store      1.52      0.47
+                   48-KiB parallel store      2.07      0.64
+                   56-KiB parallel store      2.14      0.66
+                   64-KiB parallel store      2.14      0.66
+                   80-KiB parallel store      2.14      0.66
+                   96-KiB parallel store      2.13      0.66
+                  112-KiB parallel store      2.13      0.66
+                  128-KiB parallel store      2.14      0.66
+                  196-KiB parallel store      2.14      0.66
+                  252-KiB parallel store      2.13      0.66
+                  256-KiB parallel store      2.13      0.66
+                  260-KiB parallel store      1.01      0.31
+                  384-KiB parallel store      2.06      0.64
+                  512-KiB parallel store      2.35      0.73
+                 1024-KiB parallel store      2.83      0.87
+                 2048-KiB parallel store      2.46      0.76
+Finished in 3703 ms (memory/store-parallel)
+
+** Running group memory/prefetch-parallel : Parallel prefetches from fixed-size regions **
+                               Benchmark    Cycles     Nanos
+              16-KiB parallel prefetcht0      0.44      0.13
+              16-KiB parallel prefetcht1      0.44      0.13
+              16-KiB parallel prefetcht2      0.44      0.13
+             16-KiB parallel prefetchnta      0.44      0.13
+              32-KiB parallel prefetcht0      0.44      0.13
+              32-KiB parallel prefetcht1      0.44      0.13
+              32-KiB parallel prefetcht2      0.44      0.13
+             32-KiB parallel prefetchnta      0.44      0.13
+              64-KiB parallel prefetcht0      0.55      0.17
+              64-KiB parallel prefetcht1      0.55      0.17
+              64-KiB parallel prefetcht2      0.55      0.17
+             64-KiB parallel prefetchnta      0.55      0.17
+             128-KiB parallel prefetcht0      1.00      0.31
+             128-KiB parallel prefetcht1      1.00      0.31
+             128-KiB parallel prefetcht2      1.00      0.31
+            128-KiB parallel prefetchnta      1.00      0.31
+             256-KiB parallel prefetcht0      1.00      0.31
+             256-KiB parallel prefetcht1      1.00      0.31
+             256-KiB parallel prefetcht2      1.00      0.31
+            256-KiB parallel prefetchnta      1.00      0.31
+             512-KiB parallel prefetcht0      1.03      0.32
+             512-KiB parallel prefetcht1      1.03      0.32
+             512-KiB parallel prefetcht2      1.04      0.32
+            512-KiB parallel prefetchnta      1.03      0.32
+            2048-KiB parallel prefetcht0      1.00      0.31
+            2048-KiB parallel prefetcht1      1.00      0.31
+            2048-KiB parallel prefetcht2      1.03      0.32
+           2048-KiB parallel prefetchnta      1.03      0.32
+            4096-KiB parallel prefetcht0      1.06      0.33
+            4096-KiB parallel prefetcht1      1.06      0.33
+            4096-KiB parallel prefetcht2      1.06      0.33
+           4096-KiB parallel prefetchnta      1.00      0.31
+            8192-KiB parallel prefetcht0      1.07      0.33
+            8192-KiB parallel prefetcht1      1.07      0.33
+            8192-KiB parallel prefetcht2      1.06      0.33
+           8192-KiB parallel prefetchnta      1.04      0.32
+           32768-KiB parallel prefetcht0      1.08      0.33
+           32768-KiB parallel prefetcht1      1.08      0.33
+           32768-KiB parallel prefetcht2      1.08      0.33
+          32768-KiB parallel prefetchnta      1.03      0.32
+Finished in 460 ms (memory/prefetch-parallel)
+
+** Running group memory/pointer-chase : Pointer-chasing **
+                               Benchmark    Cycles     Nanos
+  Simple addressing chase, half diffpage      4.03      1.24
+Simple addressing chase, different pages      4.02      1.24
+     Simple addressing chase with ALU op      5.03      1.55
+                   load5 -> load4 -> alu      9.07      2.80
+                   load4 -> load5 -> alu      9.07      2.80
+        8 parallel simple pointer chases      4.00      1.23
+      10 parallel complex pointer chases      4.00      1.23
+        10 parallel mixed pointer chases      4.00      1.23
+Finished in 451 ms (memory/pointer-chase)
+
+** Running group memory/load-serial : Random serial loads from fixed-size regions **
+                               Benchmark    Cycles     Nanos
+                     16-KiB serial loads      4.00      1.23
+                     24-KiB serial loads      4.00      1.23
+                     30-KiB serial loads      4.00      1.23
+                     31-KiB serial loads      4.00      1.23
+                     32-KiB serial loads      4.06      1.25
+                     33-KiB serial loads      5.17      1.60
+                     34-KiB serial loads      5.64      1.74
+                     35-KiB serial loads      7.17      2.21
+                     40-KiB serial loads     11.85      3.66
+                     48-KiB serial loads     11.97      3.69
+                     56-KiB serial loads     11.99      3.70
+                     64-KiB serial loads     12.00      3.70
+                     80-KiB serial loads     12.02      3.71
+                     96-KiB serial loads     12.02      3.71
+                    112-KiB serial loads     12.04      3.71
+                    128-KiB serial loads     12.04      3.72
+                    196-KiB serial loads     12.03      3.71
+                    252-KiB serial loads     12.04      3.71
+                    256-KiB serial loads     12.04      3.71
+                    260-KiB serial loads     12.03      3.71
+                    384-KiB serial loads     12.04      3.71
+                    512-KiB serial loads     13.61      4.20
+                   1024-KiB serial loads     38.83     11.98
+                   2048-KiB serial loads     42.66     13.16
+Finished in 326 ms (memory/load-serial)
+
+** Running group memory/load-serial-crossing : Cacheline crossing loads from fixed-size regions **
+                               Benchmark    Cycles     Nanos
+                      8-KiB serial loads      5.00      1.54
+                     16-KiB serial loads      5.00      1.54
+                     32-KiB serial loads      5.21      1.61
+                     64-KiB serial loads     13.02      4.02
+                    128-KiB serial loads     13.98      4.31
+                    256-KiB serial loads     14.13      4.36
+                    512-KiB serial loads     17.22      5.31
+                   1024-KiB serial loads     48.38     14.92
+                   2048-KiB serial loads     51.35     15.84
+Finished in 198 ms (memory/load-serial-crossing)
+
+** Running group memory/bandwidth/load : Linear loads **
+                               Benchmark    Cycles     Nanos
+                4-KiB touch 1 byte in CL      1.06      0.33
+       4-KiB  32-bit loads (time per CL)      5.95      1.83
+       4-KiB  64-bit loads (time per CL)      3.26      1.01
+       4-KiB 128-bit loads (time per CL)      2.03      0.63
+       4-KiB 256-bit loads (time per CL)      1.06      0.33
+       4-KiB 512-bit loads (time per CL) Skipped because hardware doesn't support required features: [AVX512F]
+                8-KiB touch 1 byte in CL      1.13      0.35
+       8-KiB  32-bit loads (time per CL)      5.82      1.80
+       8-KiB  64-bit loads (time per CL)      3.15      0.97
+       8-KiB 128-bit loads (time per CL)      2.10      0.65
+       8-KiB 256-bit loads (time per CL)      1.15      0.35
+       8-KiB 512-bit loads (time per CL) Skipped because hardware doesn't support required features: [AVX512F]
+               16-KiB touch 1 byte in CL      1.07      0.33
+      16-KiB  32-bit loads (time per CL)      5.75      1.77
+      16-KiB  64-bit loads (time per CL)      3.07      0.95
+      16-KiB 128-bit loads (time per CL)      2.05      0.63
+      16-KiB 256-bit loads (time per CL)      1.07      0.33
+      16-KiB 512-bit loads (time per CL) Skipped because hardware doesn't support required features: [AVX512F]
+               32-KiB touch 1 byte in CL      1.03      0.32
+      32-KiB  32-bit loads (time per CL)      6.76      2.09
+      32-KiB  64-bit loads (time per CL)      3.12      0.96
+      32-KiB 128-bit loads (time per CL)      2.04      0.63
+      32-KiB 256-bit loads (time per CL)      1.05      0.32
+      32-KiB 512-bit loads (time per CL) Skipped because hardware doesn't support required features: [AVX512F]
+               64-KiB touch 1 byte in CL      2.00      0.62
+      64-KiB  32-bit loads (time per CL)      6.94      2.14
+      64-KiB  64-bit loads (time per CL)      4.11      1.27
+      64-KiB 128-bit loads (time per CL)      2.33      0.72
+      64-KiB 256-bit loads (time per CL)      2.00      0.62
+      64-KiB 512-bit loads (time per CL) Skipped because hardware doesn't support required features: [AVX512F]
+              128-KiB touch 1 byte in CL      2.00      0.62
+     128-KiB  32-bit loads (time per CL)      6.90      2.13
+     128-KiB  64-bit loads (time per CL)      4.08      1.26
+     128-KiB 128-bit loads (time per CL)      2.57      0.79
+     128-KiB 256-bit loads (time per CL)      2.00      0.62
+     128-KiB 512-bit loads (time per CL) Skipped because hardware doesn't support required features: [AVX512F]
+              256-KiB touch 1 byte in CL      2.00      0.62
+     256-KiB  32-bit loads (time per CL)      6.86      2.12
+     256-KiB  64-bit loads (time per CL)      4.07      1.25
+     256-KiB 128-bit loads (time per CL)      2.30      0.71
+     256-KiB 256-bit loads (time per CL)      2.00      0.62
+     256-KiB 512-bit loads (time per CL) Skipped because hardware doesn't support required features: [AVX512F]
+              512-KiB touch 1 byte in CL      2.21      0.68
+     512-KiB  32-bit loads (time per CL)      7.07      2.18
+     512-KiB  64-bit loads (time per CL)      3.88      1.20
+     512-KiB 128-bit loads (time per CL)      2.75      0.85
+     512-KiB 256-bit loads (time per CL)      2.24      0.69
+     512-KiB 512-bit loads (time per CL) Skipped because hardware doesn't support required features: [AVX512F]
+             1024-KiB touch 1 byte in CL      2.62      0.81
+    1024-KiB  32-bit loads (time per CL)      7.11      2.19
+    1024-KiB  64-bit loads (time per CL)      4.26      1.31
+    1024-KiB 128-bit loads (time per CL)      2.65      0.82
+    1024-KiB 256-bit loads (time per CL)      2.56      0.79
+    1024-KiB 512-bit loads (time per CL) Skipped because hardware doesn't support required features: [AVX512F]
+Finished in 443 ms (memory/bandwidth/load)
+
+** Running group memory/bandwidth/store : Linear stores **
+                               Benchmark    Cycles     Nanos
+            4-KiB 32-bit linear store BW      8.12      2.50
+            4-KiB 64-bit linear store BW      4.06      1.25
+           4-KiB 128-bit linear store BW      4.06      1.25
+           4-KiB 256-bit linear store BW      2.03      0.63
+           4-KiB 512-bit linear store BW Skipped because hardware doesn't support required features: [AVX512F]
+         4-KiB 32-bit linear NT store BW     22.52      6.95
+         4-KiB 64-bit linear NT store BW     11.90      3.67
+        4-KiB 128-bit linear NT store BW      9.00      2.78
+        4-KiB 256-bit linear NT store BW      9.00      2.78
+        4-KiB 512-bit linear NT store BW Skipped because hardware doesn't support required features: [AVX512F]
+        4-KiB 32-bit NT partial store BW     39.83     12.29
+        4-KiB 64-bit NT partial store BW     39.84     12.29
+       4-KiB 128-bit NT partial store BW     39.81     12.28
+       4-KiB 256-bit NT partial store BW     39.82     12.28
+            8-KiB 32-bit linear store BW      8.08      2.49
+            8-KiB 64-bit linear store BW      4.05      1.25
+           8-KiB 128-bit linear store BW      4.03      1.24
+           8-KiB 256-bit linear store BW      2.01      0.62
+           8-KiB 512-bit linear store BW Skipped because hardware doesn't support required features: [AVX512F]
+         8-KiB 32-bit linear NT store BW     22.30      6.88
+         8-KiB 64-bit linear NT store BW     11.76      3.63
+        8-KiB 128-bit linear NT store BW      9.26      2.86
+        8-KiB 256-bit linear NT store BW      9.45      2.92
+        8-KiB 512-bit linear NT store BW Skipped because hardware doesn't support required features: [AVX512F]
+        8-KiB 32-bit NT partial store BW     39.52     12.19
+        8-KiB 64-bit NT partial store BW     39.53     12.19
+       8-KiB 128-bit NT partial store BW     39.50     12.19
+       8-KiB 256-bit NT partial store BW     39.51     12.19
+           16-KiB 32-bit linear store BW      8.11      2.50
+           16-KiB 64-bit linear store BW      4.02      1.24
+          16-KiB 128-bit linear store BW      4.01      1.24
+          16-KiB 256-bit linear store BW      2.01      0.62
+          16-KiB 512-bit linear store BW Skipped because hardware doesn't support required features: [AVX512F]
+        16-KiB 32-bit linear NT store BW     22.26      6.87
+        16-KiB 64-bit linear NT store BW     11.70      3.61
+       16-KiB 128-bit linear NT store BW      8.89      2.74
+       16-KiB 256-bit linear NT store BW      8.89      2.74
+       16-KiB 512-bit linear NT store BW Skipped because hardware doesn't support required features: [AVX512F]
+       16-KiB 32-bit NT partial store BW     39.37     12.14
+       16-KiB 64-bit NT partial store BW     39.35     12.14
+      16-KiB 128-bit NT partial store BW     39.38     12.15
+      16-KiB 256-bit NT partial store BW     39.35     12.14
+           32-KiB 32-bit linear store BW      8.06      2.49
+           32-KiB 64-bit linear store BW      4.03      1.24
+          32-KiB 128-bit linear store BW      4.00      1.24
+          32-KiB 256-bit linear store BW      2.00      0.62
+          32-KiB 512-bit linear store BW Skipped because hardware doesn't support required features: [AVX512F]
+        32-KiB 32-bit linear NT store BW     22.16      6.84
+        32-KiB 64-bit linear NT store BW     11.68      3.60
+       32-KiB 128-bit linear NT store BW      8.87      2.74
+       32-KiB 256-bit linear NT store BW      8.87      2.74
+       32-KiB 512-bit linear NT store BW Skipped because hardware doesn't support required features: [AVX512F]
+       32-KiB 32-bit NT partial store BW     39.31     12.13
+       32-KiB 64-bit NT partial store BW     39.32     12.13
+      32-KiB 128-bit NT partial store BW     39.29     12.12
+      32-KiB 256-bit NT partial store BW     39.28     12.12
+           64-KiB 32-bit linear store BW      8.35      2.58
+           64-KiB 64-bit linear store BW      4.30      1.33
+          64-KiB 128-bit linear store BW      4.78      1.48
+          64-KiB 256-bit linear store BW      3.13      0.96
+          64-KiB 512-bit linear store BW Skipped because hardware doesn't support required features: [AVX512F]
+        64-KiB 32-bit linear NT store BW     22.16      6.84
+        64-KiB 64-bit linear NT store BW     11.60      3.58
+       64-KiB 128-bit linear NT store BW      8.88      2.74
+       64-KiB 256-bit linear NT store BW      8.87      2.74
+       64-KiB 512-bit linear NT store BW Skipped because hardware doesn't support required features: [AVX512F]
+       64-KiB 32-bit NT partial store BW     39.25     12.11
+       64-KiB 64-bit NT partial store BW     39.26     12.11
+      64-KiB 128-bit NT partial store BW     39.23     12.10
+      64-KiB 256-bit NT partial store BW     39.26     12.11
+          128-KiB 32-bit linear store BW      8.13      2.51
+          128-KiB 64-bit linear store BW      4.15      1.28
+         128-KiB 128-bit linear store BW      4.73      1.46
+         128-KiB 256-bit linear store BW      3.15      0.97
+         128-KiB 512-bit linear store BW Skipped because hardware doesn't support required features: [AVX512F]
+       128-KiB 32-bit linear NT store BW     22.12      6.82
+       128-KiB 64-bit linear NT store BW     11.64      3.59
+      128-KiB 128-bit linear NT store BW      8.86      2.73
+      128-KiB 256-bit linear NT store BW      8.87      2.74
+      128-KiB 512-bit linear NT store BW Skipped because hardware doesn't support required features: [AVX512F]
+      128-KiB 32-bit NT partial store BW     39.23     12.10
+      128-KiB 64-bit NT partial store BW     39.23     12.10
+     128-KiB 128-bit NT partial store BW     39.23     12.10
+     128-KiB 256-bit NT partial store BW     39.22     12.10
+          256-KiB 32-bit linear store BW      8.14      2.51
+          256-KiB 64-bit linear store BW      6.75      2.08
+         256-KiB 128-bit linear store BW      4.72      1.46
+         256-KiB 256-bit linear store BW      3.16      0.97
+         256-KiB 512-bit linear store BW Skipped because hardware doesn't support required features: [AVX512F]
+       256-KiB 32-bit linear NT store BW     22.12      6.82
+       256-KiB 64-bit linear NT store BW     11.65      3.59
+      256-KiB 128-bit linear NT store BW      8.86      2.73
+      256-KiB 256-bit linear NT store BW      8.86      2.73
+      256-KiB 512-bit linear NT store BW Skipped because hardware doesn't support required features: [AVX512F]
+      256-KiB 32-bit NT partial store BW     39.25     12.11
+      256-KiB 64-bit NT partial store BW     39.24     12.11
+     256-KiB 128-bit NT partial store BW     39.20     12.09
+     256-KiB 256-bit NT partial store BW     39.21     12.10
+          512-KiB 32-bit linear store BW      8.33      2.57
+          512-KiB 64-bit linear store BW      4.61      1.42
+         512-KiB 128-bit linear store BW      4.82      1.49
+         512-KiB 256-bit linear store BW      3.27      1.01
+         512-KiB 512-bit linear store BW Skipped because hardware doesn't support required features: [AVX512F]
+       512-KiB 32-bit linear NT store BW     22.16      6.84
+       512-KiB 64-bit linear NT store BW     11.61      3.58
+      512-KiB 128-bit linear NT store BW      8.86      2.73
+      512-KiB 256-bit linear NT store BW      8.86      2.73
+      512-KiB 512-bit linear NT store BW Skipped because hardware doesn't support required features: [AVX512F]
+      512-KiB 32-bit NT partial store BW     39.24     12.11
+      512-KiB 64-bit NT partial store BW     39.23     12.10
+     512-KiB 128-bit NT partial store BW     39.23     12.10
+     512-KiB 256-bit NT partial store BW     39.21     12.10
+         1024-KiB 32-bit linear store BW      8.30      2.56
+         1024-KiB 64-bit linear store BW      4.58      1.41
+        1024-KiB 128-bit linear store BW      4.45      1.37
+        1024-KiB 256-bit linear store BW      3.27      1.01
+        1024-KiB 512-bit linear store BW Skipped because hardware doesn't support required features: [AVX512F]
+      1024-KiB 32-bit linear NT store BW     22.15      6.83
+      1024-KiB 64-bit linear NT store BW     11.65      3.59
+     1024-KiB 128-bit linear NT store BW      8.87      2.74
+     1024-KiB 256-bit linear NT store BW      8.86      2.73
+     1024-KiB 512-bit linear NT store BW Skipped because hardware doesn't support required features: [AVX512F]
+     1024-KiB 32-bit NT partial store BW     39.23     12.10
+     1024-KiB 64-bit NT partial store BW     39.22     12.10
+    1024-KiB 128-bit NT partial store BW     39.22     12.10
+    1024-KiB 256-bit NT partial store BW     39.22     12.10
+Finished in 5945 ms (memory/bandwidth/store)
+
+** Running group memory/gather : Gather tests **
+                               Benchmark    Cycles     Nanos
+                L1-hit gatherdd tput xmm      5.01      1.54
+                L1-hit gatherdd tput ymm      9.77      3.01
+                gatherdd latency xmm + 1     16.52      5.10
+                gatherdd latency ymm + 1     24.70      7.62
+Finished in 98 ms (memory/gather)
+
+** Running group studies/memory/l2-doubleload : Serial loads at differnet cache line offsets **
+                               Benchmark    Cycles     Nanos
+                Just one load 16k region      4.02      1.24
+                           Just one load     12.15      3.75
+                        Dummy load first     13.15      4.06
+                       Dummy load second     12.15      3.75
+  Dummy load first, alu op before second     13.16      4.06
+  Dummy load first, lea in addr depchain     13.16      4.06
+       Dummy load first, add dummy value     12.16      3.75
+        Dummy load first, indexed second     13.16      4.06
+          Dummy load first, both indexed     13.16      4.06
+         Dummy load second, both indexed     13.17      4.06
+               Same loc prefetcht0 first     12.14      3.74
+               Diff loc prefetcht0 first     13.15      4.06
+               Diff loc prefetcht1 first     13.15      4.06
+                  8-KiB linear bandwidth      1.02      0.31
+             8-KiB interleaved bandwidth      1.30      0.40
+                8-KiB original bandwidth      1.28      0.39
+          8-KiB oneloop-1-wide bandwidth      1.98      0.61
+          8-KiB oneloop-2-wide bandwidth      1.23      0.38
+                 16-KiB linear bandwidth      1.01      0.31
+            16-KiB interleaved bandwidth      1.15      0.35
+               16-KiB original bandwidth      1.15      0.36
+         16-KiB oneloop-1-wide bandwidth      2.03      0.63
+         16-KiB oneloop-2-wide bandwidth      1.14      0.35
+                 32-KiB linear bandwidth      1.12      0.35
+            32-KiB interleaved bandwidth      1.09      0.34
+               32-KiB original bandwidth      1.13      0.35
+         32-KiB oneloop-1-wide bandwidth      2.02      0.62
+         32-KiB oneloop-2-wide bandwidth      1.09      0.34
+                 64-KiB linear bandwidth      2.01      0.62
+            64-KiB interleaved bandwidth      2.03      0.63
+               64-KiB original bandwidth      2.04      0.63
+         64-KiB oneloop-1-wide bandwidth      2.04      0.63
+         64-KiB oneloop-2-wide bandwidth      2.02      0.62
+                128-KiB linear bandwidth      2.01      0.62
+           128-KiB interleaved bandwidth      2.01      0.62
+              128-KiB original bandwidth      2.01      0.62
+        128-KiB oneloop-1-wide bandwidth      2.04      0.63
+        128-KiB oneloop-2-wide bandwidth      2.01      0.62
+                256-KiB linear bandwidth      2.02      0.62
+           256-KiB interleaved bandwidth      2.02      0.62
+              256-KiB original bandwidth      2.03      0.62
+        256-KiB oneloop-1-wide bandwidth      2.04      0.63
+        256-KiB oneloop-2-wide bandwidth      2.02      0.62
+                512-KiB linear bandwidth      2.32      0.72
+           512-KiB interleaved bandwidth      2.32      0.72
+              512-KiB original bandwidth      2.38      0.73
+        512-KiB oneloop-1-wide bandwidth      2.52      0.78
+        512-KiB oneloop-2-wide bandwidth      2.36      0.73
+               1024-KiB linear bandwidth      2.63      0.81
+          1024-KiB interleaved bandwidth      2.61      0.81
+             1024-KiB original bandwidth      2.65      0.82
+       1024-KiB oneloop-1-wide bandwidth      2.80      0.86
+       1024-KiB oneloop-2-wide bandwidth      2.62      0.81
+             Linked list traversal + sum     12.16      3.75
+Finished in 4272 ms (studies/memory/l2-doubleload)
+
+** Running group memory/store-fwd : Store forwaring latency and throughput **
+                               Benchmark    Cycles     Nanos
+           Store forward latency delay 0      1.05      0.32
+           Store forward latency delay 1      1.10      0.34
+           Store forward latency delay 2      1.99      0.62
+           Store forward latency delay 3      2.99      0.92
+           Store forward latency delay 4      3.99      1.23
+           Store forward latency delay 5      4.99      1.54
+            Store fwd tput concurrency 1      1.00      0.31
+            Store fwd tput concurrency 2      1.00      0.31
+            Store fwd tput concurrency 3      1.00      0.31
+            Store fwd tput concurrency 4      1.00      0.31
+            Store fwd tput concurrency 5      1.00      0.31
+            Store fwd tput concurrency 6      1.00      0.31
+            Store fwd tput concurrency 7      0.71      0.22
+            Store fwd tput concurrency 8      0.67      0.21
+            Store fwd tput concurrency 9      0.67      0.21
+           Store fwd tput concurrency 10      0.67      0.21
+Finished in 6 ms (memory/store-fwd)
+
+** Running group memory/touch-lines : Touching cache lines **
+
+---------- Oneshot calibration start (default) --------------
+                               Benchmark    Cycles     Nanos
+                 Oneshot overhead min       162.07     50.00
+          Oneshot overhead median (used)    162.07     50.00
+                 Oneshot overhead max       165.32     51.00
+---------- Oneshot calibration end   (default) --------------
+
+touch-lines-1 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+              touch one cache line 1 KiB         1     97.45     30.06
+              touch one cache line 1 KiB         2     30.39      9.38
+              touch one cache line 1 KiB         3     24.31      7.50
+              touch one cache line 1 KiB         4     24.31      7.50
+              touch one cache line 1 KiB         5     30.39      9.38
+              touch one cache line 1 KiB         6     60.98     18.81
+              touch one cache line 1 KiB         7     24.11      7.44
+              touch one cache line 1 KiB         8    101.50     31.31
+              touch one cache line 1 KiB         9     24.31      7.50
+              touch one cache line 1 KiB        10     26.34      8.12
+              touch one cache line 1 KiB        11     24.51      7.56
+              touch one cache line 1 KiB        12     24.51      7.56
+              touch one cache line 1 KiB        13     26.54      8.19
+              touch one cache line 1 KiB        14     24.51      7.56
+              touch one cache line 1 KiB        15     24.51      7.56
+              touch one cache line 1 KiB        16     46.80     14.44
+              touch one cache line 1 KiB        17    137.97     42.56
+              touch one cache line 1 KiB        18     24.31      7.50
+              touch one cache line 1 KiB        19     26.34      8.12
+              touch one cache line 1 KiB        20     26.34      8.12
+              touch one cache line 1 KiB    median     26.34      8.12
+
+touch-lines-2 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+              touch one cache line 2 KiB         1     25.43      7.84
+              touch one cache line 2 KiB         2     57.94     17.88
+              touch one cache line 2 KiB         3     23.40      7.22
+              touch one cache line 2 KiB         4     35.45     10.94
+              touch one cache line 2 KiB         5     24.41      7.53
+              touch one cache line 2 KiB         6     22.29      6.88
+              touch one cache line 2 KiB         7     24.31      7.50
+              touch one cache line 2 KiB         8     23.30      7.19
+              touch one cache line 2 KiB         9     14.18      4.38
+              touch one cache line 2 KiB        10     13.17      4.06
+              touch one cache line 2 KiB        11     13.17      4.06
+              touch one cache line 2 KiB        12     14.18      4.38
+              touch one cache line 2 KiB        13     14.18      4.38
+              touch one cache line 2 KiB        14     14.18      4.38
+              touch one cache line 2 KiB        15     14.18      4.38
+              touch one cache line 2 KiB        16     13.17      4.06
+              touch one cache line 2 KiB        17     23.30      7.19
+              touch one cache line 2 KiB        18     12.26      3.78
+              touch one cache line 2 KiB        19     13.17      4.06
+              touch one cache line 2 KiB        20     13.17      4.06
+              touch one cache line 2 KiB    median     14.18      4.38
+
+touch-lines-4 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+              touch one cache line 4 KiB         1     27.40      8.45
+              touch one cache line 4 KiB         2     14.23      4.39
+              touch one cache line 4 KiB         3     13.68      4.22
+              touch one cache line 4 KiB         4     13.22      4.08
+              touch one cache line 4 KiB         5     13.73      4.23
+              touch one cache line 4 KiB         6     12.71      3.92
+              touch one cache line 4 KiB         7     12.66      3.91
+              touch one cache line 4 KiB         8     12.71      3.92
+              touch one cache line 4 KiB         9     13.17      4.06
+              touch one cache line 4 KiB        10     12.21      3.77
+              touch one cache line 4 KiB        11     12.71      3.92
+              touch one cache line 4 KiB        12      8.15      2.52
+              touch one cache line 4 KiB        13      8.15      2.52
+              touch one cache line 4 KiB        14      8.15      2.52
+              touch one cache line 4 KiB        15      8.15      2.52
+              touch one cache line 4 KiB        16      7.60      2.34
+              touch one cache line 4 KiB        17      7.60      2.34
+              touch one cache line 4 KiB        18      8.10      2.50
+              touch one cache line 4 KiB        19      7.65      2.36
+              touch one cache line 4 KiB        20      8.05      2.48
+              touch one cache line 4 KiB    median     12.21      3.77
+
+touch-lines-8 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+              touch one cache line 8 KiB         1      9.40      2.90
+              touch one cache line 8 KiB         2      5.09      1.57
+              touch one cache line 8 KiB         3      5.32      1.64
+              touch one cache line 8 KiB         4      4.84      1.49
+              touch one cache line 8 KiB         5      5.04      1.55
+              touch one cache line 8 KiB         6      4.86      1.50
+              touch one cache line 8 KiB         7      5.06      1.56
+              touch one cache line 8 KiB         8      5.09      1.57
+              touch one cache line 8 KiB         9      5.09      1.57
+              touch one cache line 8 KiB        10      4.84      1.49
+              touch one cache line 8 KiB        11      5.06      1.56
+              touch one cache line 8 KiB        12      5.34      1.65
+              touch one cache line 8 KiB        13      5.32      1.64
+              touch one cache line 8 KiB        14      5.06      1.56
+              touch one cache line 8 KiB        15      4.84      1.49
+              touch one cache line 8 KiB        16      4.84      1.49
+              touch one cache line 8 KiB        17      5.09      1.57
+              touch one cache line 8 KiB        18      5.06      1.56
+              touch one cache line 8 KiB        19      4.84      1.49
+              touch one cache line 8 KiB        20      5.32      1.64
+              touch one cache line 8 KiB    median      5.06      1.56
+
+touch-lines-16 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+             touch one cache line 16 KiB         1      6.20      1.91
+             touch one cache line 16 KiB         2      6.23      1.92
+             touch one cache line 16 KiB         3      6.47      2.00
+             touch one cache line 16 KiB         4      9.51      2.93
+             touch one cache line 16 KiB         5      6.23      1.92
+             touch one cache line 16 KiB         6      6.34      1.96
+             touch one cache line 16 KiB         7      6.34      1.96
+             touch one cache line 16 KiB         8      6.60      2.04
+             touch one cache line 16 KiB         9      6.09      1.88
+             touch one cache line 16 KiB        10      6.34      1.96
+             touch one cache line 16 KiB        11      6.23      1.92
+             touch one cache line 16 KiB        12      6.47      2.00
+             touch one cache line 16 KiB        13     10.66      3.29
+             touch one cache line 16 KiB        14      6.22      1.92
+             touch one cache line 16 KiB        15      7.36      2.27
+             touch one cache line 16 KiB        16      8.00      2.47
+             touch one cache line 16 KiB        17      6.60      2.04
+             touch one cache line 16 KiB        18      6.61      2.04
+             touch one cache line 16 KiB        19      8.24      2.54
+             touch one cache line 16 KiB        20      6.47      2.00
+             touch one cache line 16 KiB    median      6.47      2.00
+
+touch-lines-32 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+             touch one cache line 32 KiB         1      7.42      2.29
+             touch one cache line 32 KiB         2      6.53      2.02
+             touch one cache line 32 KiB         3      5.96      1.84
+             touch one cache line 32 KiB         4      7.16      2.21
+             touch one cache line 32 KiB         5      5.90      1.82
+             touch one cache line 32 KiB         6      5.39      1.66
+             touch one cache line 32 KiB         7      5.65      1.74
+             touch one cache line 32 KiB         8      5.52      1.70
+             touch one cache line 32 KiB         9      5.45      1.68
+             touch one cache line 32 KiB        10      6.53      2.02
+             touch one cache line 32 KiB        11      8.57      2.64
+             touch one cache line 32 KiB        12      6.16      1.90
+             touch one cache line 32 KiB        13      5.96      1.84
+             touch one cache line 32 KiB        14      7.42      2.29
+             touch one cache line 32 KiB        15      5.52      1.70
+             touch one cache line 32 KiB        16      5.58      1.72
+             touch one cache line 32 KiB        17      7.17      2.21
+             touch one cache line 32 KiB        18      8.88      2.74
+             touch one cache line 32 KiB        19      7.48      2.31
+             touch one cache line 32 KiB        20      8.18      2.52
+             touch one cache line 32 KiB    median      6.16      1.90
+
+touch-lines-64 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+             touch one cache line 64 KiB         1      6.31      1.95
+             touch one cache line 64 KiB         2      7.20      2.22
+             touch one cache line 64 KiB         3      6.22      1.92
+             touch one cache line 64 KiB         4      6.02      1.86
+             touch one cache line 64 KiB         5      5.49      1.69
+             touch one cache line 64 KiB         6      6.44      1.99
+             touch one cache line 64 KiB         7      5.01      1.55
+             touch one cache line 64 KiB         8      5.11      1.58
+             touch one cache line 64 KiB         9      5.11      1.58
+             touch one cache line 64 KiB        10      6.89      2.12
+             touch one cache line 64 KiB        11      5.11      1.58
+             touch one cache line 64 KiB        12      5.71      1.76
+             touch one cache line 64 KiB        13      5.68      1.75
+             touch one cache line 64 KiB        14      5.65      1.74
+             touch one cache line 64 KiB        15      7.10      2.19
+             touch one cache line 64 KiB        16      7.17      2.21
+             touch one cache line 64 KiB        17      6.12      1.89
+             touch one cache line 64 KiB        18      6.28      1.94
+             touch one cache line 64 KiB        19      5.26      1.62
+             touch one cache line 64 KiB        20      6.47      2.00
+             touch one cache line 64 KiB    median      6.02      1.86
+
+touch-lines-128 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+            touch one cache line 128 KiB         1      6.77      2.09
+            touch one cache line 128 KiB         2      5.39      1.66
+            touch one cache line 128 KiB         3      6.25      1.93
+            touch one cache line 128 KiB         4      6.04      1.86
+            touch one cache line 128 KiB         5      5.80      1.79
+            touch one cache line 128 KiB         6      6.55      2.02
+            touch one cache line 128 KiB         7      6.09      1.88
+            touch one cache line 128 KiB         8      5.27      1.62
+            touch one cache line 128 KiB         9      6.49      2.00
+            touch one cache line 128 KiB        10      6.39      1.97
+            touch one cache line 128 KiB        11      5.53      1.71
+            touch one cache line 128 KiB        12      6.44      1.99
+            touch one cache line 128 KiB        13      5.46      1.68
+            touch one cache line 128 KiB        14      5.04      1.56
+            touch one cache line 128 KiB        15      5.31      1.64
+            touch one cache line 128 KiB        16      5.34      1.65
+            touch one cache line 128 KiB        17      6.17      1.90
+            touch one cache line 128 KiB        18      4.85      1.50
+            touch one cache line 128 KiB        19      5.25      1.62
+            touch one cache line 128 KiB        20      5.55      1.71
+            touch one cache line 128 KiB    median      5.55      1.71
+
+touch-lines-256 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+            touch one cache line 256 KiB         1      6.38      1.97
+            touch one cache line 256 KiB         2      5.86      1.81
+            touch one cache line 256 KiB         3      5.50      1.70
+            touch one cache line 256 KiB         4      5.00      1.54
+            touch one cache line 256 KiB         5      5.10      1.57
+            touch one cache line 256 KiB         6      5.33      1.64
+            touch one cache line 256 KiB         7      5.44      1.68
+            touch one cache line 256 KiB         8      5.03      1.55
+            touch one cache line 256 KiB         9      5.79      1.79
+            touch one cache line 256 KiB        10      5.42      1.67
+            touch one cache line 256 KiB        11      5.61      1.73
+            touch one cache line 256 KiB        12      5.68      1.75
+            touch one cache line 256 KiB        13      5.52      1.70
+            touch one cache line 256 KiB        14      5.59      1.72
+            touch one cache line 256 KiB        15      5.75      1.77
+            touch one cache line 256 KiB        16      5.14      1.59
+            touch one cache line 256 KiB        17      4.87      1.50
+            touch one cache line 256 KiB        18      5.12      1.58
+            touch one cache line 256 KiB        19      5.15      1.59
+            touch one cache line 256 KiB        20      4.67      1.44
+            touch one cache line 256 KiB    median      5.42      1.67
+
+touch-lines-512 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+            touch one cache line 512 KiB         1      6.17      1.90
+            touch one cache line 512 KiB         2      5.28      1.63
+            touch one cache line 512 KiB         3      5.07      1.56
+            touch one cache line 512 KiB         4      4.89      1.51
+            touch one cache line 512 KiB         5      4.73      1.46
+            touch one cache line 512 KiB         6      4.51      1.39
+            touch one cache line 512 KiB         7      4.48      1.38
+            touch one cache line 512 KiB         8      4.41      1.36
+            touch one cache line 512 KiB         9      4.27      1.32
+            touch one cache line 512 KiB        10      5.03      1.55
+            touch one cache line 512 KiB        11      5.14      1.59
+            touch one cache line 512 KiB        12      4.77      1.47
+            touch one cache line 512 KiB        13      4.68      1.44
+            touch one cache line 512 KiB        14      4.48      1.38
+            touch one cache line 512 KiB        15      4.25      1.31
+            touch one cache line 512 KiB        16      4.32      1.33
+            touch one cache line 512 KiB        17      4.17      1.29
+            touch one cache line 512 KiB        18      3.93      1.21
+            touch one cache line 512 KiB        19      4.35      1.34
+            touch one cache line 512 KiB        20      3.99      1.23
+            touch one cache line 512 KiB    median      4.48      1.38
+
+touch-lines-1024 @ 0x0x506860
+                               Benchmark    Sample    Cycles     Nanos
+           touch one cache line 1024 KiB         1      5.33      1.64
+           touch one cache line 1024 KiB         2      3.77      1.16
+           touch one cache line 1024 KiB         3      3.75      1.16
+           touch one cache line 1024 KiB         4      4.49      1.39
+           touch one cache line 1024 KiB         5      4.86      1.50
+           touch one cache line 1024 KiB         6      5.19      1.60
+           touch one cache line 1024 KiB         7      5.28      1.63
+           touch one cache line 1024 KiB         8      4.92      1.52
+           touch one cache line 1024 KiB         9      4.23      1.31
+           touch one cache line 1024 KiB        10      3.90      1.20
+           touch one cache line 1024 KiB        11      4.00      1.24
+           touch one cache line 1024 KiB        12      4.42      1.36
+           touch one cache line 1024 KiB        13      5.78      1.78
+           touch one cache line 1024 KiB        14      5.81      1.79
+           touch one cache line 1024 KiB        15      5.44      1.68
+           touch one cache line 1024 KiB        16      4.61      1.42
+           touch one cache line 1024 KiB        17      4.15      1.28
+           touch one cache line 1024 KiB        18      5.54      1.71
+           touch one cache line 1024 KiB        19      3.85      1.19
+           touch one cache line 1024 KiB        20      3.80      1.17
+           touch one cache line 1024 KiB    median      4.49      1.39
+
+Finished in 547 ms (memory/touch-lines)
+
+** Running group memory/store-fwd-oneshot : Store forwaring latency and throughput **
+oneshot-latency-5 @ 0x0x706880
+                               Benchmark    Sample    Cycles     Nanos
+             StFwd oneshot lat (delay 5)         1 154003.24  47510.00
+             StFwd oneshot lat (delay 5)         2 183620.75  56647.00
+             StFwd oneshot lat (delay 5)         3 147374.39  45465.00
+             StFwd oneshot lat (delay 5)         4 147445.71  45487.00
+             StFwd oneshot lat (delay 5)         5 148155.59  45706.00
+             StFwd oneshot lat (delay 5)         6 149260.94  46047.00
+             StFwd oneshot lat (delay 5)         7 147507.29  45506.00
+             StFwd oneshot lat (delay 5)         8 147150.73  45396.00
+             StFwd oneshot lat (delay 5)         9 147115.07  45385.00
+             StFwd oneshot lat (delay 5)        10 147118.31  45386.00
+             StFwd oneshot lat (delay 5)        11 147115.07  45385.00
+             StFwd oneshot lat (delay 5)        12 147118.31  45386.00
+             StFwd oneshot lat (delay 5)        13 147150.73  45396.00
+             StFwd oneshot lat (delay 5)        14 185115.07  57108.00
+             StFwd oneshot lat (delay 5)        15 147247.97  45426.00
+             StFwd oneshot lat (delay 5)        16 147118.31  45386.00
+             StFwd oneshot lat (delay 5)        17 147147.49  45395.00
+             StFwd oneshot lat (delay 5)        18 147085.90  45376.00
+             StFwd oneshot lat (delay 5)        19 147153.97  45397.00
+             StFwd oneshot lat (delay 5)        20 147115.07  45385.00
+             StFwd oneshot lat (delay 5)    median 147150.73  45396.00
+
+oneshot-latency-4 @ 0x0x706500
+                               Benchmark    Sample    Cycles     Nanos
+             StFwd oneshot lat (delay 4)         1 148645.06  45857.00
+             StFwd oneshot lat (delay 4)         2 179238.25  55295.00
+             StFwd oneshot lat (delay 4)         3 147212.32  45415.00
+             StFwd oneshot lat (delay 4)         4 147153.97  45397.00
+             StFwd oneshot lat (delay 4)         5 148191.25  45717.00
+             StFwd oneshot lat (delay 4)         6 148029.17  45667.00
+             StFwd oneshot lat (delay 4)         7 147121.56  45387.00
+             StFwd oneshot lat (delay 4)         8 147118.31  45386.00
+             StFwd oneshot lat (delay 4)         9 147121.56  45387.00
+             StFwd oneshot lat (delay 4)        10 147121.56  45387.00
+             StFwd oneshot lat (delay 4)        11 147118.31  45386.00
+             StFwd oneshot lat (delay 4)        12 147085.90  45376.00
+             StFwd oneshot lat (delay 4)        13 147150.73  45396.00
+             StFwd oneshot lat (delay 4)        14 147085.90  45376.00
+             StFwd oneshot lat (delay 4)        15 147150.73  45396.00
+             StFwd oneshot lat (delay 4)        16 147118.31  45386.00
+             StFwd oneshot lat (delay 4)        17 147089.14  45377.00
+             StFwd oneshot lat (delay 4)        18 147150.73  45396.00
+             StFwd oneshot lat (delay 4)        19 147085.90  45376.00
+             StFwd oneshot lat (delay 4)        20 147150.73  45396.00
+             StFwd oneshot lat (delay 4)    median 147121.56  45387.00
+
+oneshot-latency-3 @ 0x0x706180
+                               Benchmark    Sample    Cycles     Nanos
+             StFwd oneshot lat (delay 3)         1 148061.59  45677.00
+             StFwd oneshot lat (delay 3)         2 167413.29  51647.00
+             StFwd oneshot lat (delay 3)         3 147507.29  45506.00
+             StFwd oneshot lat (delay 3)         4 147183.14  45406.00
+             StFwd oneshot lat (delay 3)         5 147734.20  45576.00
+             StFwd oneshot lat (delay 3)         6 148123.18  45696.00
+             StFwd oneshot lat (delay 3)         7 148249.59  45735.00
+             StFwd oneshot lat (delay 3)         8 147153.97  45397.00
+             StFwd oneshot lat (delay 3)         9 147118.31  45386.00
+             StFwd oneshot lat (delay 3)        10 147115.07  45385.00
+             StFwd oneshot lat (delay 3)        11 147153.97  45397.00
+             StFwd oneshot lat (delay 3)        12 147082.66  45375.00
+             StFwd oneshot lat (delay 3)        13 147150.73  45396.00
+             StFwd oneshot lat (delay 3)        14 147082.66  45375.00
+             StFwd oneshot lat (delay 3)        15 147147.49  45395.00
+             StFwd oneshot lat (delay 3)        16 147118.31  45386.00
+             StFwd oneshot lat (delay 3)        17 147118.31  45386.00
+             StFwd oneshot lat (delay 3)        18 147147.49  45395.00
+             StFwd oneshot lat (delay 3)        19 147118.31  45386.00
+             StFwd oneshot lat (delay 3)        20 147118.31  45386.00
+             StFwd oneshot lat (delay 3)    median 147147.49  45395.00
+
+oneshot-latency-2 @ 0x0x705e00
+                               Benchmark    Sample    Cycles     Nanos
+             StFwd oneshot lat (delay 2)         1 148486.22  45808.00
+             StFwd oneshot lat (delay 2)         2 173491.09  53522.00
+             StFwd oneshot lat (delay 2)         3 148382.50  45776.00
+             StFwd oneshot lat (delay 2)         4 149685.58  46178.00
+             StFwd oneshot lat (delay 2)         5 147085.90  45376.00
+             StFwd oneshot lat (delay 2)         6 148382.50  45776.00
+             StFwd oneshot lat (delay 2)         7 147769.85  45587.00
+             StFwd oneshot lat (delay 2)         8 147147.49  45395.00
+             StFwd oneshot lat (delay 2)         9 147150.73  45396.00
+             StFwd oneshot lat (delay 2)        10 147118.31  45386.00
+             StFwd oneshot lat (delay 2)        11 147115.07  45385.00
+             StFwd oneshot lat (delay 2)        12 147085.90  45376.00
+             StFwd oneshot lat (delay 2)        13 147153.97  45397.00
+             StFwd oneshot lat (delay 2)        14 147082.66  45375.00
+             StFwd oneshot lat (delay 2)        15 147089.14  45377.00
+             StFwd oneshot lat (delay 2)        16 147085.90  45376.00
+             StFwd oneshot lat (delay 2)        17 147053.48  45366.00
+             StFwd oneshot lat (delay 2)        18 147118.31  45386.00
+             StFwd oneshot lat (delay 2)        19 147053.48  45366.00
+             StFwd oneshot lat (delay 2)        20 147118.31  45386.00
+             StFwd oneshot lat (delay 2)    median 147118.31  45386.00
+
+oneshot-latency-1 @ 0x0x705a80
+                               Benchmark    Sample    Cycles     Nanos
+             StFwd oneshot lat (delay 1)         1 148353.32  45767.00
+             StFwd oneshot lat (delay 1)         2 175792.54  54232.00
+             StFwd oneshot lat (delay 1)         3 147669.37  45556.00
+             StFwd oneshot lat (delay 1)         4 147089.14  45377.00
+             StFwd oneshot lat (delay 1)         5 147115.07  45385.00
+             StFwd oneshot lat (delay 1)         6 148094.00  45687.00
+             StFwd oneshot lat (delay 1)         7 149419.77  46096.00
+             StFwd oneshot lat (delay 1)         8 147507.29  45506.00
+             StFwd oneshot lat (delay 1)         9 147089.14  45377.00
+             StFwd oneshot lat (delay 1)        10 147118.31  45386.00
+             StFwd oneshot lat (delay 1)        11 147118.31  45386.00
+             StFwd oneshot lat (delay 1)        12 147118.31  45386.00
+             StFwd oneshot lat (delay 1)        13 147150.73  45396.00
+             StFwd oneshot lat (delay 1)        14 177614.26  54794.00
+             StFwd oneshot lat (delay 1)        15 147247.97  45426.00
+             StFwd oneshot lat (delay 1)        16 147121.56  45387.00
+             StFwd oneshot lat (delay 1)        17 147150.73  45396.00
+             StFwd oneshot lat (delay 1)        18 147082.66  45375.00
+             StFwd oneshot lat (delay 1)        19 147183.14  45406.00
+             StFwd oneshot lat (delay 1)        20 147082.66  45375.00
+             StFwd oneshot lat (delay 1)    median 147150.73  45396.00
+
+oneshot-latency-0 @ 0x0x705700
+                               Benchmark    Sample    Cycles     Nanos
+             StFwd oneshot lat (delay 0)         1 148414.91  45786.00
+             StFwd oneshot lat (delay 0)         2 174006.48  53681.00
+             StFwd oneshot lat (delay 0)         3 147247.97  45426.00
+             StFwd oneshot lat (delay 0)         4 147115.07  45385.00
+             StFwd oneshot lat (delay 0)         5 149653.16  46168.00
+             StFwd oneshot lat (delay 0)         6 147928.69  45636.00
+             StFwd oneshot lat (delay 0)         7 149455.43  46107.00
+             StFwd oneshot lat (delay 0)         8 148450.57  45797.00
+             StFwd oneshot lat (delay 0)         9 147179.90  45405.00
+             StFwd oneshot lat (delay 0)        10 147118.31  45386.00
+             StFwd oneshot lat (delay 0)        11 147118.31  45386.00
+             StFwd oneshot lat (delay 0)        12 147147.49  45395.00
+             StFwd oneshot lat (delay 0)        13 147118.31  45386.00
+             StFwd oneshot lat (delay 0)        14 147150.73  45396.00
+             StFwd oneshot lat (delay 0)        15 147118.31  45386.00
+             StFwd oneshot lat (delay 0)        16 147153.97  45397.00
+             StFwd oneshot lat (delay 0)        17 147147.49  45395.00
+             StFwd oneshot lat (delay 0)        18 147085.90  45376.00
+             StFwd oneshot lat (delay 0)        19 147179.90  45405.00
+             StFwd oneshot lat (delay 0)        20 147085.90  45376.00
+             StFwd oneshot lat (delay 0)    median 147150.73  45396.00
+
+Finished in 6 ms (memory/store-fwd-oneshot)
+
+** Running group studies/store-fwd-try : Store forward attempts **
+oneshot-dummy @ 0x0x4ed6e0
+                               Benchmark    Sample    Cycles     Nanos
+                     Empty oneshot bench         1      3.24      1.00
+                     Empty oneshot bench         2      0.00      0.00
+                     Empty oneshot bench         3      0.00      0.00
+                     Empty oneshot bench         4      0.00      0.00
+                     Empty oneshot bench         5     32.41     10.00
+                     Empty oneshot bench         6      0.00      0.00
+                     Empty oneshot bench         7     -3.24     -1.00
+                     Empty oneshot bench         8      0.00      0.00
+                     Empty oneshot bench         9      0.00      0.00
+                     Empty oneshot bench        10      0.00      0.00
+                     Empty oneshot bench        11      0.00      0.00
+                     Empty oneshot bench        12      3.24      1.00
+                     Empty oneshot bench        13     -3.24     -1.00
+                     Empty oneshot bench        14      0.00      0.00
+                     Empty oneshot bench        15      0.00      0.00
+                     Empty oneshot bench        16      0.00      0.00
+                     Empty oneshot bench        17     -3.24     -1.00
+                     Empty oneshot bench        18      3.24      1.00
+                     Empty oneshot bench        19     32.41     10.00
+                     Empty oneshot bench        20      0.00      0.00
+                     Empty oneshot bench    median      0.00      0.00
+
+stfwd-try1 @ 0x0x704dc0
+                               Benchmark    Sample    Cycles     Nanos
+                              stfwd-try1         1   1267.42    391.00
+                              stfwd-try1         2     64.83     20.00
+                              stfwd-try1         3    100.49     31.00
+                              stfwd-try1         4     64.83     20.00
+                              stfwd-try1         5     64.83     20.00
+                              stfwd-try1         6     64.83     20.00
+                              stfwd-try1         7     64.83     20.00
+                              stfwd-try1         8     64.83     20.00
+                              stfwd-try1         9     64.83     20.00
+                              stfwd-try1        10     97.24     30.00
+                              stfwd-try1        11     68.07     21.00
+                              stfwd-try1        12     68.07     21.00
+                              stfwd-try1        13     68.07     21.00
+                              stfwd-try1        14     68.07     21.00
+                              stfwd-try1        15     64.83     20.00
+                              stfwd-try1        16     97.24     30.00
+                              stfwd-try1        17     64.83     20.00
+                              stfwd-try1        18     64.83     20.00
+                              stfwd-try1        19     64.83     20.00
+                              stfwd-try1        20     64.83     20.00
+                              stfwd-try1    median     64.83     20.00
+
+stfwd-try2 @ 0x0x704900
+                               Benchmark    Sample    Cycles     Nanos
+                    stfwd-try2 100 loads         1    615.88    190.00
+                    stfwd-try2 100 loads         2    421.39    130.00
+                    stfwd-try2 100 loads         3    388.98    120.00
+                    stfwd-try2 100 loads         4    324.15    100.00
+                    stfwd-try2 100 loads         5    356.56    110.00
+                    stfwd-try2 100 loads         6    356.56    110.00
+                    stfwd-try2 100 loads         7    324.15    100.00
+                    stfwd-try2 100 loads         8    288.49     89.00
+                    stfwd-try2 100 loads         9    259.32     80.00
+                    stfwd-try2 100 loads        10    259.32     80.00
+                    stfwd-try2 100 loads        11    259.32     80.00
+                    stfwd-try2 100 loads        12    259.32     80.00
+                    stfwd-try2 100 loads        13    291.73     90.00
+                    stfwd-try2 100 loads        14    262.56     81.00
+                    stfwd-try2 100 loads        15    259.32     80.00
+                    stfwd-try2 100 loads        16    294.98     91.00
+                    stfwd-try2 100 loads        17    262.56     81.00
+                    stfwd-try2 100 loads        18    259.32     80.00
+                    stfwd-try2 100 loads        19    294.98     91.00
+                    stfwd-try2 100 loads        20    259.32     80.00
+                    stfwd-try2 100 loads    median    288.49     89.00
+
+stfwd-try2-4 @ 0x0x701840
+                               Benchmark    Sample    Cycles     Nanos
+                      stfwd-try2 4 loads         1    392.22    121.00
+                      stfwd-try2 4 loads         2      3.24      1.00
+                      stfwd-try2 4 loads         3      0.00      0.00
+                      stfwd-try2 4 loads         4      0.00      0.00
+                      stfwd-try2 4 loads         5      3.24      1.00
+                      stfwd-try2 4 loads         6      0.00      0.00
+                      stfwd-try2 4 loads         7      0.00      0.00
+                      stfwd-try2 4 loads         8      3.24      1.00
+                      stfwd-try2 4 loads         9     32.41     10.00
+                      stfwd-try2 4 loads        10      0.00      0.00
+                      stfwd-try2 4 loads        11     -3.24     -1.00
+                      stfwd-try2 4 loads        12      3.24      1.00
+                      stfwd-try2 4 loads        13     -3.24     -1.00
+                      stfwd-try2 4 loads        14      0.00      0.00
+                      stfwd-try2 4 loads        15      0.00      0.00
+                      stfwd-try2 4 loads        16      0.00      0.00
+                      stfwd-try2 4 loads        17     -3.24     -1.00
+                      stfwd-try2 4 loads        18      0.00      0.00
+                      stfwd-try2 4 loads        19      0.00      0.00
+                      stfwd-try2 4 loads        20      0.00      0.00
+                      stfwd-try2 4 loads    median      0.00      0.00
+
+stfwd-try2-10 @ 0x0x701880
+                               Benchmark    Sample    Cycles     Nanos
+                     stfwd-try2 10 loads         1     -3.24     -1.00
+                     stfwd-try2 10 loads         2      0.00      0.00
+                     stfwd-try2 10 loads         3      0.00      0.00
+                     stfwd-try2 10 loads         4      3.24      1.00
+                     stfwd-try2 10 loads         5      0.00      0.00
+                     stfwd-try2 10 loads         6     29.17      9.00
+                     stfwd-try2 10 loads         7      0.00      0.00
+                     stfwd-try2 10 loads         8      0.00      0.00
+                     stfwd-try2 10 loads         9     35.66     11.00
+                     stfwd-try2 10 loads        10      3.24      1.00
+                     stfwd-try2 10 loads        11      0.00      0.00
+                     stfwd-try2 10 loads        12      3.24      1.00
+                     stfwd-try2 10 loads        13     32.41     10.00
+                     stfwd-try2 10 loads        14      0.00      0.00
+                     stfwd-try2 10 loads        15     -3.24     -1.00
+                     stfwd-try2 10 loads        16     35.66     11.00
+                     stfwd-try2 10 loads        17      3.24      1.00
+                     stfwd-try2 10 loads        18      0.00      0.00
+                     stfwd-try2 10 loads        19      0.00      0.00
+                     stfwd-try2 10 loads        20     32.41     10.00
+                     stfwd-try2 10 loads    median      0.00      0.00
+
+stfwd-try2-20 @ 0x0x704800
+                               Benchmark    Sample    Cycles     Nanos
+                     stfwd-try2 20 loads         1    262.56     81.00
+                     stfwd-try2 20 loads         2    132.90     41.00
+                     stfwd-try2 20 loads         3     35.66     11.00
+                     stfwd-try2 20 loads         4     64.83     20.00
+                     stfwd-try2 20 loads         5     32.41     10.00
+                     stfwd-try2 20 loads         6     32.41     10.00
+                     stfwd-try2 20 loads         7     64.83     20.00
+                     stfwd-try2 20 loads         8     35.66     11.00
+                     stfwd-try2 20 loads         9     35.66     11.00
+                     stfwd-try2 20 loads        10     64.83     20.00
+                     stfwd-try2 20 loads        11     32.41     10.00
+                     stfwd-try2 20 loads        12     32.41     10.00
+                     stfwd-try2 20 loads        13     64.83     20.00
+                     stfwd-try2 20 loads        14     32.41     10.00
+                     stfwd-try2 20 loads        15     32.41     10.00
+                     stfwd-try2 20 loads        16     64.83     20.00
+                     stfwd-try2 20 loads        17     29.17      9.00
+                     stfwd-try2 20 loads        18     29.17      9.00
+                     stfwd-try2 20 loads        19     32.41     10.00
+                     stfwd-try2 20 loads        20     32.41     10.00
+                     stfwd-try2 20 loads    median     32.41     10.00
+
+stfwd-try2-1000 @ 0x0x701900
+                               Benchmark    Sample    Cycles     Nanos
+                   stfwd-try2 1000 loads         1   6139.38   1894.00
+                   stfwd-try2 1000 loads         2   3085.90    952.00
+                   stfwd-try2 1000 loads         3   3085.90    952.00
+                   stfwd-try2 1000 loads         4   3053.48    942.00
+                   stfwd-try2 1000 loads         5   3053.48    942.00
+                   stfwd-try2 1000 loads         6   3053.48    942.00
+                   stfwd-try2 1000 loads         7   3053.48    942.00
+                   stfwd-try2 1000 loads         8   2956.24    912.00
+                   stfwd-try2 1000 loads         9   2988.65    922.00
+                   stfwd-try2 1000 loads        10   2988.65    922.00
+                   stfwd-try2 1000 loads        11   2956.24    912.00
+                   stfwd-try2 1000 loads        12   2988.65    922.00
+                   stfwd-try2 1000 loads        13   2956.24    912.00
+                   stfwd-try2 1000 loads        14   2988.65    922.00
+                   stfwd-try2 1000 loads        15   2988.65    922.00
+                   stfwd-try2 1000 loads        16   2956.24    912.00
+                   stfwd-try2 1000 loads        17   2953.00    911.00
+                   stfwd-try2 1000 loads        18   2956.24    912.00
+                   stfwd-try2 1000 loads        19   2956.24    912.00
+                   stfwd-try2 1000 loads        20   2988.65    922.00
+                   stfwd-try2 1000 loads    median   2988.65    922.00
+
+stfwd-try2-1000w @ 0x0x701900
+                               Benchmark    Sample    Cycles     Nanos
+              stfwd-try2 1000 loads warm         1   2985.41    921.00
+              stfwd-try2 1000 loads warm         2   3053.48    942.00
+              stfwd-try2 1000 loads warm         3   2956.24    912.00
+              stfwd-try2 1000 loads warm         4   2988.65    922.00
+              stfwd-try2 1000 loads warm         5   2956.24    912.00
+              stfwd-try2 1000 loads warm         6   2988.65    922.00
+              stfwd-try2 1000 loads warm         7   2956.24    912.00
+              stfwd-try2 1000 loads warm         8   2988.65    922.00
+              stfwd-try2 1000 loads warm         9   2988.65    922.00
+              stfwd-try2 1000 loads warm        10   2956.24    912.00
+              stfwd-try2 1000 loads warm        11   2988.65    922.00
+              stfwd-try2 1000 loads warm        12   2985.41    921.00
+              stfwd-try2 1000 loads warm        13   2956.24    912.00
+              stfwd-try2 1000 loads warm        14   2988.65    922.00
+              stfwd-try2 1000 loads warm        15   2988.65    922.00
+              stfwd-try2 1000 loads warm        16   2956.24    912.00
+              stfwd-try2 1000 loads warm        17   2988.65    922.00
+              stfwd-try2 1000 loads warm        18   2988.65    922.00
+              stfwd-try2 1000 loads warm        19   2956.24    912.00
+              stfwd-try2 1000 loads warm        20   2988.65    922.00
+              stfwd-try2 1000 loads warm    median   2988.65    922.00
+
+stfwd-try2b @ 0x0x704900
+                               Benchmark    Sample    Cycles     Nanos
+                    stfwd-try2 100 loads         1    294.98     91.00
+                    stfwd-try2 100 loads         2    392.22    121.00
+                    stfwd-try2 100 loads         3    388.98    120.00
+                    stfwd-try2 100 loads         4    356.56    110.00
+                    stfwd-try2 100 loads         5    359.81    111.00
+                    stfwd-try2 100 loads         6    356.56    110.00
+                    stfwd-try2 100 loads         7    356.56    110.00
+                    stfwd-try2 100 loads         8    262.56     81.00
+                    stfwd-try2 100 loads         9    291.73     90.00
+                    stfwd-try2 100 loads        10    262.56     81.00
+                    stfwd-try2 100 loads        11    291.73     90.00
+                    stfwd-try2 100 loads        12    262.56     81.00
+                    stfwd-try2 100 loads        13    294.98     91.00
+                    stfwd-try2 100 loads        14    259.32     80.00
+                    stfwd-try2 100 loads        15    294.98     91.00
+                    stfwd-try2 100 loads        16    262.56     81.00
+                    stfwd-try2 100 loads        17    291.73     90.00
+                    stfwd-try2 100 loads        18    262.56     81.00
+                    stfwd-try2 100 loads        19    291.73     90.00
+                    stfwd-try2 100 loads        20    259.32     80.00
+                    stfwd-try2 100 loads    median    291.73     90.00
+
+stfwd-try2c-trained @ 0x0x705100
+                               Benchmark    Sample    Cycles     Nanos
+                           trained loads         1    194.49     60.00
+                           trained loads         2     64.83     20.00
+                           trained loads         3     97.24     30.00
+                           trained loads         4     68.07     21.00
+                           trained loads         5     68.07     21.00
+                           trained loads         6     97.24     30.00
+                           trained loads         7     97.24     30.00
+                           trained loads         8     97.24     30.00
+                           trained loads         9    100.49     31.00
+                           trained loads        10     64.83     20.00
+                           trained loads        11    132.90     41.00
+                           trained loads        12     97.24     30.00
+                           trained loads        13     97.24     30.00
+                           trained loads        14    194.49     60.00
+                           trained loads        15     97.24     30.00
+                           trained loads        16    162.07     50.00
+                           trained loads        17     97.24     30.00
+                           trained loads        18     97.24     30.00
+                           trained loads        19     97.24     30.00
+                           trained loads        20    194.49     60.00
+                           trained loads    median     97.24     30.00
+
+stfwd-try2c-untrained @ 0x0x705100
+                               Benchmark    Sample    Cycles     Nanos
+                         untrained loads         1     64.83     20.00
+                         untrained loads         2     68.07     21.00
+                         untrained loads         3     64.83     20.00
+                         untrained loads         4     32.41     10.00
+                         untrained loads         5     64.83     20.00
+                         untrained loads         6     64.83     20.00
+                         untrained loads         7     32.41     10.00
+                         untrained loads         8     64.83     20.00
+                         untrained loads         9     32.41     10.00
+                         untrained loads        10     64.83     20.00
+                         untrained loads        11     61.59     19.00
+                         untrained loads        12     32.41     10.00
+                         untrained loads        13     64.83     20.00
+                         untrained loads        14     32.41     10.00
+                         untrained loads        15     35.66     11.00
+                         untrained loads        16     64.83     20.00
+                         untrained loads        17     32.41     10.00
+                         untrained loads        18     64.83     20.00
+                         untrained loads        19     32.41     10.00
+                         untrained loads        20     29.17      9.00
+                         untrained loads    median     61.59     19.00
+
+Finished in 971 ms (studies/store-fwd-try)
+
+** Running group studies/replay : Cacheline crossing loads from fixed-size regions **
+                               Benchmark    Cycles     Nanos
+                             description     20.15      6.22
+Finished in 218 ms (studies/replay)
+
+** Running group studies/forwarding : Forwarding scenarios **
+                               Benchmark    Cycles     Nanos
+                           fw_write_read      1.00      0.31
+              Cacheline split forwarding      5.02      1.55
+                       fw_write_read_rcx      6.05      1.87
+                      fw_write_read_rcx2      6.19      1.91
+                      fw_write_read_rcx3      7.88      2.43
+                      fw_write_read_rcx4      7.97      2.46
+                      fw_write_read_rcx5      7.54      2.33
+                     fw_write_read_rcx4s      8.15      2.51
+                          fw_write_readx      9.04      2.79
+                     fw_split_write_read     18.13      5.59
+             fw_split_write_read_chained     23.15      7.14
+                     fw_write_split_read     10.06      3.10
+                fw_write_split_read_both     11.91      3.67
+Finished in 1349 ms (studies/forwarding)
+
+** Running group oneshot : Oneshot Group **
+oneshot-dummy @ 0x0x4ed6e0
+                               Benchmark    Sample    Cycles     Nanos
+                     Empty oneshot bench         1      3.24      1.00
+                     Empty oneshot bench         2     -3.24     -1.00
+                     Empty oneshot bench         3      0.00      0.00
+                     Empty oneshot bench         4      0.00      0.00
+                     Empty oneshot bench         5      0.00      0.00
+                     Empty oneshot bench         6     -3.24     -1.00
+                     Empty oneshot bench         7     35.66     11.00
+                     Empty oneshot bench         8      3.24      1.00
+                     Empty oneshot bench         9      0.00      0.00
+                     Empty oneshot bench        10      0.00      0.00
+                     Empty oneshot bench        11      3.24      1.00
+                     Empty oneshot bench        12      3.24      1.00
+                     Empty oneshot bench        13      0.00      0.00
+                     Empty oneshot bench        14      0.00      0.00
+                     Empty oneshot bench        15      0.00      0.00
+                     Empty oneshot bench        16      0.00      0.00
+                     Empty oneshot bench        17      0.00      0.00
+                     Empty oneshot bench        18      3.24      1.00
+                     Empty oneshot bench        19      0.00      0.00
+                     Empty oneshot bench        20      0.00      0.00
+                     Empty oneshot bench    median      0.00      0.00
+
+dep-add-oneshot @ 0x0x6df000
+                               Benchmark    Sample    Cycles     Nanos
+                   Oneshot dep add chain         1     11.67      3.60
+                   Oneshot dep add chain         2      0.51      0.16
+                   Oneshot dep add chain         3      0.51      0.16
+                   Oneshot dep add chain         4      0.76      0.23
+                   Oneshot dep add chain         5      0.76      0.23
+                   Oneshot dep add chain         6      0.51      0.16
+                   Oneshot dep add chain         7      0.76      0.23
+                   Oneshot dep add chain         8      0.79      0.24
+                   Oneshot dep add chain         9      0.76      0.23
+                   Oneshot dep add chain        10      0.51      0.16
+                   Oneshot dep add chain        11      0.76      0.23
+                   Oneshot dep add chain        12      0.76      0.23
+                   Oneshot dep add chain        13      0.51      0.16
+                   Oneshot dep add chain        14      0.76      0.23
+                   Oneshot dep add chain        15      0.79      0.24
+                   Oneshot dep add chain        16      0.76      0.23
+                   Oneshot dep add chain        17      0.51      0.16
+                   Oneshot dep add chain        18      0.76      0.23
+                   Oneshot dep add chain        19      0.76      0.23
+                   Oneshot dep add chain        20      0.51      0.16
+                   Oneshot dep add chain    median      0.76      0.23
+
+indep-add-oneshot @ 0x0x6e4f00
+                               Benchmark    Sample    Cycles     Nanos
+                 Oneshot indep add chain         1     33.04     10.19
+                 Oneshot indep add chain         2      0.24      0.07
+                 Oneshot indep add chain         3      0.24      0.07
+                 Oneshot indep add chain         4      0.24      0.07
+                 Oneshot indep add chain         5      0.24      0.07
+                 Oneshot indep add chain         6      0.16      0.05
+                 Oneshot indep add chain         7      0.24      0.07
+                 Oneshot indep add chain         8      0.24      0.07
+                 Oneshot indep add chain         9      0.24      0.07
+                 Oneshot indep add chain        10      0.25      0.08
+                 Oneshot indep add chain        11      0.24      0.07
+                 Oneshot indep add chain        12      0.24      0.07
+                 Oneshot indep add chain        13      0.24      0.07
+                 Oneshot indep add chain        14      0.16      0.05
+                 Oneshot indep add chain        15      0.24      0.07
+                 Oneshot indep add chain        16      0.24      0.07
+                 Oneshot indep add chain        17      0.25      0.08
+                 Oneshot indep add chain        18      0.24      0.07
+                 Oneshot indep add chain        19      0.24      0.07
+                 Oneshot indep add chain        20      0.24      0.07
+                 Oneshot indep add chain    median      0.24      0.07
+
+dep-add128 @ 0x0x6dee40
+                               Benchmark    Sample    Cycles     Nanos
+          128 dependent add instructions         1      3.82      1.18
+          128 dependent add instructions         2      0.76      0.23
+          128 dependent add instructions         3      0.76      0.23
+          128 dependent add instructions         4      0.51      0.16
+          128 dependent add instructions         5      0.76      0.23
+          128 dependent add instructions         6      0.76      0.23
+          128 dependent add instructions         7      0.51      0.16
+          128 dependent add instructions         8      0.76      0.23
+          128 dependent add instructions         9      0.76      0.23
+          128 dependent add instructions        10      0.79      0.24
+          128 dependent add instructions        11      0.53      0.16
+          128 dependent add instructions        12      0.76      0.23
+          128 dependent add instructions        13      0.76      0.23
+          128 dependent add instructions        14      0.51      0.16
+          128 dependent add instructions        15      0.79      0.24
+          128 dependent add instructions        16      0.76      0.23
+          128 dependent add instructions        17      0.51      0.16
+          128 dependent add instructions        18      0.76      0.23
+          128 dependent add instructions        19      0.76      0.23
+          128 dependent add instructions        20      0.51      0.16
+          128 dependent add instructions    median      0.76      0.23
+
+oneshot-dummy-notouch @ 0x0x6dedc0
+                               Benchmark    Sample    Cycles     Nanos
+           Empty untouched oneshot bench         1    294.98     91.00
+           Empty untouched oneshot bench         2      3.24      1.00
+           Empty untouched oneshot bench         3      0.00      0.00
+           Empty untouched oneshot bench         4      0.00      0.00
+           Empty untouched oneshot bench         5      0.00      0.00
+           Empty untouched oneshot bench         6      0.00      0.00
+           Empty untouched oneshot bench         7      0.00      0.00
+           Empty untouched oneshot bench         8      3.24      1.00
+           Empty untouched oneshot bench         9      0.00      0.00
+           Empty untouched oneshot bench        10      0.00      0.00
+           Empty untouched oneshot bench        11      3.24      1.00
+           Empty untouched oneshot bench        12     35.66     11.00
+           Empty untouched oneshot bench        13     -3.24     -1.00
+           Empty untouched oneshot bench        14      0.00      0.00
+           Empty untouched oneshot bench        15      0.00      0.00
+           Empty untouched oneshot bench        16      0.00      0.00
+           Empty untouched oneshot bench        17     -3.24     -1.00
+           Empty untouched oneshot bench        18      3.24      1.00
+           Empty untouched oneshot bench        19      0.00      0.00
+           Empty untouched oneshot bench        20      0.00      0.00
+           Empty untouched oneshot bench    median      0.00      0.00
+
+oneshot-dummy-touch @ 0x0x6dee00
+                               Benchmark    Sample    Cycles     Nanos
+             Empty touched oneshot bench         1      0.00      0.00
+             Empty touched oneshot bench         2      0.00      0.00
+             Empty touched oneshot bench         3      3.24      1.00
+             Empty touched oneshot bench         4      0.00      0.00
+             Empty touched oneshot bench         5      0.00      0.00
+             Empty touched oneshot bench         6      3.24      1.00
+             Empty touched oneshot bench         7      0.00      0.00
+             Empty touched oneshot bench         8      0.00      0.00
+             Empty touched oneshot bench         9      3.24      1.00
+             Empty touched oneshot bench        10      0.00      0.00
+             Empty touched oneshot bench        11     32.41     10.00
+             Empty touched oneshot bench        12     -3.24     -1.00
+             Empty touched oneshot bench        13      3.24      1.00
+             Empty touched oneshot bench        14      0.00      0.00
+             Empty touched oneshot bench        15      0.00      0.00
+             Empty touched oneshot bench        16      0.00      0.00
+             Empty touched oneshot bench        17      0.00      0.00
+             Empty touched oneshot bench        18     -3.24     -1.00
+             Empty touched oneshot bench        19      0.00      0.00
+             Empty touched oneshot bench        20      0.00      0.00
+             Empty touched oneshot bench    median      0.00      0.00
+
+Finished in 0 ms (oneshot)
+
+** Running group syscall : Syscall benches **
+                               Benchmark    Cycles     Nanos
+                     getuid() glibc call    225.84     69.67
+                  getuid using syscall()    227.54     70.20
+                  getpid using syscall()    226.68     69.93
+            close() on a non-existent FD    231.83     71.52
+             getcpu syscall (maybe VDSO)     48.96     15.10
+                    non-existent syscall    165.38     51.02
+                            sched_getcpu     52.96     16.34
+                   getuid direct syscall    209.24     64.55
+             non-existent direct syscall    144.90     44.70
+                   syscall+lfence before    157.89     48.71
+                    syscall+lfence after    152.89     47.17
+                     back-to-back lfence     10.37      3.20
+Finished in 213 ms (syscall)
+
+** Running group vector/bypass : Vector unit bypass latency **
+                               Benchmark    Cycles     Nanos
+           movdqa [mem] -> paddb latency      9.99      3.08
+           movdqu [mem] -> paddb latency      9.99      3.08
+           movups [mem] -> paddb latency      9.99      3.08
+           movupd [mem] -> paddb latency      9.99      3.08
+           movq rax,xmm0 -> xmm0,rax lat      5.99      1.85
+           movq rax,xmm0 -> xmm0,rax lat      5.99      1.85
+Finished in 56 ms (vector/bypass)
+
+** Running group vector/load-load : Vector load-load latency **
+                               Benchmark    Cycles     Nanos
+            aligned  movdqu xmm load lat      8.99      2.77
+            aligned vmovdqu xmm load lat      8.99      2.77
+            aligned   lddqu xmm load lat      8.99      2.77
+            aligned  vlddqu xmm load lat      8.99      2.77
+            aligned vmovdqu ymm load lat      8.99      2.77
+            aligned vmovdqu zmm load lat Skipped because hardware doesn't support required features: [AVX512F]
+         misaligned  movdqu xmm load lat     10.99      3.39
+         misaligned vmovdqu xmm load lat     10.99      3.39
+         misaligned   lddqu xmm load lat     10.99      3.39
+         misaligned  vlddqu xmm load lat     10.99      3.39
+         misaligned vmovdqu ymm load lat     10.99      3.39
+         misaligned vmovdqu zmm load lat Skipped because hardware doesn't support required features: [AVX512F]
+Finished in 109 ms (vector/load-load)
+
+** Running group vector/misc : Miscellaneous vector benches **
+                               Benchmark    Cycles     Nanos
+          check that scalar ops go to p1 Skipped because hardware doesn't support required features: [AVX512F]
+          check that scalar ops go to p0 Skipped because hardware doesn't support required features: [AVX512F]
+Finished in 0 ms (vector/misc)
