@@ -130,8 +130,15 @@ util/seqtest: util/seqtest.o $(JEVENTS_LIB)
 %.o : %.c
 	$(CC) $(CFLAGS) -c -std=c11 -o $@ $<
 
-%.o : %.cpp %.cc
+define cpp-build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -std=c++11 -o $@ $<
+endef
+
+%.o : %.cpp
+	$(cpp-build)
+
+%.o : %.cc
+	$(cpp-build)
 
 %.o: %.asm nasm-utils/nasm-utils-inc.asm
 	$(ASM) $(ASM_FLAGS) ${NASM_DEFINES} -f elf64 $<
