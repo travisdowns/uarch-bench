@@ -219,8 +219,11 @@ public:
 
     void add(const Benchmark &bench) {
         assert(&bench->getGroup() == this);
-        assert(std::find_if(benches_.begin(), benches_.end(),
-                [&bench](const Benchmark& o){ return bench->getId() == o->getId(); }) == benches_.end()); // duplicate ID
+        if (std::find_if(benches_.begin(), benches_.end(),
+                         [&bench](const Benchmark& o) { return bench->getId() == o->getId(); }) != benches_.end()) {
+            // duplicate ID
+            throw std::runtime_error(std::string("duplicate test ID: ") + bench->getId());
+        }
         benches_.push_back(bench);
     }
 
