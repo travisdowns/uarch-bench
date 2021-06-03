@@ -36,6 +36,8 @@ PSNIP_SRC := cpu.c
 
 BOOST_DIR := boost_1_70_0
 
+FMT_DIR := fmt-7.1.3
+
 GIT_VERSION := $(shell git describe --dirty --always)
 
 ifneq ($(CPU_ARCH),)
@@ -46,13 +48,14 @@ O_LEVEL ?= -O2
 COMMON_FLAGS := -MMD -Wall $(ARCH_FLAGS) -g $(O_LEVEL) -DGIT_VERSION=\"$(GIT_VERSION)\" \
     -DUSE_LIBPFC=$(USE_LIBPFC) -DUSE_BACKWARD_CPP=$(USE_BACKWARD_CPP) -DBACKWARD_HAS_BFD=$(BACKWARD_HAS_BFD) \
     -DBACKWARD_HAS_DW=$(BACKWARD_HAS_DW) -DUSE_PERF_TIMER=$(USE_PERF_TIMER) -I$(PSNIP_DIR) -I$(BOOST_DIR) \
+    -I$(FMT_DIR)/include \
     -DUARCH_BENCH_PORTABLE=$(if $(PORTABLE),1,0)
 CPPFLAGS := $(COMMON_FLAGS)
 CFLAGS := $(COMMON_FLAGS)
 
 # files that should only be compiled if USE_LIBPFC is enabled
 PFC_SRC := libpfc-timer.cpp libpfm4-support.cpp
-SRC_FILES := $(wildcard *.cpp) $(wildcard *.c) nasm-utils/nasm-utils-helper.c $(PSNIP_SRC)
+SRC_FILES := $(wildcard *.cpp) $(wildcard *.c) nasm-utils/nasm-utils-helper.c $(PSNIP_SRC) $(FMT_DIR)/src/format.cc
 SRC_FILES := $(filter-out $(PFC_SRC), $(SRC_FILES))
 ASM_FILES := $(if $(PORTABLE),,$(wildcard *.asm))
 
@@ -86,6 +89,7 @@ LDFLAGS += -ldw
 endif
 
 OBJECTS := $(SRC_FILES:.cpp=.o) $(ASM_FILES:.asm=.o)
+OBJECTS := $(OBJECTS:.cc=.o)
 OBJECTS := $(OBJECTS:.c=.o)
 DEPFILES = $(OBJECTS:.o=.d)
 # $(info OBJECTS=$(OBJECTS))
@@ -126,7 +130,7 @@ util/seqtest: util/seqtest.o $(JEVENTS_LIB)
 %.o : %.c
 	$(CC) $(CFLAGS) -c -std=c11 -o $@ $<
 
-%.o : %.cpp
+%.o : %.cpp %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -std=c++11 -o $@ $<
 
 %.o: %.asm nasm-utils/nasm-utils-inc.asm
