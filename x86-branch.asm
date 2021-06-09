@@ -12,7 +12,10 @@ thunk_boilerplate
 ; sometimes longer, exhibiting patterns such as 5.0, 5.67 or 6.33 cycles for
 ; two such branches for the *same* benchmark, from run to run
 ; an lfence inside the loop appears to remove the variance (only the
-; fastest timing shows)
+; fastest timing shows).
+; The "second" determination is based on the IP, not frequency: even if the
+; second branch is jumped to 2x as often, the first branch retains the fast
+; behavior.
 ; an lfence before the benchmark but outside the loop seems to reduce
 ; the variance
 ;
@@ -22,6 +25,13 @@ thunk_boilerplate
 ; indirect seem to have a best-case throughput of 1 per 2 cycles,
 ; regardless of spacing
 
+; fill the given number of bytes with nop3, using
+; plain nop for the 0-2 odd bytes at the end
+%macro fillnop3 1-2 2
+times ((%1 - %2) / 3) nop3
+times ((%1 - %2) % 3) nop
+%endmacro
+
 %macro jmp_forward 1
 %assign jump_bytes %1
 %if %1 < 2
@@ -29,8 +39,7 @@ thunk_boilerplate
 %assign jump_bytes 2
 %endif
     jmp %%target
-    times ((jump_bytes-2) / 3) nop3
-    times ((jump_bytes-2) % 3) nop
+    fillnop3 jump_bytes
 %%target:
 %undef jump_bytes
 %endmacro
@@ -64,10 +73,154 @@ align 64
     ret
 %endmacro
 
-define_jmp_forward  8,  8
-define_jmp_forward 16, 16
-define_jmp_forward 32, 32
-define_jmp_forward 64, 64
+define_jmp_forward   8,   8
+define_jmp_forward  16,  16
+define_jmp_forward  32,  32
+define_jmp_forward  64,  64
+define_jmp_forward  96,  96
+define_jmp_forward 128, 128
+
+; This test consists of a series of forward jumps, two per "block", organized
+; into two chains: a first chain whose jmp is always first in the block and
+; targets the first jmp in the second block, and a second chain that is similar
+; except using the second jump.
+;
+; We go though three chains every iteration, either 2 first and 1 second, or
+; 2 second and 1 first chains. This test shows that the first jump in a block
+; is resolved faster (1 cycle) by the BTB, since the variant with 2:1
+; first:second jumps is faster by 1 cycle per jmp tham the 1:2 variant.
+;
+; %1 total gap (between first/second jump in one block and first/second
+; %2 first gap (between first and second jump targets)
+; jump in the next)
+; %3: 0 means the second jump occurs in a 2:1 ratio with the first
+;     1 means the second jump occurs in a 1:2 ratio with the first
+; %4 offset of the first jump after the start of the block
+%macro define_jmp_forward_dual 4
+define_bench jmp_forward_dual_%1_%2_%3
+    xor eax, eax
+    jmp .first_1
+
+align 64
+
+%assign reps 10
+%assign fill1 %2
+%assign fill2 (%1 - %2 - %4)
+
+%assign i 1
+%rep (reps-1)
+    %assign next (i+1)
+    fillnop3 %4, 0
+.first_%+i:
+    jmp  .first_%+next
+    fillnop3 fill1
+.second_%+i:
+    jmp .second_%+next
+    fillnop3 fill2
+%assign i (i+1)
+%endrep
+
+%if %3
+%define target1 first
+%define target2 second
+%else
+%define target1 second
+%define target2 first
+%endif
+
+; the final iteration of the first pass jumps to
+; the first target of the second pass, unconditionally
+. %+ target1 %+ _ %+ reps:
+    jmp     . %+ target2 %+ _1
+
+; while the second iteration alternates between jumping again
+; to the second pass and the first pass (in the latter case
+; also checking for termination). So the first:second passes are
+; executed in a 1:2 ratio
+. %+ target2 %+ _ %+ reps:
+    xor     eax, 1
+    jnz      . %+ target2 %+ _1 
+    dec rdi
+    jnz . %+ target1 %+ _1
+    ret
+%endmacro
+
+define_jmp_forward_dual 32, 16, 0, 3
+define_jmp_forward_dual 32,  6, 0, 3
+define_jmp_forward_dual 64, 16, 0, 3
+define_jmp_forward_dual 64, 48, 0, 3
+define_jmp_forward_dual 32, 16, 1, 3
+define_jmp_forward_dual 32,  6, 1, 3
+define_jmp_forward_dual 64, 16, 1, 3
+define_jmp_forward_dual 64, 48, 1, 3
+
+struc jmp_loop_args
+    .total  : resd 1
+    .first  : resd 1
+endstruc
+
+; this is similar to the jmp_forward_dual test
+; except that we execute the forward jump region
+; 100x times in a loop, split in a configurable way
+; between the first and second regions
+;
+; %1 total gap (between first/second jump in one block and first/second
+; %2 first gap (between first and second jump targets)
+%macro define_jmp_loop_generic 2
+define_bench jmp_loop_generic_%1_%2
+%define block_size  %1
+%define gap         %2
+
+    mov edx, [rsi + jmp_loop_args.total]
+    mov ecx, [rsi + jmp_loop_args.first]
+
+%define total_iters edx
+%define first_iters ecx
+
+    xor eax, eax
+    jmp .bottom
+    ud2
+
+align 64
+
+%assign reps 10
+%assign fill1 gap
+%assign fill2 (block_size - gap)
+
+%assign i 1
+%rep (reps-1)
+    %assign next (i+1)
+.first_%+i:
+    jmp  .first_%+next
+    fillnop3 fill1
+.second_%+i:
+    jmp .second_%+next
+    fillnop3 fill2
+%assign i (i+1)
+%endrep
+
+.first_%+i:
+    nop
+    nop
+.second_%+i:
+
+.bottom:
+    inc eax
+    cmp eax, first_iters
+    jle .first_1
+    cmp eax, total_iters
+    jle .second_1
+
+
+    xor eax, eax
+    dec rdi
+    jnz .bottom
+
+.done:
+    ret
+%endmacro
+
+define_jmp_loop_generic 32, 16
 
 %macro indirect_forward 1
 %%before:

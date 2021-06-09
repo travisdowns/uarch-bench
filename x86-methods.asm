@@ -3070,6 +3070,26 @@ syscall_123456
 define_bench syscall_misses_lfence
 define_parallel_load_miss syscall_123456_lfence
 
+define_bench nested_loop
+.outer:
+    mov ecx, [rsi]
+
+.inner:
+    dec ecx
+    jnz .inner
+
+    times 10 nop9
+    
+
+    dec     rdi
+    jnz     .outer
+
+    ;jmp     .done
+
+align 32
+.done:
+    ret
+
 ud2
 
 ; constants

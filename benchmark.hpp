@@ -47,13 +47,23 @@ arg_provider_t constant(void *value);
 
 extern const arg_provider_t null_provider;
 
-
 /**
- * Create an arg provider that returns a poitner to a copy of the given object
- * allocated on the heap, and whose deleter frees the object.
+ * Create an arg provider that returns a pointer to a copy of the given object
+ * embedded in the std::function. No deleter needed.
  */
 template <typename T>
 arg_provider_t arg_object(T obj) {
+    return arg_provider_t{
+        [=]() mutable { return static_cast<void *>(&obj); }
+    };
+}
+
+/**
+ * Create an arg provider that returns a pointer to a copy of the given object
+ * allocated on the heap, and whose deleter frees the object.
+ */
+template <typename T>
+arg_provider_t arg_heap_object(T obj) {
     return arg_provider_t{
         [=](){ return static_cast<void *>(new T(obj)); },
         [](void *p){ delete static_cast<T *>(p); },

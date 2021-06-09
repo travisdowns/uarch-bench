@@ -5,6 +5,7 @@
  */
 
 #include "benchmark.hpp"
+#include "fmt/format.h"
 #include "util.hpp"
 
 extern "C" {
@@ -95,6 +96,8 @@ bench2_f weird_store_xor;
 
 bench2_f mov_elim;
 bench2_f mov_elim_inc;
+
+bench2_f nested_loop;
 
 }
 
@@ -283,6 +286,20 @@ void register_misc(GroupList& list) {
         maker = maker.useLoopDelta();
 
         maker.template make<rep_movsb>("stosb", "stosb to 1024 byte region", 100);
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/nested", "Nested loop mispredicts");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get());
+        // maker = maker.useLoopDelta();
+
+            
+        for (uint32_t iters = 1; iters <= 100; iters++) {
+            auto id = fmt::format("nested-loop-{}", iters);
+            auto desc = fmt::format("nested loop with {:3} iterations", iters);
+            maker.template make<nested_loop>(id, desc, 1, arg_object(iters));
+        }
     }
 
 #endif // #if !UARCH_BENCH_PORTABLE

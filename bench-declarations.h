@@ -22,7 +22,7 @@ extern "C" {
  * return value: ignored by the benchmarking code, but useful for C/C++ benchmarks to return some value that
  * depends on the substance of the benchmark so that the method isn't optimized away.
  */
-typedef long (bench2_f)(uint64_t iters, void *arg);
+extern "C" typedef long (bench2_f)(uint64_t iters, void *arg);
 
 bench2_f dummy_bench;
 
