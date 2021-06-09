@@ -4,7 +4,12 @@
  * Benchmarks relating to SSE and AVX instructions.
  */
 
+#if !UARCH_BENCH_PORTABLE
+
+#include <immintrin.h>
+
 #include "benchmark.hpp"
+#include "opt-control.hpp"
 
 extern "C" {
 
@@ -35,9 +40,32 @@ bench2_f p01_fusion_p0;
 
 }
 
+/**
+ * Specialization of modify for double to use the xmm
+ * register type (x86 specific).
+ */
+HEDLEY_ALWAYS_INLINE
+static void modify(__m256i& x) {
+    __asm__ volatile (" " :"+x"(x)::);
+}
+
+HEDLEY_NEVER_INLINE
+long intrinsic_bench(uint64_t iters, void*) {
+
+    __m256i total = _mm256_setzero_si256(), addend = _mm256_set1_epi32(1);
+
+    do {
+        for (int i = 0; i < 4; i++) {
+            total = _mm256_add_epi32(total, addend);
+            modify(total);
+        }
+    } while (--iters);
+
+    return _mm256_extract_epi32(total, 0);
+}
+
 template <typename TIMER>
 void register_vector(GroupList& list) {
-#if !UARCH_BENCH_PORTABLE
     {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("vector/bypass", "Vector unit bypass latency");
         list.push_back(group);
@@ -80,19 +108,23 @@ void register_vector(GroupList& list) {
         std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("vector/misc", "Miscellaneous vector benches");
         list.push_back(group);
 
-        auto maker = DeltaMaker<TIMER>(group.get(), 1000).setFeatures({AVX2});
-        auto m512  = maker.setFeatures({AVX512F});
+        auto m512  = DeltaMaker<TIMER>(group.get(), 1000).setFeatures({AVX512F});
 
         m512.template make<p01_fusion_p1>("p01-fusion-p1", "check that scalar ops go to p1", 100);
         m512.template make<p01_fusion_p0>("p01-fusion-p0", "check that scalar ops go to p0", 100);
+
+        auto maker = DeltaMaker<TIMER>(group.get()).setFeatures({AVX2});
+
+        maker.template make<intrinsic_bench>("intrinsic", "demo how to write intrinsic bench", 4);
+        maker.useLoopDelta().template make<intrinsic_bench>("intrinsic-loop-delta", "demo with loop delta", 4);
     }
 
-#endif // #if !UARCH_BENCH_PORTABLE
 }
 
-#define REG_DEFAULT(CLOCK) template void register_vector<CLOCK>(GroupList& list);
+#define REGISTER_ALL(CLOCK) template void register_vector<CLOCK>(GroupList& list);
 
-ALL_TIMERS_X(REG_DEFAULT)
+ALL_TIMERS_X(REGISTER_ALL)
 
+#endif // #if !UARCH_BENCH_PORTABLE
 
 
