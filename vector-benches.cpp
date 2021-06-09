@@ -6,7 +6,9 @@
 
 #if !UARCH_BENCH_PORTABLE
 
+#ifdef __AVX2__
 #include <immintrin.h>
+#endif
 
 #include "benchmark.hpp"
 #include "opt-control.hpp"
@@ -40,6 +42,8 @@ bench2_f p01_fusion_p0;
 
 }
 
+#ifdef __AVX2__
+
 /**
  * Specialization of modify for double to use the xmm
  * register type (x86 specific).
@@ -63,6 +67,8 @@ long intrinsic_bench(uint64_t iters, void*) {
 
     return _mm256_extract_epi32(total, 0);
 }
+
+#endif
 
 template <typename TIMER>
 void register_vector(GroupList& list) {
@@ -113,10 +119,12 @@ void register_vector(GroupList& list) {
         m512.template make<p01_fusion_p1>("p01-fusion-p1", "check that scalar ops go to p1", 100);
         m512.template make<p01_fusion_p0>("p01-fusion-p0", "check that scalar ops go to p0", 100);
 
+#ifdef __AVX2__
         auto maker = DeltaMaker<TIMER>(group.get()).setFeatures({AVX2});
 
         maker.template make<intrinsic_bench>("intrinsic", "demo how to write intrinsic bench", 4);
         maker.useLoopDelta().template make<intrinsic_bench>("intrinsic-loop-delta", "demo with loop delta", 4);
+#endif
     }
 
 }
