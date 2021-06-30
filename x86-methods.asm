@@ -2906,6 +2906,78 @@ vector_load_load_lat vmovdqu32, 63, zmm
 vector_load_load_lat lddqu    , 63
 vector_load_load_lat vlddqu   , 63
 
+; simple addressing version of the above
+; %1 load instruction
+; %2 offset relative to 64-byte boundary
+; %3 (default: xmm) register to load into
+%macro vector_load_load_lat_simple 3
+define_bench vector_load_load_lat_simple_%1_%2_%3
+push    rbp
+vzeroupper
+mov     rbp, rsp
+sub     rsp, 128
+and     rsp, -64
+mov     rax, rsp
+mov     [rsp], rsp
+vpbroadcastq ymm0, [rsp]
+vmovdqu [rsp], ymm0
+vmovdqu [rsp + 32], ymm0
+vmovdqu [rsp + 64], ymm0
+vmovdqu [rsp + 96], ymm0
+.top:
+%1      %{3}0, [rax + %2]   ; 6 cycles
+;vpaddd  xmm0, xmm0, xmm0
+vmovq   rax, xmm0                 ; 2 cycles
+dec     rdi
+jnz     .top
+mov     rsp, rbp
+pop     rbp
+ret
+%endmacro
+
+vector_load_load_lat_simple vmovdqu  ,  0, xmm
+vector_load_load_lat_simple vmovdqu  ,  0, ymm
+vector_load_load_lat_simple vmovdqu32,  0, zmm
+
+; indirection version of the above suggested by 
+; @rygorous, we do a SIMD load based on the result
+; of a GP load
+;
+; %1 load instruction
+; %2 offset relative to 64-byte boundary
+; %3 (default: xmm) register to load into
+%macro vector_load_load_lat_double 3
+define_bench vector_load_load_lat_double_%1_%2_%3
+push    rbp
+vzeroupper
+mov     rbp, rsp
+sub     rsp, 8192
+and     rsp, -64
+mov     rax, rsp
+mov     [rsp], rsp
+vpbroadcastq ymm0, [rsp]
+vmovdqu [rsp], ymm0
+vmovdqu [rsp + 32], ymm0
+vmovdqu [rsp + %2], ymm0
+vmovdqu [rsp + %2 + 32], ymm0
+.top:
+mov     rax, [rax]
+%1      %{3}0, [rax + %2]   ; 6 cycles
+vmovq   rax, xmm0           ; 2 cycles
+dec     rdi
+jnz     .top
+mov     rsp, rbp
+pop     rbp
+ret
+%endmacro
+
+vector_load_load_lat_double vmovdqu  ,      0, xmm
+vector_load_load_lat_double vmovdqu  ,      0, ymm
+vector_load_load_lat_double vmovdqu32,      0, zmm
+vector_load_load_lat_double vmovdqu  ,   3200, xmm
+vector_load_load_lat_double vmovdqu  ,   3200, ymm
+vector_load_load_lat_double vmovdqu32,   3200, zmm
+
 ; check if a p1 scalar op can concurrently execute
 ; when p01 are fused (1 cycle per iter if yes)
 define_bench p01_fusion_p1

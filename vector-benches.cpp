@@ -37,6 +37,17 @@ bench2_f vector_load_load_lat_vlddqu_63_xmm;
 bench2_f vector_load_load_lat_vmovdqu_63_ymm;
 bench2_f vector_load_load_lat_vmovdqu32_63_zmm;
 
+bench2_f vector_load_load_lat_simple_vmovdqu_0_xmm;
+bench2_f vector_load_load_lat_simple_vmovdqu_0_ymm;
+bench2_f vector_load_load_lat_simple_vmovdqu32_0_zmm;
+
+bench2_f vector_load_load_lat_double_vmovdqu_0_xmm;
+bench2_f vector_load_load_lat_double_vmovdqu_0_ymm;
+bench2_f vector_load_load_lat_double_vmovdqu32_0_zmm;
+bench2_f vector_load_load_lat_double_vmovdqu_3200_xmm;
+bench2_f vector_load_load_lat_double_vmovdqu_3200_ymm;
+bench2_f vector_load_load_lat_double_vmovdqu32_3200_zmm;
+
 bench2_f p01_fusion_p1;
 bench2_f p01_fusion_p0;
 
@@ -108,6 +119,17 @@ void register_vector(GroupList& list) {
         maker.template make< vector_load_load_lat_vlddqu_63_xmm   >( "vlddqu-misaligned"    , "misaligned  vlddqu xmm load lat", 1);
         maker.template make<vector_load_load_lat_vmovdqu_63_ymm   >("vmovdqu-misaligned-ymm", "misaligned vmovdqu ymm load lat", 1);
         m512 .template make<vector_load_load_lat_vmovdqu32_63_zmm>("vmovdqu-misaligned-zmm", "misaligned vmovdqu zmm load lat", 1);
+
+        maker.template make<vector_load_load_lat_simple_vmovdqu_0_xmm  >( "simple vmovdqu xmm",    "aligned vmovdqu xmm load lat", 1);
+        maker.template make<vector_load_load_lat_simple_vmovdqu_0_ymm  >( "simple vmovdqu ymm",    "aligned vmovdqu ymm load lat", 1);
+        m512 .template make<vector_load_load_lat_simple_vmovdqu32_0_zmm>( "simple vmovdqu zmm",    "aligned vmovdqu zmm load lat", 1);
+
+        maker.template make<vector_load_load_lat_double_vmovdqu_0_xmm  >   ("chained vmovdqu xmm",  "gp load -> vmovdqu x load lat", 1);
+        maker.template make<vector_load_load_lat_double_vmovdqu_0_ymm  >   ("chained vmovdqu ymm",  "gp load -> vmovdqu y load lat", 1);
+        m512 .template make<vector_load_load_lat_double_vmovdqu32_0_zmm>   ("chained vmovdqu zmm",  "gp load -> vmovdqu z load lat", 1);
+        maker.template make<vector_load_load_lat_double_vmovdqu_3200_xmm  >("chained complex vmovdqu xmm", "gp load -> vmovdqu x load lat", 1);
+        maker.template make<vector_load_load_lat_double_vmovdqu_3200_ymm  >("chained complex vmovdqu ymm", "gp load -> vmovdqu y load lat", 1);
+        m512 .template make<vector_load_load_lat_double_vmovdqu32_3200_zmm>("chained complex vmovdqu zmm", "gp load -> vmovdqu z load lat", 1);
     }
 
     {
