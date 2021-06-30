@@ -114,9 +114,9 @@ dist-clean: clean $(CLEAN_TARGETS)
 # $(filter-out $(OBJECTS), main.o)
 
 # link all object files except main.o into unit-test
-UNIT_OBJECTS := $(filter-out main.o, $(OBJECTS))
-unit-test: unit-test.o unit-test-main.o $(UNIT_OBJECTS)
-	$(CXX) $^         $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o $@
+UNIT_OBJECTS := $(filter-out main.o, $(OBJECTS)) unit-test.o unit-test-main.o
+unit-test: $(UNIT_OBJECTS) $(EXTRA_DEPS)
+	$(CXX) $(UNIT_OBJECTS) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o $@
 
 uarch-bench: $(OBJECTS) $(EXTRA_DEPS)
 	$(CXX) $(OBJECTS) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -std=c++11 -o $@
