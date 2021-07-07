@@ -372,9 +372,9 @@ define_bench sameloc_pointer_chase%1
     and  rsp, -4096 ; align rsp to page boundary
     or rcx, -1
     inc rcx ; rcx is zero but this is just a fancy way of doing it to defeat zero-idiom recognition
-    lea rax, [rsp - %3]
-    mov [rax], rax
+    mov rax, rsp
     %4
+    mov [%2 + %3], rax
     mfence ; defeat memory renaming
 .top:
     times 128 mov rax, [%2 + %3]
