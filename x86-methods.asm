@@ -368,7 +368,7 @@ define_single_op rdtscp_bench,rdtscp
 define_bench sameloc_pointer_chase%1
     push rbp
     mov  rbp, rsp
-    sub  rsp,  4096
+    sub  rsp,  8192
     and  rsp, -4096 ; align rsp to page boundary
     or rcx, -1
     inc rcx ; rcx is zero but this is just a fancy way of doing it to defeat zero-idiom recognition
