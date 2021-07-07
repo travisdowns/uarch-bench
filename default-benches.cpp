@@ -48,6 +48,8 @@ bench2_f alu_load_6_5;
 bench2_f alu_load_6_6;
 
 bench2_f sameloc_pointer_chase;
+bench2_f sameloc_pointer_chase_2047;
+bench2_f sameloc_pointer_chase_2048;
 bench2_f sameloc_pointer_chase_complex;
 bench2_f sameloc_pointer_chase_fs;
 bench2_f sameloc_pointer_chase_complex_fs;
@@ -101,6 +103,8 @@ void register_default(GroupList& list) {
     maker.template make<alu_load_6_6>  ("alu-load-6-6", "6 adds, 6 loads", 12 * 64);
 
     maker.template make<sameloc_pointer_chase>         ("pointer-chase-simple", "Simple addressing pointer chase",  128);
+    maker.template make<sameloc_pointer_chase_2047>    ("pointer-chase-base-2047", "Base + 2047 pointer chase",  128);
+    maker.template make<sameloc_pointer_chase_2048>    ("pointer-chase-base-2048", "Base + 2048 pointer chase",  128);
     maker.template make<sameloc_pointer_chase_complex> ("pointer-chase-complex","Complex addressing pointer chase",  128);
     maker.template make<sameloc_pointer_chase_fs>         ("pointer-chase-simple-fs", "Simple pointer chase FS override",  128);
     maker.template make<sameloc_pointer_chase_complex_fs> ("pointer-chase-complex-fs","Complex pointer chase FS override",  128);

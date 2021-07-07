@@ -366,21 +366,29 @@ define_single_op rdtscp_bench,rdtscp
 ; %3 offset if any to apply to pointer and load expression
 %macro make_spc 4
 define_bench sameloc_pointer_chase%1
+    push rbp
+    mov  rbp, rsp
+    sub  rsp,  4096
+    and  rsp, -4096 ; align rsp to page boundary
     or rcx, -1
     inc rcx ; rcx is zero but this is just a fancy way of doing it to defeat zero-idiom recognition
-    lea rax, [rsp - 8 - %3]
+    lea rax, [rsp - %3]
+    mov [rax], rax
     %4
-    push rax
     mfence ; defeat memory renaming
 .top:
     times 128 mov rax, [%2 + %3]
     dec rdi
     jnz .top
-    pop rax
+
+    mov rsp, rbp
+    pop rbp
     ret
 %endmacro
 
 make_spc ,rax,0,{}
+make_spc _2047,rax,2047,{}
+make_spc _2048,rax,2048,{}
 make_spc _complex,rax + rcx * 8,4096,{}
 make_spc _fs,fs:rax,0,{sub rax, [fs:0]}
 make_spc _complex_fs,fs:rax + rcx * 8,4096,{sub rax, [fs:0]}
