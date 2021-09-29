@@ -6,7 +6,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-16.04, ubuntu-20.04]
+        os: [ubuntu-18.04, ubuntu-20.04]
         cpp_compiler: [g++, g++-7, g++-8, g++-9, clang++, clang++-9]
         tag: [matrix]
         include:
