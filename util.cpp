@@ -91,10 +91,10 @@ void *new_aligned_pointer(size_t size, size_t alignment) {
     return ptr;
 }
 
-void *new_huge_ptr(size_t size) {
+void *new_huge_ptr(size_t size, bool huge) {
     void *ptr = new_aligned_pointer(size + TWO_MB, TWO_MB);
 #if UARCH_BENCH_USE_HUGEPAGES
-    madvise(ptr, size + TWO_MB, MADV_HUGEPAGE);
+    madvise(ptr, size + TWO_MB, huge ? MADV_HUGEPAGE : MADV_NOHUGEPAGE);
     ptr = ((char *)ptr + TWO_MB);
 #else
     static bool once;
@@ -117,16 +117,18 @@ void *new_huge_ptr(size_t size) {
     opt_control::modify(ptr);
 
 #ifdef KPF_THP
-    page_info_array pinfo = get_info_for_range(ptr, (char *)ptr + size);
-    flag_count thp_count = get_flag_count(pinfo, KPF_THP);
-    if (thp_count.pages_available) {
-        printf("Source pages allocated with transparent hugepages: %4.1f%%)\n", 100.0 * thp_count.pages_set / thp_count.pages_total);
-        if (thp_count.pages_available != thp_count.pages_total) {
-            printf("WARNING: THP status of some pages couldn't be determined: (%lu total pages, %4.1f%% flagged)\n",
-                    thp_count.pages_total, 100.0 * thp_count.pages_available / thp_count.pages_total);
+    if (huge) {
+        page_info_array pinfo = get_info_for_range(ptr, (char *)ptr + size);
+        flag_count thp_count = get_flag_count(pinfo, KPF_THP);
+        if (thp_count.pages_available) {
+            printf("Source pages allocated with transparent hugepages: %4.1f%%)\n", 100.0 * thp_count.pages_set / thp_count.pages_total);
+            if (thp_count.pages_available != thp_count.pages_total) {
+                printf("WARNING: THP status of some pages couldn't be determined: (%lu total pages, %4.1f%% flagged)\n",
+                        thp_count.pages_total, 100.0 * thp_count.pages_available / thp_count.pages_total);
+            }
+        } else {
+            printf("WARNING: couldn't determine hugepage info (it's OK, you are probably not running as root)\n");
         }
-    } else {
-        printf("WARNING: couldn't determine hugepage info (it's OK, you are probably not running as root)\n");
     }
 #endif
 
@@ -305,7 +307,8 @@ void flush_helper(size_t working_set, A alloc) {
 
 void flush_caches(size_t working_set) {
     static_assert(UB_CACHE_LINE_SIZE > 1, "UB_CACHE_LINE_SIZE must be >1 because we do /2");
-    flush_helper(working_set, new_huge_ptr);
+    auto alloc_huge = [](size_t size) { return new_huge_ptr(size); };
+    flush_helper(working_set, alloc_huge);
     flush_helper(working_set, [](size_t s){ return new char[s]; });
 }
 

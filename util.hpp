@@ -38,10 +38,22 @@ static inline int64_t nanos() {
 }
 
 /**
- * Return a pointer to a NEWLY ALLOCATED memory region of at least size, aligned to a 2MB boundary and with
- * an effort to ensure the pointer is backed by transparent huge pages.
+ * @brief Allocate a 2 MB-aligned pointer and set its hugepage status.
+ * 
+ * Return a pointer to a NEWLY ALLOCATED memory region of at least size,
+ * aligned to a 2MB boundary and with an effort to ensure the pointer is
+ * backed by these specified page size. Specifically, it uses
+ * madvise() to try to force either hugepages or no hugepages.
+ * 
+ * Many distributions have the sysfs tunable:
+ * /sys/kernel/mm/transparent_hugepage/enabled
+ * set to "madvise" and in this case both directions will work.
+ *
+ * @param size size of required region
+ * @param huge true to force 2MB pages, false to force 4k pages
+ * @return void* 
  */
-void *new_huge_ptr(size_t size);
+void *new_huge_ptr(size_t size, bool huge = true);
 
 /**
  * Return a pointer to a NEWLY ALLOCATED memory region of at least size, aligned to the given alignment.
