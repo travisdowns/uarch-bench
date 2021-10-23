@@ -61,7 +61,7 @@ static void sink(float x) {
 template <typename T>
 HEDLEY_ALWAYS_INLINE
 static void modify(T& x) {
-    static_assert(std::is_arithmetic<T>::value, "types should be primitive");
+    static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value, "type should be primitive");
     __asm__ volatile ("" :"+r"(x)::);
 }
 

@@ -141,7 +141,7 @@ endef
 	$(cpp-build)
 
 %.o: %.asm nasm-utils/nasm-utils-inc.asm
-	$(ASM) $(ASM_FLAGS) ${NASM_DEFINES} -f elf64 $<
+	$(ASM) $(ASM_FLAGS) $(NASM_DEFINES) -f elf64 $<
 
 # fake dependency, but prevents make from trying to build libpfc twice in parallel if both the ko and so are missing
 libpfc/pfc.ko: libpfc/libpfc.so
