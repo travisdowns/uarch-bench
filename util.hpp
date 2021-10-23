@@ -54,9 +54,18 @@ void *new_aligned_pointer(size_t size, size_t alignment);
  * Return a pointer to a single static region of the of the given size and alignment.
  * The same global region is REUSED for all calls to this function, so it is only appropriate
  * for temporary use within a test.
+ * 
+ * The pointer is allocated in huge pages if possible.
  */
 void *aligned_ptr(size_t base_alignment, size_t required_size, bool set_zero = false);
 void *misaligned_ptr(size_t base_alignment, size_t required_size, ssize_t misalignment);
+
+/**
+ * @brief Return pointer to a global storage region of 4k pages.
+ * 
+ * The same as aligned_pointer but using 4k pages, not huge pages.
+ */
+ void *aligned_ptr_4k(size_t base_alignment, size_t required_size, bool set_zero = false);
 
 
 

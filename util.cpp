@@ -3,8 +3,8 @@
  */
 
 #include "util.hpp"
-
 #include "opt-control.hpp"
+#include "page-info.h"
 
 #include <regex>
 #include <cassert>
@@ -24,6 +24,7 @@
 #ifndef UARCH_BENCH_USE_HUGEPAGES
 #ifdef MADV_HUGEPAGE
 #define UARCH_BENCH_USE_HUGEPAGES 1
+#include <linux/kernel-page-flags.h>
 #else
 #warning no MADV_HUGEPAGE on this system, huge pages not available
 #define UARCH_BENCH_USE_HUGEPAGES 0
@@ -73,8 +74,10 @@ bool wildcard_match(const std::string& target, const std::string& pattern) {
 #endif
 
 const size_t TWO_MB = 2 * 1024 * 1024;
-const int STORAGE_SIZE = 100 * 1024 * 1024;  // 100 MB
-void *storage_ptr = 0;
+const size_t STORAGE_SIZE = 512 * 1024 * 1024;
+void *storage_ptr_huge = 0;
+void *storage_ptr_4k = 0;
+
 
 volatile int zero = 0;
 bool storage_init = false;
@@ -89,9 +92,7 @@ void *new_aligned_pointer(size_t size, size_t alignment) {
 }
 
 void *new_huge_ptr(size_t size) {
-    void *ptr;
-    int result = posix_memalign(&ptr, TWO_MB, size + TWO_MB);
-    assert(result == 0);
+    void *ptr = new_aligned_pointer(size + TWO_MB, TWO_MB);
 #if UARCH_BENCH_USE_HUGEPAGES
     madvise(ptr, size + TWO_MB, MADV_HUGEPAGE);
     ptr = ((char *)ptr + TWO_MB);
@@ -108,9 +109,27 @@ void *new_huge_ptr(size_t size) {
     // to the same page.
     // We do a memset of 1 followed by zero since some compilers are recognizing the pattern of malloc/memset-to-zero
     // and transforming it to calloc, which again can result in the zero-page behavior described above. We aren't actually
-    // using malloc() currently (rather we use posix_memalign), but this might change or compilers might get even smarter.
+    // using malloc() currently (rather we use posix_memalign), but this might change or compilers might get even smarter,
+    // and so to head that off we do a no-op "modify" on the pointer after the memset operations.
     std::memset(ptr, 1, size);
+    opt_control::modify(ptr);
     std::memset(ptr, 0, size);
+    opt_control::modify(ptr);
+
+#ifdef KPF_THP
+    page_info_array pinfo = get_info_for_range(ptr, (char *)ptr + size);
+    flag_count thp_count = get_flag_count(pinfo, KPF_THP);
+    if (thp_count.pages_available) {
+        printf("Source pages allocated with transparent hugepages: %4.1f%%)\n", 100.0 * thp_count.pages_set / thp_count.pages_total);
+        if (thp_count.pages_available != thp_count.pages_total) {
+            printf("WARNING: THP status of some pages couldn't be determined: (%lu total pages, %4.1f%% flagged)\n",
+                    thp_count.pages_total, 100.0 * thp_count.pages_available / thp_count.pages_total);
+        }
+    } else {
+        printf("WARNING: couldn't determine hugepage info (it's OK, you are probably not running as root)\n");
+    }
+#endif
+
     return ptr;
 }
 
@@ -133,18 +152,28 @@ void *align(size_t base_alignment, size_t required_size, void* p, size_t space) 
     return r;
 }
 
-void *aligned_ptr(size_t base_alignment, size_t required_size, bool set_zero) {
+void *aligned_ptr_helper(size_t base_alignment, size_t required_size, bool set_zero, bool huge) {
     assert(required_size <= STORAGE_SIZE);
     assert(is_pow2(base_alignment));
     assert(base_alignment <= TWO_MB);
+    void *& storage_ptr = huge ? storage_ptr_huge : storage_ptr_4k;
     if (!storage_ptr) {
-        storage_ptr = new_huge_ptr(STORAGE_SIZE);
+        storage_ptr = huge ? new_huge_ptr(STORAGE_SIZE) : new_aligned_pointer(STORAGE_SIZE, base_alignment);
     }
     auto p = align(base_alignment, required_size, storage_ptr, STORAGE_SIZE);
     if (set_zero) {
         memset(p, 0, required_size);
+        opt_control::modify(p);
     }
     return p;
+}
+
+void *aligned_ptr(size_t base_alignment, size_t required_size, bool set_zero) {
+    return aligned_ptr_helper(base_alignment, required_size, set_zero, true); 
+}
+
+void *aligned_ptr_4k(size_t base_alignment, size_t required_size, bool set_zero) {
+    return aligned_ptr_helper(base_alignment, required_size, set_zero, false); 
 }
 
 

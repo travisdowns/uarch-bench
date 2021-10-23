@@ -9,6 +9,7 @@
 
 #include <random>
 #include "benchmark.hpp"
+#include "fmt/format.h"
 
 #define LOAD_LOOP_UNROLL    8
 
@@ -75,6 +76,9 @@ extern "C" {
 
 bench2_f   serial_load_bench;
 bench2_f   serial_load_bench2;
+
+bench2_f tlb_fencing_dep;
+bench2_f tlb_fencing_indep;
 
 bench2_f serial_double_load_oneload;
 bench2_f serial_double_load1;
@@ -381,6 +385,31 @@ void register_mem(GroupList& list) {
 
         for (int kib = MAX_KIB * 2; kib <= MAX_SIZE / 1024; kib *= 2) {
             MAKE_SERIAL(kib,serial_load_bench2);
+        }
+    }
+
+    {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/memory/tlb-fencing", "Shows STLB misses + address-unknown stores fencing loads");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get(), 1500000).setTags({"slow"});
+
+        for (size_t size = 4096; size <= 256 * 1024 * 1024; size *= 2) {
+            // we allocate a bit beyond the size, because the store may have an offset
+            const size_t alloc_size = size + 256; 
+            auto name = fmt::format("{}K", size / 1024);
+            auto desc = fmt::format("{}K region, ", size / 1024);
+
+            maker.template make<tlb_fencing_dep>(name + "-2M-dep", desc + " 2M pages", 1, [=]{
+                return new region{ size, aligned_ptr(4096, alloc_size, true)};
+            });
+
+            maker.template make<tlb_fencing_dep>(name + "-4K-dep", desc + " 4K pages", 1, [=]{
+                return new region{ size, aligned_ptr_4k(4096, alloc_size, true)};
+            });
+
+            maker.template make<tlb_fencing_indep>(name + "-4K-indep", "No SA dep, " + desc + " 4K pages", 1, [=]{
+                return new region{ size, aligned_ptr_4k(4096, alloc_size, true)};
+            });
         }
     }
 
