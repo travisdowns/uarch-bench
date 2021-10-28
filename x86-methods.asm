@@ -51,6 +51,29 @@ dec rdi
 jnz .top
 ret
 
+; just like the calibration routine
+define_bench dep_sub_calib
+    xor eax, eax
+.top:
+    times 2 sub rdi, 1
+    jge .top
+    ret
+
+define_bench dep_sub_calib_10
+    xor eax, eax
+.top:
+    times 10 sub rdi, 1
+    jge .top
+    ret
+
+define_bench dep_sub_calib_reg
+    mov eax, 1
+.top:
+    times 2 sub rdi, rax
+    jge .top
+    ret
+
+
 %macro define_dep_add_chain 1
 define_bench dep_add_chain%1
 %if %1 > 5

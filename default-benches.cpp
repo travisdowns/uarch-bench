@@ -8,6 +8,9 @@
 
 extern "C" {
 bench2_f dep_add_rax_rax;
+bench2_f dep_sub_calib;
+bench2_f dep_sub_calib_10;
+bench2_f dep_sub_calib_reg;
 bench2_f indep_add;
 bench2_f dep_imul128_rax;
 bench2_f dep_imul64_rax;
@@ -81,6 +84,11 @@ void register_default(GroupList& list) {
     maker.template make<inc_rmw>          ("inc-rmw", "same location inc [mem]",  128);
     maker.template make<add_rmw>          ("add-rmw", "same location add [mem], 1",  128);
     maker.template make<add_rmw2>         ("add-rmw2","multiple add [mem], 1",  16);
+
+    // edison
+    maker.template make<dep_sub_calib>  ("dep-sub-calib",    "Calibration subs", 1);
+    maker.template make<dep_sub_calib_10>  ("dep-sub-calib-10", "Calibration subs x10", 1);
+    maker.template make<dep_sub_calib_reg>  ("dep-sub-calib-reg", "Calibration subs w/ register", 1);
 
     // add chain tests
 

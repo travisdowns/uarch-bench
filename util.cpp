@@ -121,7 +121,7 @@ void *new_huge_ptr(size_t size, bool huge) {
         page_info_array pinfo = get_info_for_range(ptr, (char *)ptr + size);
         flag_count thp_count = get_flag_count(pinfo, KPF_THP);
         if (thp_count.pages_available) {
-            printf("Source pages allocated with transparent hugepages: %4.1f%%)\n", 100.0 * thp_count.pages_set / thp_count.pages_total);
+            printf("Source pages allocated with transparent hugepages: %4.1f\n", 100.0 * thp_count.pages_set / thp_count.pages_total);
             if (thp_count.pages_available != thp_count.pages_total) {
                 printf("WARNING: THP status of some pages couldn't be determined: (%lu total pages, %4.1f%% flagged)\n",
                         thp_count.pages_total, 100.0 * thp_count.pages_available / thp_count.pages_total);
