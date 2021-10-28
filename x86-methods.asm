@@ -73,6 +73,15 @@ define_bench dep_sub_calib_reg
     jge .top
     ret
 
+define_bench dep_sub_calib_nop
+    mov eax, 1
+.top:
+    sub rdi, 1
+    nop
+    sub rdi, 1
+    nop
+    jge .top
+    ret
 
 %macro define_dep_add_chain 1
 define_bench dep_add_chain%1
