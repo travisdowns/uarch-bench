@@ -39,6 +39,7 @@ double CalcCpuFreq() {
     const char* mhz;
     if ((mhz = getenv("UARCH_BENCH_CLOCK_MHZ"))) {
         double ghz = std::stoi(mhz) / 1000.0;
+        fprintf(stderr, "Frequency set to %6.3f GHz using UARCH_BENCH_CLOCK_MHZ\n");
         return ghz;
     }
 
