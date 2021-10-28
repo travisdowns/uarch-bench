@@ -2,7 +2,7 @@
 
 # uarch-bench
 
-A fine-grained micro-benchmark intended to investigate micro-architectural details of a target CPU, or to precisely benchmark small functions in a repeatable manner.
+A collection of low level, fine-grained benchmarks intended to investigate micro-architectural details of a target CPU, or to precisely benchmark small functions in a repeatable manner.
 
 ## Disclaimer
 
