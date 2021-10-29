@@ -58,10 +58,10 @@ double CalcCpuFreq() {
         }
     }
 
-    fprintf(stderr, "All runs:\n");
-    for (auto &r : results) {
-        fprintf(stderr, "%lu\n", (unsigned long)r);
-    }
+    // fprintf(stderr, "All runs:\n");
+    // for (auto &r : results) {
+    //     fprintf(stderr, "%lu\n", (unsigned long)r);
+    // }
 
     DescriptiveStats stats = get_stats(results.begin(), results.end());
 

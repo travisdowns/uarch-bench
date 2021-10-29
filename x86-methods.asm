@@ -83,6 +83,22 @@ define_bench dep_sub_calib_nop
     jge .top
     ret
 
+define_bench dep_sub_calib_10b
+    mov rsi, -1
+.top:
+    times 10 sub rsi, 1
+    sub rdi, 10
+    jge .top
+    ret
+
+define_bench dep_sub_calib_v1000
+    mov rsi, -1
+.top:
+    times 10 sub rsi, 1000
+    sub rdi, 10
+    jge .top
+    ret
+
 %macro define_dep_add_chain 1
 define_bench dep_add_chain%1
 %if %1 > 5
