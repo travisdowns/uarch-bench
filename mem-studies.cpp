@@ -66,6 +66,21 @@ bench2_f lockadd_fencesolo;
 bench2_f xadd_fencesolo;
 bench2_f lockxadd_fencesolo;
 
+#define LOAD_PATTERNS_X(f) \
+        f(0_0_0_0)         \
+        f(0_4_0_4)         \
+        f(4_8_4_8)         \
+        f(0_4_8_12)        \
+        f(1_5_9_13)        \
+        f(12_8_4_0)        \
+        f(0_8_0_8)         \
+        f(0_32_0_32)       \
+        f(0_64_0_64)       \
+        f(reg_0_4_8_12)        \
+
+#define DECLARE_LOAD_PATTERN_BENCH(suffix) bench2_f load_pattern_##suffix;
+LOAD_PATTERNS_X(DECLARE_LOAD_PATTERN_BENCH)
+
 }
 
 template <bench2_f F, typename M>
@@ -145,7 +160,7 @@ void register_mem_studies(GroupList& list) {
         MAKE_NT(128)
         MAKE_NT(256)
     }
-
+ 
 
     {
         // determine the effect of fencing and LOCKed instructions on load misses
@@ -183,6 +198,18 @@ void register_mem_studies(GroupList& list) {
         MAKE_SOLO(lockxadd_fencesolo, lock xadds);
 
     }
+
+
+     {
+        std::shared_ptr<BenchmarkGroup> group = std::make_shared<BenchmarkGroup>("studies/load-patterns", "Load patterns loads");
+        list.push_back(group);
+        auto maker = DeltaMaker<TIMER>(group.get());
+
+        #define DEFINE_LOAD_PATTERN_BENCH(pat) \
+            maker.template make<load_pattern_##pat>("load-pattern-" #pat,  "32-bit loads with pattern " #pat,  1);
+
+        LOAD_PATTERNS_X(DEFINE_LOAD_PATTERN_BENCH)
+     }
 
 #endif  // #if !UARCH_BENCH_PORTABLE
 }

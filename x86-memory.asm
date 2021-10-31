@@ -38,3 +38,85 @@ define_bench tlb_fencing_%1
 
 define_tlb_fencing dep, {xor rcx, rcx}     ; rcx is an unused dummy here
 define_tlb_fencing indep, {xor rdx, rdx}   ; rdx breaks the load -> store address dep
+
+; how many times the pattern is repeated (helps defray loop overhead)
+%define LOAD_PATTERN_REPEAT 2
+
+; load patterns within 1 or 2 cache lines
+; tests for things like load merging
+%macro define_load_pattern 0-*
+
+%define LP_NAME load_pattern
+%rep %0
+%define LP_NAME %[LP_NAME]_%1
+%rotate 1
+%endrep
+
+define_bench LP_NAME
+    push rbp
+    mov  rbp, rsp
+
+    sub rsp, 1024
+    and rsp, -1024
+
+    mov rsi, rsp
+    jmp .top
+
+ALIGN 64
+.top:
+%rep LOAD_PATTERN_REPEAT
+%rep %0
+    mov rax, [rsi + %1]
+%rotate 1
+%endrep
+%endrep
+    sub rdi, (%0 * LOAD_PATTERN_REPEAT)
+    jg .top
+
+    mov rsp, rbp
+    pop rbp
+    ret
+    
+
+%endmacro
+
+
+define_load_pattern  0, 0, 0, 0 ; same location
+define_load_pattern  0, 4, 0, 4 ; adjacent pairs
+define_load_pattern  4, 8, 4, 8 ; adjacent but offset (32b aligned, not 64b aliged)
+define_load_pattern  0, 4, 8,12 
+define_load_pattern  1, 5, 9,13 
+define_load_pattern 12, 8, 4, 0
+define_load_pattern  0, 8, 0, 8
+define_load_pattern  0,32, 0,32
+define_load_pattern  0,64, 0,64
+
+define_bench load_pattern_reg_0_4_8_12
+    push rbp
+    mov  rbp, rsp
+
+    sub rsp, 1024
+    and rsp, -1024
+
+    mov rsi, rsp
+
+    mov ecx,  0
+    mov edx,  4
+    mov r8d,  8
+    mov r9d, 12
+
+ALIGN 64
+.top:
+
+%rep LOAD_PATTERN_REPEAT
+    mov rax, [rsi + rcx]
+    mov rax, [rsi + rdx]
+    mov rax, [rsi + r8]
+    mov rax, [rsi + r9]
+%endrep
+    sub rdi, 4 * LOAD_PATTERN_REPEAT
+    jg .top
+
+    mov rsp, rbp
+    pop rbp
+    ret

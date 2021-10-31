@@ -28,7 +28,7 @@ GLOBAL add_calibration_x86:function
 ALIGN 32
 add_calibration_x86:
 mov rax, -1
-neg rax      ; on ADL, subtractions of a constant can somehow be optimized
+neg rax       ; on some CPUs, subtractions of a constant can somehow be optimized
               ; to run > 1 per cycle even if dependent, so we use a reg op
               ; operand instead
 times 2 sub rdi, rax
