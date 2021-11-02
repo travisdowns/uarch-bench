@@ -14,6 +14,9 @@ bench2_f dep_sub_calib_10b;
 bench2_f dep_sub_calib_reg;
 bench2_f dep_sub_calib_nop;
 bench2_f dep_sub_calib_v1000;
+bench2_f dep_sub_calib_v100;
+bench2_f dep_sub_calib_v2;
+bench2_f dep_sub_calib_v1;
 bench2_f indep_add;
 bench2_f dep_imul128_rax;
 bench2_f dep_imul64_rax;
@@ -95,6 +98,9 @@ void register_default(GroupList& list) {
     maker.template make<dep_sub_calib_reg>  ("dep-sub-calib-reg", "Calibration subs w/ register", 1);
     maker.template make<dep_sub_calib_nop>  ("dep-sub-calib-nop", "Calibration subs w/ nop", 1);
     maker.template make<dep_sub_calib_v1000>  ("dep-sub-calib-v1000", "Calibration subs value 1000", 1);
+    maker.template make<dep_sub_calib_v100>  ("dep-sub-calib-v100", "Calibration subs value 100", 1);
+    maker.template make<dep_sub_calib_v2>  ("dep-sub-calib-v2", "Calibration subs value 2", 1);
+    maker.template make<dep_sub_calib_v1>  ("dep-sub-calib-v1", "Calibration subs value 1", 1);
 
     // add chain tests
 

@@ -4,8 +4,8 @@
 BITS 64
 default rel
 
-%use smartalign
-ALIGNMODE p6
+; %use smartalign
+; ALIGNMODE p6
 
 %ifdef __YASM_MAJOR__
 %error "We don't support YASM compilation anymore, see issue #63"

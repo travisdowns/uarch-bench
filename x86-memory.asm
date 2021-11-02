@@ -80,16 +80,25 @@ ALIGN 64
 
 %endmacro
 
-
-define_load_pattern  0, 0, 0, 0 ; same location
-define_load_pattern  0, 4, 0, 4 ; adjacent pairs
-define_load_pattern  4, 8, 4, 8 ; adjacent but offset (32b aligned, not 64b aliged)
-define_load_pattern  0, 4, 8,12 
-define_load_pattern  1, 5, 9,13 
-define_load_pattern 12, 8, 4, 0
-define_load_pattern  0, 8, 0, 8
-define_load_pattern  0,32, 0,32
-define_load_pattern  0,64, 0,64
+define_load_pattern 0,0,0,0
+define_load_pattern 0,4,0,4
+define_load_pattern 0,8,0,8
+define_load_pattern 0,12,0,12
+define_load_pattern 0,16,0,16
+define_load_pattern 0,20,0,20
+define_load_pattern 0,24,0,24
+define_load_pattern 0,0,8,8
+define_load_pattern 0,0,0,8
+define_load_pattern 4,8,4,8
+define_load_pattern 0,4,8,12
+define_load_pattern 1,5,9,13
+define_load_pattern 12,8,4,0
+define_load_pattern 0,32,0,32
+define_load_pattern 0,64,0,64
+define_load_pattern 0,96,0,96
+define_load_pattern 0,72,0,72
+define_load_pattern 0,4,8
+define_load_pattern 0,8,80
 
 define_bench load_pattern_reg_0_4_8_12
     push rbp
@@ -114,6 +123,7 @@ ALIGN 64
     mov rax, [rsi + r8]
     mov rax, [rsi + r9]
 %endrep
+
     sub rdi, 4 * LOAD_PATTERN_REPEAT
     jg .top
 

@@ -103,6 +103,32 @@ define_bench dep_sub_calib_v1000
     jge .top
     ret
 
+define_bench dep_sub_calib_v100
+    mov rsi, -1
+.top:
+    times 10 sub rsi, 100
+    sub rdi, 10
+    jge .top
+    ret
+
+define_bench dep_sub_calib_v2
+    mov rsi, -1
+.top:
+    times 10 sub rsi, 2
+    sub rdi, 10
+    jge .top
+    ret
+
+define_bench dep_sub_calib_v1
+    mov rsi, -1
+.top:
+    times 10 sub rsi, 1
+    sub rdi, 10
+    jge .top
+    ret
+
+
+
 %macro define_dep_add_chain 1
 define_bench dep_add_chain%1
 %if %1 > 5
@@ -3226,7 +3252,10 @@ ud2
 
 ; constants
 
+align 64
+ZERO_64:
+times 64 db 0
+
 align 32
 CONST_DWORD_0_7:
 dd 0,64,128,192,256,320,384,448
-
