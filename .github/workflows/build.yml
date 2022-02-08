@@ -9,9 +9,10 @@ jobs:
         os: [ubuntu-18.04, ubuntu-20.04]
         cpp_compiler: [g++, g++-7, g++-8, g++-9, clang++, clang++-9]
         tag: [matrix]
+        debug: [0]
+        portable: [0]
         include:
           - c_compiler: gcc
-          - debug: 0
           - cpp_compiler: g++-7
             c_compiler: gcc-7
           - cpp_compiler: g++-8
@@ -25,8 +26,15 @@ jobs:
           - os: ubuntu-20.04
             c_compiler: gcc
             cpp_compiler: g++
-            debug: 1
             tag: extra
+            debug: 1
+            portable: 0
+          - os: ubuntu-20.04
+            c_compiler: gcc
+            cpp_compiler: g++
+            tag: extra
+            debug: 0
+            portable: 1
     steps:
       - name: Install C Compiler
         if: ${{ startsWith(matrix.c_compiler, 'gcc-') || startsWith(matrix.c_compiler, 'clang-') }}
@@ -44,7 +52,7 @@ jobs:
           # fetch-depth: 0 needed for libpfm4 whose clone fails otherwise
           fetch-depth: 0
       - run: lscpu
-      - run: make -j4 CC=${{ matrix.c_compiler }} CXX=${{ matrix.cpp_compiler }} DEBUG=${{ matrix.debug }}
+      - run: make -j4 CC=${{ matrix.c_compiler }} CXX=${{ matrix.cpp_compiler }} DEBUG=${{ matrix.debug }} PORTABLE=${{ matrix.portable }}
       - run: ./unit-test
       - run: ./scripts/actions-test.sh
 
