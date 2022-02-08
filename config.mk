@@ -11,6 +11,11 @@ ifneq ($(OS_ARCH),x86_64)
 PORTABLE ?= 1
 endif
 
+# set to empty if zero, so we can use ifneq $(PORTABLE), 0 checks below
+ifeq ($(PORTABLE),0)
+override PORTABLE:=
+endif
+
 # Whether to compile support for using --timer=libpfc, which is a kernel module
 # and associated userland code that allows use of rdpmc instruction to sample
 # the Intel performance counters directly, leading to very precise measurements.
