@@ -57,7 +57,10 @@ GroupList make_benches() {
     register_oneshot<TIMER>(groupList);
     register_syscall<TIMER>(groupList);
     register_rstalls<TIMER>(groupList);
+
+#if !UARCH_BENCH_PORTABLE
     register_vector<TIMER>(groupList);
+#endif
 
     return groupList;
 }
